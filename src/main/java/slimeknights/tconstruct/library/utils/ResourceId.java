@@ -1,57 +1,75 @@
 package slimeknights.tconstruct.library.utils;
 
 import net.minecraft.resources.ResourceLocation;
-
 import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
-/**
- * Helper for use with our extensions of resource location for some type safety in IDs.
- * Note we left {@link ResourceLocation#withPath(String)} and alike as returning {@link ResourceLocation} as there is not much use extending an ID.
- * @see IdParser
- */
-public abstract class ResourceId extends ResourceLocation {
-  protected ResourceId(String namespace, String path, @Nullable Dummy pDummy) {
-    super(namespace, path, pDummy);
+public abstract class ResourceId implements Comparable<ResourceId> {
+  private final ResourceLocation id;
+
+  @Override
+  public int compareTo(ResourceId o) {
+    return this.id.compareTo(o.id);
+  }
+
+  protected ResourceId(String namespace, String path) {
+    this.id = ResourceLocation.fromNamespaceAndPath(namespace, path);
   }
 
   public ResourceId(ResourceLocation location) {
-    this(location.getNamespace(), location.getPath(), null);
+    this.id = location;
   }
 
-  @SuppressWarnings("removal")
-  public ResourceId(String namespace, String path) {
-    super(namespace, path);
-  }
-
-  @SuppressWarnings("removal")
   public ResourceId(String location) {
-    super(location);
+    this.id = ResourceLocation.parse(location);
   }
 
-
-  /* Helpers for static constructors */
-
-  /**
-   * Creates a new ID from the given string
-   * @param string  String
-   * @return  ID, or null if invalid
-   */
-  @Nullable
-  protected static <T extends ResourceLocation> T tryParse(String string, BiFunction<String,String,T> constructor) {
-    String[] parts = decompose(string, ':');
-    return tryBuild(parts[0], parts[1], constructor);
+  public ResourceLocation getId() {
+    return id;
   }
 
-  /**
-   * Creates a new ID from the given namespace and path
-   * @param namespace  Namespace
-   * @param path       Path
-   * @return  ID, or null if invalid
-   */
+  public String getNamespace() {
+    return id.getNamespace();
+  }
+
+  public String getPath() {
+    return id.getPath();
+  }
+
+  @Override
+  public String toString() {
+    return id.toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj instanceof ResourceId other) {
+      return this.id.equals(other.id);
+    }
+    if (obj instanceof ResourceLocation rl) {
+      return this.id.equals(rl);
+    }
+    return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return id.hashCode();
+  }
+
   @Nullable
-  protected static <T extends ResourceLocation> T tryBuild(String namespace, String path, BiFunction<String,String,T> constructor) {
-    if (isValidNamespace(namespace) && isValidPath(path)) {
+  protected static <T extends ResourceId> T tryParse(String string, BiFunction<String,String,T> constructor) {
+    int i = string.indexOf(':');
+    if (i >= 0) {
+      return tryBuild(string.substring(0, i), string.substring(i + 1), constructor);
+    }
+    return tryBuild("minecraft", string, constructor);
+  }
+
+  @Nullable
+  protected static <T extends ResourceId> T tryBuild(String namespace, String path, BiFunction<String,String,T> constructor) {
+    if (ResourceLocation.isValidNamespace(namespace) && ResourceLocation.isValidPath(path)) {
       return constructor.apply(namespace, path);
     }
     return null;

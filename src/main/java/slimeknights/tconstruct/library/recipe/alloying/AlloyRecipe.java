@@ -6,7 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.primitive.BooleanLoadable;
 import slimeknights.mantle.data.loadable.primitive.IntLoadable;
@@ -33,20 +33,24 @@ public class AlloyRecipe implements ICustomOutputRecipe<IAlloyTank> {
     IntLoadable.FROM_ONE.requiredField("temperature", r -> r.temperature),
     AlloyRecipe::new);
 
-  @Getter
   private final ResourceLocation id;
+  public ResourceLocation getId() { return this.id; }
   /**
    * List of input ingredients.
    * Order matters, as if a fluid matches multiple ingredients it may produce unexpected behavior.
    * Making the most strict first will produce the best behavior
    */
-  @Getter
   private final List<AlloyIngredient> inputs;
+  public List<AlloyIngredient> getInputs() { return this.inputs; }
   /** Recipe output */
   private final FluidOutput output;
   /** Required temperature to craft this */
   @Getter
   private final int temperature;
+
+  public int getTemperature() {
+    return this.temperature;
+  }
 
   /** Gets the result of this recipe */
   public FluidStack getOutput() {
@@ -166,7 +170,7 @@ public class AlloyRecipe implements ICustomOutputRecipe<IAlloyTank> {
         fluid = inv.getFluidInTank(index);
         int amount = ingredient.fluid.getAmount(fluid.getFluid());
         drainAmount += amount;
-        drainFluids[index] = new FluidStack(fluid, amount);
+        drainFluids[index] = fluid.copyWithAmount(amount);
       }
     }
 

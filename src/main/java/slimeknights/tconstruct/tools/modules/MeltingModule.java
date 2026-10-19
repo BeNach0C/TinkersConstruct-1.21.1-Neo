@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.json.LevelingInt;
@@ -88,6 +88,16 @@ public record MeltingModule(LevelingInt temperature, LevelingInt nuggetsPerMetal
   }
 
   @Override
+  public boolean isEmpty() {
+    return stack.isEmpty();
+  }
+
+  @Override
+  public ItemStack getItem(int index) {
+    return index == 0 ? stack : ItemStack.EMPTY;
+  }
+
+  @Override
   public int applyOreBoost(OreRateType rate, int amount) {
     return switch (rate) {
       case METAL -> amount * nuggetsPerMetal.compute(level) / 9;
@@ -116,7 +126,7 @@ public record MeltingModule(LevelingInt temperature, LevelingInt nuggetsPerMetal
     // first, update inventory
     IMeltingRecipe recipe = lastRecipe;
     if (recipe == null || !recipe.matches(this, world)) {
-      recipe = world.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MELTING.get(), this, world).orElse(null);
+      recipe = world.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MELTING.get(), this, world).map(net.minecraft.world.item.crafting.RecipeHolder::value).orElse(null);
       if (recipe == null) {
         MeltingModule.stack = ItemStack.EMPTY;
         return FluidStack.EMPTY;
@@ -160,7 +170,7 @@ public record MeltingModule(LevelingInt temperature, LevelingInt nuggetsPerMetal
       ItemStack stack = iterator.next();
       FluidStack output = meltItem(modifier, stack, world);
       // fluid must match tank fluid
-      if (!output.isEmpty() && (current.isEmpty() || current.isFluidEqual(output))) {
+      if (!output.isEmpty() && (current.isEmpty() || net.neoforged.neoforge.fluids.FluidStack.isSameFluidSameComponents(current, output))) {
         int amount;
 
         // if forced to melt, melt everything regardless, fluid handler will ensure we don't overflow
@@ -215,7 +225,7 @@ public record MeltingModule(LevelingInt temperature, LevelingInt nuggetsPerMetal
           damagePerOutput = 2;
         }
         FluidStack fluid = TANK_HELPER.getFluid(tool);
-        if (fluid.isEmpty() || fluid.isFluidEqual(output)) {
+        if (fluid.isEmpty() || net.neoforged.neoforge.fluids.FluidStack.isSameFluidSameComponents(fluid, output)) {
           // recipe amount determines how much we get per hit, up to twice the recipe damage
           int fluidAmount;
           if (damageDealt < damagePerOutput * 2) {

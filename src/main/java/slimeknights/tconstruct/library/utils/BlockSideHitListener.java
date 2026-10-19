@@ -3,15 +3,19 @@ package slimeknights.tconstruct.library.utils;
 import lombok.Getter;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.bus.api.EventPriority;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.tools.capability.TinkerDataCapability;
 import slimeknights.tconstruct.library.tools.capability.TinkerDataCapability.TinkerDataKey;
+
+import net.minecraft.world.item.ItemStack;
+import slimeknights.tconstruct.library.tools.helper.ToolHarvestLogic;
+import slimeknights.tconstruct.library.tools.item.IModifiable;
 
 /**
  * Logic to keep track of the side of the block that was last hit
@@ -19,6 +23,7 @@ import slimeknights.tconstruct.library.tools.capability.TinkerDataCapability.Tin
 public class BlockSideHitListener {
   private static final TinkerDataKey<Direction> HIT_FACE = TConstruct.createKey("hit_face");
   private static final TinkerDataKey<Integer> LAST_XP = TConstruct.createKey("last_xp");
+  private static final ThreadLocal<Boolean> IS_BREAKING = ThreadLocal.withInitial(() -> false);
   @Getter
   private static Direction clientSideHit = Direction.UP;
   private static boolean init = false;
@@ -30,8 +35,8 @@ public class BlockSideHitListener {
       return;
     }
     init = true;
-    MinecraftForge.EVENT_BUS.addListener(BlockSideHitListener::onLeftClickBlock);
-    MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, BlockSideHitListener::breakBlock);
+    NeoForge.EVENT_BUS.addListener(BlockSideHitListener::onLeftClickBlock);
+    NeoForge.EVENT_BUS.addListener(EventPriority.LOW, BlockSideHitListener::breakBlock);
   }
 
   /** Called when the player left-clicks a block to store the face */
@@ -52,11 +57,28 @@ public class BlockSideHitListener {
     }
   }
 
-  /** Called on block break to store the last break XP */
+  /** Called on block break to store the last break XP and execute Tinkers harvest/AOE */
   private static void breakBlock(BlockEvent.BreakEvent event) {
-    TinkerDataCapability.Holder data = TinkerDataCapability.getData(event.getPlayer());
+    Player player = event.getPlayer();
+    TinkerDataCapability.Holder data = TinkerDataCapability.getData(player);
     if (data != null) {
-      data.put(LAST_XP, event.getExpToDrop());
+      data.put(LAST_XP, 0);
+    }
+
+    if (IS_BREAKING.get() || event.isCanceled() || player.level().isClientSide()) {
+      return;
+    }
+
+    ItemStack stack = player.getMainHandItem();
+    if (stack.getItem() instanceof IModifiable) {
+      IS_BREAKING.set(true);
+      try {
+        if (ToolHarvestLogic.handleBlockBreak(stack, event.getPos(), player)) {
+          event.setCanceled(true);
+        }
+      } finally {
+        IS_BREAKING.set(false);
+      }
     }
   }
 

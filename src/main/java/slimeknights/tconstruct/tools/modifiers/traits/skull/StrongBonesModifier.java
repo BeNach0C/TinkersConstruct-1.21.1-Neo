@@ -6,10 +6,10 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.modifiers.fluid.FluidEffect;
@@ -31,7 +31,7 @@ public class StrongBonesModifier extends SingleLevelModifier {
 
   public StrongBonesModifier() {
     // TODO: move this out of constructor to generalized logic
-    MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, LivingEntityUseItemEvent.Finish.class, StrongBonesModifier::onItemFinishUse);
+    NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, LivingEntityUseItemEvent.Finish.class, StrongBonesModifier::onItemFinishUse);
   }
 
   @Override
@@ -48,8 +48,8 @@ public class StrongBonesModifier extends SingleLevelModifier {
     int level = ModifierUtil.getModifierLevel(helmet, TinkerModifiers.strongBones.getId());
     if (level > 0) {
       MobEffectInstance effect = new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, flat + eachLevel * level);
-      effect.getCurativeItems().clear();
-      effect.getCurativeItems().add(new ItemStack(helmet.getItem()));
+      // effect.getCurativeItems().clear();
+      // effect.getCurativeItems().add(new ItemStack(helmet.getItem()));
       // on simulate, don't apply the effect, just ask if we can apply
       didSomething = action.execute() ? living.addEffect(effect) : living.canBeAffected(effect);
       // quick exit on simulate: no more information needed
@@ -59,7 +59,7 @@ public class StrongBonesModifier extends SingleLevelModifier {
     }
     level = ArmorLevelModule.getLevel(living, CALCIFIABLE);
     if (level > 0) {
-      MobEffectInstance effect = new MobEffectInstance(TinkerModifiers.calcifiedEffect.get(), flat + eachLevel * level, 0);
+      MobEffectInstance effect = new MobEffectInstance(TinkerModifiers.calcifiedEffect, flat + eachLevel * level, 0);
       didSomething |= action.execute() ? living.addEffect(effect) : living.canBeAffected(effect);
     }
     return didSomething;

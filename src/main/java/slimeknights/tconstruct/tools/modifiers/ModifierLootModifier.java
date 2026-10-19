@@ -11,8 +11,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraftforge.common.loot.IGlobalLootModifier;
-import net.minecraftforge.common.loot.LootModifier;
+import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
+import net.neoforged.neoforge.common.loot.LootModifier;
 import slimeknights.mantle.loot.AbstractLootModifierBuilder.GenericLootModifierBuilder;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
@@ -30,7 +30,7 @@ import javax.annotation.Nonnull;
 
 /** Global loot modifier for modifiers */
 public class ModifierLootModifier extends LootModifier {
-  public static final Codec<ModifierLootModifier> CODEC = RecordCodecBuilder.create(inst -> codecStart(inst).apply(inst, ModifierLootModifier::new));
+  public static final com.mojang.serialization.MapCodec<ModifierLootModifier> CODEC = RecordCodecBuilder.mapCodec(inst -> codecStart(inst).apply(inst, ModifierLootModifier::new));
 
   protected ModifierLootModifier(LootItemCondition[] conditionsIn) {
     super(conditionsIn);
@@ -51,12 +51,12 @@ public class ModifierLootModifier extends LootModifier {
     if (stack == null) {
       // if this loot is due to a projectile fired by one of our tools, then use that projectile as the loot source
       // prevents weirdness when held tool switches after firing a projectile
-      if (context.getParamOrNull(LootContextParams.DIRECT_KILLER_ENTITY) instanceof Projectile projectile) {
+      if (context.getParamOrNull(LootContextParams.DIRECT_ATTACKING_ENTITY) instanceof Projectile projectile) {
         ModifierNBT modifiers = EntityModifierCapability.getOrEmpty(projectile);
 
         // no need to build the dummy tool if we lack modifiers
         if (!modifiers.isEmpty()) {
-          ModDataNBT persistentData = projectile.getCapability(PersistentDataCapability.CAPABILITY).orElseGet(ModDataNBT::new);
+          ModDataNBT persistentData = PersistentDataCapability.get(projectile);
           IToolStackView dummyTool = new DummyToolStack(Items.AIR, modifiers, persistentData);
           for (ModifierEntry entry : modifiers) {
             entry.getHook(ModifierHooks.PROCESS_LOOT).processLoot(dummyTool, entry, generatedLoot, context);
@@ -69,7 +69,7 @@ public class ModifierLootModifier extends LootModifier {
       // not a projectile causing it, fetch the killer entity directly from loot context
       // requires a melee damage source, the held tool is not responsible for kills it did not make such as explosions
       DamageSource damageSource = context.getParamOrNull(LootContextParams.DAMAGE_SOURCE);
-      if (damageSource != null && damageSource.is(TinkerTags.DamageTypes.LOOT_MODIFIER_WHITELIST) && context.getParamOrNull(LootContextParams.KILLER_ENTITY) instanceof LivingEntity living) {
+      if (damageSource != null && damageSource.is(TinkerTags.DamageTypes.LOOT_MODIFIER_WHITELIST) && context.getParamOrNull(LootContextParams.ATTACKING_ENTITY) instanceof LivingEntity living) {
         stack = living.getItemBySlot(ModifierLootingHandler.getLootingSlot(living));
       }
     }
@@ -86,7 +86,7 @@ public class ModifierLootModifier extends LootModifier {
   }
 
   @Override
-  public Codec<? extends IGlobalLootModifier> codec() {
+  public com.mojang.serialization.MapCodec<? extends IGlobalLootModifier> codec() {
     return CODEC;
   }
 }

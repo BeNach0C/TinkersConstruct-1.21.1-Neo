@@ -26,8 +26,11 @@ import java.util.Optional;
 /** Implements recipe transfer in the tinker station. */
 @Internal
 public class TinkerStationTransferInfo<T> implements IRecipeTransferInfo<TinkerStationContainerMenu,T>, IRecipeTransferHandler<TinkerStationContainerMenu,T> {
-  @Getter
   private final RecipeType<T> recipeType;
+  @Override
+  public RecipeType<T> getRecipeType() {
+    return recipeType;
+  }
   private final IRecipeTransferHandlerHelper handlerHelper;
   private final IRecipeTransferHandler<TinkerStationContainerMenu,T> handler;
 

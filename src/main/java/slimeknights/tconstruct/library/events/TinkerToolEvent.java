@@ -11,8 +11,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.bus.api.Event;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.InteractionSource;
 import slimeknights.tconstruct.library.tools.nbt.IToolStackView;
 import slimeknights.tconstruct.library.tools.nbt.ToolStack;
@@ -32,15 +32,23 @@ public abstract class TinkerToolEvent extends Event {
   /**
    * Event fired when a kama tries to harvest a crop. Set result to {@link Result#ALLOW} if you handled the harvest yourself. Set the result to {@link Result#DENY} if the block cannot be harvested.
    */
-  @HasResult
+  
   @Getter
   public static class ToolHarvestEvent extends TinkerToolEvent {
+    public void setResult(net.minecraft.world.InteractionResult result) { this.result = result; }
+    private net.minecraft.world.InteractionResult result = null;
+    public net.minecraft.world.InteractionResult getResult() { return this.result; }
     /** Item context, note this is the original context, so some information (such as position) may not be accurate */
     private final UseOnContext context;
     private final ServerLevel world;
     private final BlockState state;
     private final BlockPos pos;
     private final InteractionSource source;
+    public UseOnContext getContext() { return this.context; }
+    public ServerLevel getWorld() { return this.world; }
+    public BlockState getState() { return this.state; }
+    public BlockPos getPos() { return this.pos; }
+    public InteractionSource getSource() { return this.source; }
 
     public ToolHarvestEvent(IToolStackView tool, UseOnContext context, ServerLevel world, BlockState state, BlockPos pos, InteractionSource source) {
       super(getItem(context, source), tool);
@@ -75,8 +83,8 @@ public abstract class TinkerToolEvent extends Event {
     }
 
     /** Fires this event and posts the result */
-    public Result fire() {
-      MinecraftForge.EVENT_BUS.post(this);
+    public net.minecraft.world.InteractionResult fire() {
+      net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(this);
       return this.getResult();
     }
   }
@@ -84,9 +92,12 @@ public abstract class TinkerToolEvent extends Event {
   /**
    * Event fired when a kama or scythe tries to shear an entity
    */
-  @HasResult
+  
   @Getter
   public static class ToolShearEvent extends TinkerToolEvent {
+    public void setResult(net.minecraft.world.InteractionResult result) { this.result = result; }
+    private net.minecraft.world.InteractionResult result = null;
+    public net.minecraft.world.InteractionResult getResult() { return this.result; }
     private final Level world;
     private final Player player;
     private final Entity target;
@@ -100,8 +111,8 @@ public abstract class TinkerToolEvent extends Event {
     }
 
     /** Fires this event and posts the result */
-    public Result fire() {
-      MinecraftForge.EVENT_BUS.post(this);
+    public net.minecraft.world.InteractionResult fire() {
+      net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(this);
       return this.getResult();
     }
   }

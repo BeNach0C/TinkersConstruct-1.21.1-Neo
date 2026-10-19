@@ -21,7 +21,7 @@ public interface MaterialPredicate extends IJsonPredicate<MaterialVariantId> {
   /** Instance that always returns false */
   MaterialPredicate NONE = simple(material -> false);
   /** Loader for material predicates */
-  TagPredicateRegistry<IMaterial,MaterialVariantId> LOADER = new TagPredicateRegistry<>("Material Predicate", ANY, NONE, TinkerLoadables.MATERIAL_TAGS, (tag, source) -> MaterialRegistry.getInstance().isInTag(source.getId(), tag));
+  TagPredicateRegistry<IMaterial,MaterialVariantId> LOADER = new TagPredicateRegistry<>("Material Predicate", ANY, NONE, TinkerLoadables.MATERIAL_TAGS, (tag, source) -> MaterialRegistry.getInstance().isInTag(source.getMaterialId(), tag));
 
   /** Gets an inverted condition */
   @Override
@@ -62,11 +62,11 @@ public interface MaterialPredicate extends IJsonPredicate<MaterialVariantId> {
   static MaterialPredicate variant(MaterialVariantId material) {
     String variant = material.getVariant();
     if (variant.isEmpty()) {
-      return new MaterialIdPredicate(material.getId());
+      return new MaterialIdPredicate(material.getMaterialId());
     }
     // default variant means exact match on ID
     if (MaterialVariantId.DEFAULT_VARIANT.equals(variant)) {
-      return new MaterialVariantPredicate(material.getId());
+      return new MaterialVariantPredicate(material.getMaterialId());
     }
     // anything else is exact match on material
     return new MaterialVariantPredicate(material);

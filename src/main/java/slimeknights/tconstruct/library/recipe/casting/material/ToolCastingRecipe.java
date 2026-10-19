@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.primitive.BooleanLoadable;
 import slimeknights.mantle.data.loadable.primitive.EnumLoadable;
@@ -17,6 +17,7 @@ import slimeknights.mantle.data.predicate.IJsonPredicate;
 import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.json.TinkerLoadables;
 import slimeknights.tconstruct.library.json.predicate.material.MaterialPredicate;
@@ -45,7 +46,7 @@ import java.util.stream.IntStream;
 /** Recipe for casting a tool using molten metal on either a tool part or a non-tool part (2 materials or 1) */
 public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRecipe<IDisplayableCastingRecipe> {
   public static final RecordLoadable<ToolCastingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(),
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(),
     ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP, CAST_FIELD, ITEM_COST_FIELD,
     new EnumLoadable<>(CastPurpose.class).defaultField("cast_purpose", CastPurpose.MAYBE_MATERIAL, true, r -> r.castPurpose),
     TinkerLoadables.MODIFIABLE_ITEM.requiredField("result", r -> r.result),
@@ -115,7 +116,7 @@ public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRe
   }
 
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return new ItemStack(result);
   }
 
@@ -154,7 +155,7 @@ public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRe
   }
 
   @Override
-  public ItemStack assemble(ICastingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ICastingContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     // if the cast is the result, we are part swapping, replace the last material
     ItemStack cast = inv.getStack();
     if (fluidSwapping && cast.getItem() == result) {
@@ -199,7 +200,7 @@ public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRe
   }
 
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       List<MaterialStatsId> requirements = ToolMaterialHook.stats(result.getToolDefinition());
       if (requirements.size() < castPurpose.minMaterials) {
@@ -272,7 +273,6 @@ public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRe
   }
 
   /** Enum describing the function of the cast in this recipe */
-  @RequiredArgsConstructor
   public enum CastPurpose {
     /**
      * Based on the material definition stat count, cast is either the first material or has no material purpose.
@@ -295,6 +295,11 @@ public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRe
     private final int fluidIndex;
     /** Minimum number of materials needed for this cast */
     private final int minMaterials;
+
+    CastPurpose(int fluidIndex, int minMaterials) {
+      this.fluidIndex = fluidIndex;
+      this.minMaterials = minMaterials;
+    }
   }
 
   /**
@@ -363,7 +368,7 @@ public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRe
     public List<ItemStack> getCastItems(ItemStack focus, boolean focusOutput) {
       if (focusOutput && !focus.isEmpty()) {
         MaterialVariantId castMaterial = MaterialIdNBT.getMaterial(focus, castIndex);
-        if (castItem.canUseMaterial(castMaterial.getId())) {
+        if (castItem.canUseMaterial(castMaterial.getMaterialId())) {
           return List.of(castItem.withMaterialForDisplay(castMaterial));
         }
       }
@@ -374,7 +379,7 @@ public class ToolCastingRecipe extends PartSwapCastingRecipe implements IMultiRe
     public List<FluidStack> getFluids(ItemStack focus, boolean focusOutput) {
       if (focusOutput && !focus.isEmpty()) {
         MaterialVariantId material = MaterialIdNBT.getMaterial(focus, fluidIndex);
-        if (materials.matches(material) && castItem.canUseMaterial(material.getId())) {
+        if (materials.matches(material) && castItem.canUseMaterial(material.getMaterialId())) {
           List<FluidStack> fluids = MaterialCastingLookup.getCastingFluids(material).stream()
             .flatMap(recipe -> recipe.getFluids().stream().map(ToolCastingRecipe.this::resizeFluid))
             .toList();

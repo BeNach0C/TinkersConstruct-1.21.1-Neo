@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 /** A single slot in a slot layout */
-@RequiredArgsConstructor
 public class LayoutSlot {
   public static final LayoutSlot EMPTY = new LayoutSlot(null, "", -1, -1, null);
 
@@ -30,6 +29,31 @@ public class LayoutSlot {
   /** Filter to only allow certain items in the slot under this layout */
   @Nullable @Getter(AccessLevel.PROTECTED) @VisibleForTesting
   private final Ingredient filter;
+  public LayoutSlot(@Nullable Pattern icon, @Nullable String translation_key, int x, int y, @Nullable Ingredient filter) {
+    this.icon = icon;
+    this.translation_key = translation_key;
+    this.x = x;
+    this.y = y;
+    this.filter = filter;
+  }
+
+  @Nullable
+  public Pattern getIcon() {
+    return icon;
+  }
+
+  public int getX() {
+    return x;
+  }
+
+  public int getY() {
+    return y;
+  }
+
+  @Nullable
+  public Ingredient getFilter() {
+    return filter;
+  }
 
   /** If true, this is an empty slot */
   public boolean isEmpty() {
@@ -64,7 +88,7 @@ public class LayoutSlot {
     int y = buffer.readVarInt();
     Ingredient ingredient = null;
     if (buffer.readBoolean()) {
-      ingredient = Ingredient.fromNetwork(buffer);
+      ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode((net.minecraft.network.RegistryFriendlyByteBuf) buffer);
     }
     return new LayoutSlot(pattern, name, x, y, ingredient);
   }
@@ -73,7 +97,7 @@ public class LayoutSlot {
   public void write(FriendlyByteBuf buffer) {
     if (icon != null) {
       buffer.writeBoolean(true);
-      buffer.writeResourceLocation(icon);
+      buffer.writeResourceLocation(icon.getId());
     } else {
       buffer.writeBoolean(false);
     }
@@ -82,7 +106,7 @@ public class LayoutSlot {
     buffer.writeVarInt(y);
     if (filter != null) {
       buffer.writeBoolean(true);
-      filter.toNetwork(buffer);
+      Ingredient.CONTENTS_STREAM_CODEC.encode((net.minecraft.network.RegistryFriendlyByteBuf) buffer, filter);
     } else {
       buffer.writeBoolean(false);
     }

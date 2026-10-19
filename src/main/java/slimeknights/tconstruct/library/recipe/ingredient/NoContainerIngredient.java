@@ -9,9 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.IIngredientSerializer;
-import net.minecraftforge.common.crafting.VanillaIngredientSerializer;
+import net.neoforged.neoforge.common.crafting.CraftingHelper;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.utils.JsonUtils;
 
@@ -35,50 +33,28 @@ public class NoContainerIngredient extends NestedIngredient {
     return false;
   }
 
-  @Override
-  public JsonElement toJson() {
-    JsonElement nestedElement = nested.toJson();
-    // if we are a vanilla ingredient, and not an array ingredient, serialize into the ingredient directly
-    if (nested.isVanilla() && nestedElement.isJsonObject()) {
-      JsonObject nestedObject = nestedElement.getAsJsonObject();
-      nestedObject.addProperty("type", ID.toString());
-      return nestedObject;
-    }
-    // if we have an array or a type, then serialize nested
-    JsonObject json = JsonUtils.withType(ID);
-    json.add("match", nestedElement);
-    return json;
-  }
 
-  @Override
-  public IIngredientSerializer<? extends Ingredient> getSerializer() {
-    return Serializer.INSTANCE;
-  }
 
-  public enum Serializer implements IIngredientSerializer<NoContainerIngredient> {
-    INSTANCE;
-
-    @Override
-    public NoContainerIngredient parse(JsonObject json) {
-      // if we have match, parse as a nested object. Without match, just parse the object as vanilla
+  public static final net.neoforged.neoforge.common.crafting.IngredientType<NoContainerIngredient> TYPE = slimeknights.mantle.recipe.helper.LoadableIngredientSerializer.of(
+    json -> {
       Ingredient ingredient;
       if (json.has("match")) {
-        ingredient = CraftingHelper.getIngredient(json.get("match"), false);
+        ingredient = slimeknights.mantle.data.loadable.common.IngredientLoadable.DISALLOW_EMPTY.convert(json.get("match"), "match");
       } else {
-        ingredient = VanillaIngredientSerializer.INSTANCE.parse(json);
+        JsonObject copy = json.deepCopy();
+        copy.remove("type");
+        ingredient = slimeknights.mantle.data.loadable.common.IngredientLoadable.DISALLOW_EMPTY.convert(copy, "match");
       }
       return new NoContainerIngredient(ingredient);
-    }
+    },
+    (ing, json) -> json.add("match", slimeknights.mantle.data.loadable.common.IngredientLoadable.DISALLOW_EMPTY.serialize(ing.nested)),
+    buffer -> new NoContainerIngredient(Ingredient.CONTENTS_STREAM_CODEC.decode(buffer)),
+    (buffer, ing) -> Ingredient.CONTENTS_STREAM_CODEC.encode(buffer, ing.nested)
+  );
 
-    @Override
-    public NoContainerIngredient parse(FriendlyByteBuf buffer) {
-      return new NoContainerIngredient(Ingredient.fromNetwork(buffer));
-    }
-
-    @Override
-    public void write(FriendlyByteBuf buffer, NoContainerIngredient ingredient) {
-      ingredient.nested.toNetwork(buffer);
-    }
+  @Override
+  public net.neoforged.neoforge.common.crafting.IngredientType<?> getType() {
+    return TYPE;
   }
 
 

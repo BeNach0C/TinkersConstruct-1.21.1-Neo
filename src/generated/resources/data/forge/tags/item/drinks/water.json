@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:drinks/water",
+                       "required":  false
+                   }
+               ]
+}

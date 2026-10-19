@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import java.util.Locale;
 
 /** Variants of slimy foliage, for grass and leaves notably. */
-@Getter
 public enum FoliageType implements StringRepresentable {
   EARTH(0x8CD782, Tiers.STONE,   MapColor.GRASS, false),
   SKY  (0x00F4DA, Tiers.GOLD,    MapColor.DIAMOND, false),
@@ -37,7 +36,6 @@ public enum FoliageType implements StringRepresentable {
   private final MapColor mapColor;
   /** If true, this block type has fungus foliage instead of grass */
   private final boolean nether;
-  @Getter
   private final String serializedName = this.name().toLowerCase(Locale.ROOT);
 
   /* Tags */
@@ -51,6 +49,30 @@ public enum FoliageType implements StringRepresentable {
     this.nether = nether;
     // tags
     grassBlockTag = BlockTags.create(TConstruct.getResource((nether ? "slimy_nylium/" : "slimy_grass/") + this.getSerializedName()));
+  }
+
+  public int getColor() {
+    return color;
+  }
+
+  public Tiers getHarvestTier() {
+    return harvestTier;
+  }
+
+  public MapColor getMapColor() {
+    return mapColor;
+  }
+
+  public boolean isNether() {
+    return nether;
+  }
+
+  public String getSerializedName() {
+    return serializedName;
+  }
+
+  public TagKey<Block> getGrassBlockTag() {
+    return grassBlockTag;
   }
 
   private SlimeType slimeType;

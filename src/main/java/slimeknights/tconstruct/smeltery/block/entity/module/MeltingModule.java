@@ -6,7 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import slimeknights.mantle.block.entity.MantleBlockEntity;
 import slimeknights.tconstruct.common.network.InventorySlotSyncPacket;
 import slimeknights.tconstruct.common.network.TinkerNetwork;
@@ -21,7 +21,6 @@ import java.util.function.Predicate;
 /**
  * This class represents a single item slot that can melt into a liquid
  */
-@RequiredArgsConstructor
 public class MeltingModule implements IMeltingContainer, ContainerData {
   public static final int NO_SPACE = -1;
 
@@ -41,6 +40,13 @@ public class MeltingModule implements IMeltingContainer, ContainerData {
   /** Slot index for updates */
   private final int slotIndex;
 
+  public MeltingModule(MantleBlockEntity parent, Predicate<IMeltingRecipe> outputFunction, IOreRate oreRate, int slotIndex) {
+    this.parent = parent;
+    this.outputFunction = outputFunction;
+    this.oreRate = oreRate;
+    this.slotIndex = slotIndex;
+  }
+
   /** Current time of the item in the slot */
   @Getter
   private int currentTime = 0;
@@ -51,12 +57,21 @@ public class MeltingModule implements IMeltingContainer, ContainerData {
   @Getter
   private int requiredTemp = 0;
 
+  public int getCurrentTime() { return currentTime; }
+  public int getRequiredTime() { return requiredTime; }
+  public int getRequiredTemp() { return requiredTemp; }
+
   /** Last recipe this slot contained */
   private IMeltingRecipe lastRecipe;
 
   /** Current item in this slot */
   @Getter
   private ItemStack stack = ItemStack.EMPTY;
+
+  @Override
+  public ItemStack getStack() {
+    return stack;
+  }
 
   @Override
   public IOreRate getOreRate() {
@@ -86,7 +101,7 @@ public class MeltingModule implements IMeltingContainer, ContainerData {
     // clear progress if setting to empty or the items do not match
     if (newStack.isEmpty()) {
       resetRecipe();
-    } else if (this.stack.isEmpty() || !ItemHandlerHelper.canItemStacksStack(this.stack, newStack)) {
+    } else if (this.stack.isEmpty() || !ItemStack.isSameItemSameComponents(this.stack, newStack)) {
       currentTime = 0;
     }
 
@@ -176,9 +191,9 @@ public class MeltingModule implements IMeltingContainer, ContainerData {
       return last;
     }
     // if that fails, try to find a new recipe
-    Optional<IMeltingRecipe> newRecipe = world.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MELTING.get(), this, world);
+    Optional<net.minecraft.world.item.crafting.RecipeHolder<IMeltingRecipe>> newRecipe = world.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MELTING.get(), this, world);
     if (newRecipe.isPresent()) {
-      lastRecipe = newRecipe.get();
+      lastRecipe = newRecipe.get().value();
       return lastRecipe;
     }
     return null;
@@ -208,10 +223,10 @@ public class MeltingModule implements IMeltingContainer, ContainerData {
    * Writes this module to NBT
    * @return  Module in NBT
    */
-  public CompoundTag writeToTag() {
+  public CompoundTag writeToTag(net.minecraft.core.HolderLookup.Provider provider) {
     CompoundTag nbt = new CompoundTag();
     if (!stack.isEmpty()) {
-      stack.save(nbt);
+      nbt.put("item", stack.save(provider));
       nbt.putInt(TAG_CURRENT_TIME, currentTime);
       nbt.putInt(TAG_REQUIRED_TIME, requiredTime);
       nbt.putInt(TAG_REQUIRED_TEMP, requiredTemp);
@@ -223,8 +238,12 @@ public class MeltingModule implements IMeltingContainer, ContainerData {
    * Reads this module from NBT
    * @param nbt  NBT
    */
-  public void readFromTag(CompoundTag nbt) {
-    stack = ItemStack.of(nbt);
+  public void readFromTag(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
+    if (nbt.contains("item", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+      stack = ItemStack.parseOptional(provider, nbt.getCompound("item"));
+    } else {
+      stack = ItemStack.parseOptional(provider, nbt);
+    }
     if (!stack.isEmpty()) {
       currentTime = nbt.getInt(TAG_CURRENT_TIME);
       requiredTime = nbt.getInt(TAG_REQUIRED_TIME);

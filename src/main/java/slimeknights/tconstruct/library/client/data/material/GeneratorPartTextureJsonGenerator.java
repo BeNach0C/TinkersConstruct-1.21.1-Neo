@@ -29,7 +29,7 @@ public class GeneratorPartTextureJsonGenerator extends GenericDataProvider {
   /** GSON adapter for material info deserializing */
   public static final Gson GSON = (new GsonBuilder())
     .registerTypeAdapter(ResourceLocation.class, new ResourceLocation.Serializer())
-    .registerTypeAdapter(MaterialStatsId.class, new ResourceLocationSerializer<>(MaterialStatsId::new, TConstruct.MOD_ID))
+    .registerTypeAdapter(MaterialStatsId.class, MaterialStatsId.SERIALIZER)
     .setPrettyPrinting()
     .disableHtmlEscaping()
     .create();
@@ -58,7 +58,7 @@ public class GeneratorPartTextureJsonGenerator extends GenericDataProvider {
     if (!overrides.overrides.isEmpty()) {
       json.add("overrides", overrides.serialize());
     }
-    return saveJson(cache, new ResourceLocation(modId, "generator_part_textures"), json);
+    return saveJson(cache, ResourceLocation.fromNamespaceAndPath(modId, "generator_part_textures"), json);
   }
 
   @Override

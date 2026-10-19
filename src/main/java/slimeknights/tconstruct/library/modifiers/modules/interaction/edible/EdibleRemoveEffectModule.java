@@ -46,7 +46,7 @@ public record EdibleRemoveEffectModule(MobEffect effect, IJsonPredicate<LivingEn
   @Override
   public void onToolEaten(IToolStackView tool, ModifierEntry modifier, Player player, EquipmentSlot eatenSlot, int hunger, float saturation, List<ItemStack> representativeItems) {
     if (condition.matches(tool, modifier) && holder.matches(player)) {
-      player.removeEffect(effect);
+      player.removeEffect(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect));
     }
   }
 }

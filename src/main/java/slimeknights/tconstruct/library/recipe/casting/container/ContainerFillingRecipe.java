@@ -11,11 +11,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.primitive.IntLoadable;
@@ -23,6 +24,7 @@ import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.recipe.casting.DisplayCastingRecipe;
 import slimeknights.tconstruct.library.recipe.casting.ICastingContainer;
@@ -37,7 +39,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContainerFillingRecipe implements ICastingRecipe, IMultiRecipe<IDisplayableCastingRecipe> {
   public static final RecordLoadable<ContainerFillingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
     IntLoadable.FROM_ONE.requiredField("fluid_amount", r -> r.fluidAmount),
     Loadables.ITEM.requiredField("container", r -> r.container),
     ContainerFillingRecipe::new);
@@ -59,9 +61,8 @@ public class ContainerFillingRecipe implements ICastingRecipe, IMultiRecipe<IDis
   @Override
   public int getFluidAmount(ICastingContainer inv) {
     Fluid fluid = inv.getFluid();
-    return inv.getStack().getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM)
-              .map(handler -> handler.fill(new FluidStack(fluid, this.fluidAmount), FluidAction.SIMULATE))
-              .orElse(0);
+    IFluidHandlerItem handler = inv.getStack().getCapability(Capabilities.FluidHandler.ITEM);
+    return handler != null ? handler.fill(new FluidStack(fluid, this.fluidAmount), FluidAction.SIMULATE) : 0;
   }
 
   @Override
@@ -83,26 +84,31 @@ public class ContainerFillingRecipe implements ICastingRecipe, IMultiRecipe<IDis
   public boolean matches(ICastingContainer inv, Level worldIn) {
     ItemStack stack = inv.getStack();
     Fluid fluid = inv.getFluid();
-    return stack.getItem() == this.container.asItem()
-           && stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM)
-                   .filter(handler -> handler.fill(new FluidStack(fluid, this.fluidAmount), FluidAction.SIMULATE) > 0)
-                   .isPresent();
+    if (stack.getItem() != this.container.asItem()) return false;
+    IFluidHandlerItem handler = stack.getCapability(Capabilities.FluidHandler.ITEM);
+    return handler != null && handler.fill(new FluidStack(fluid, this.fluidAmount), FluidAction.SIMULATE) > 0;
   }
 
   /** @deprecated use {@link ICastingRecipe#assemble(Container, RegistryAccess)} */
   @Override
   @Deprecated
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return new ItemStack(this.container);
   }
 
   @Override
-  public ItemStack assemble(ICastingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ICastingContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ItemStack stack = inv.getStack().copy();
-    return stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).map(handler -> {
-      handler.fill(new FluidStack(inv.getFluid(), this.fluidAmount, inv.getFluidTag()), FluidAction.EXECUTE);
+    IFluidHandlerItem handler = stack.getCapability(Capabilities.FluidHandler.ITEM);
+    if (handler != null) {
+      FluidStack fluidStack = new FluidStack(inv.getFluid(), this.fluidAmount);
+      if (inv.getFluidTag() != null) {
+        fluidStack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(inv.getFluidTag()));
+      }
+      handler.fill(fluidStack, FluidAction.EXECUTE);
       return handler.getContainer();
-    }).orElse(stack);
+    }
+    return stack;
   }
 
   /* Display */
@@ -110,10 +116,10 @@ public class ContainerFillingRecipe implements ICastingRecipe, IMultiRecipe<IDis
   private List<IDisplayableCastingRecipe> displayRecipes = null;
 
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
       // filter fluid registry to just fluids we care about
-      List<FluidStack> fluids = ForgeRegistries.FLUIDS.getValues().stream()
+      List<FluidStack> fluids = BuiltInRegistries.FLUID.stream()
         .filter(fluid -> {
           // skip flowing fluids (redundant to source), fluids with no bucket (probably internal), and fluids hidden from recipe viewers (they be hidden)
           if (fluid.isSource(fluid.defaultFluidState()) && !fluid.is(TinkerTags.Fluids.HIDE_IN_CREATIVE_TANKS)) {

@@ -4,7 +4,7 @@ import lombok.Getter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.LoadableField;
 import slimeknights.mantle.data.loadable.primitive.IntLoadable;
 import slimeknights.mantle.data.predicate.IJsonPredicate;
@@ -66,7 +66,7 @@ public abstract class AbstractMaterialCastingRecipe extends AbstractCastingRecip
     if (itemCost == 1) {
       return fluid;
     }
-    return new FluidStack(fluid, itemCost * fluid.getAmount());
+    return fluid.copyWithAmount(itemCost * fluid.getAmount());
   }
 
   /** Resizes the list of the fluids with respect to the item cost */

@@ -2,14 +2,14 @@ package slimeknights.tconstruct.plugin.jei.casting;
 
 import lombok.Getter;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.recipe.advanced.ISimpleRecipeManagerPlugin;
 import mezz.jei.api.runtime.IIngredientManager;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.tconstruct.library.recipe.casting.IDisplayableCastingRecipe;
 import slimeknights.tconstruct.library.recipe.display.FilteredRecipe;
 import slimeknights.tconstruct.plugin.jei.util.manager.FluidRecipeCache;
@@ -27,7 +27,7 @@ public class CastingRecipeManager implements ISimpleRecipeManagerPlugin<IDisplay
   public CastingRecipeManager(IIngredientManager ingredientManager, List<IDisplayableCastingRecipe> recipes) {
     this.allRecipes = FilteredRecipe.alwaysVisible(recipes);
     IIngredientHelper<ItemStack> itemHelper = ingredientManager.getIngredientHelper(VanillaTypes.ITEM_STACK);
-    IIngredientHelper<FluidStack> fluidHelper = ingredientManager.getIngredientHelper(ForgeTypes.FLUID_STACK);
+    IIngredientHelper<FluidStack> fluidHelper = ingredientManager.getIngredientHelper(NeoForgeTypes.FLUID_STACK);
     inputItemCache = new ItemRecipeCache<>(itemHelper, recipes, false);
     outputItemCache = new ItemRecipeCache<>(itemHelper, recipes, true);
     fluidCache = new FluidRecipeCache<>(fluidHelper, recipes, false);
@@ -36,7 +36,7 @@ public class CastingRecipeManager implements ISimpleRecipeManagerPlugin<IDisplay
   @Override
   public boolean isHandledInput(ITypedIngredient<?> input) {
     IIngredientType<?> type = input.getType();
-    return type == VanillaTypes.ITEM_STACK || type == ForgeTypes.FLUID_STACK;
+    return type == VanillaTypes.ITEM_STACK || type == NeoForgeTypes.FLUID_STACK;
   }
 
   @Override
@@ -50,7 +50,7 @@ public class CastingRecipeManager implements ISimpleRecipeManagerPlugin<IDisplay
     if (item != null) {
       return inputItemCache.filterRecipes(item.getIngredient());
     }
-    ITypedIngredient<FluidStack> fluid = input.cast(ForgeTypes.FLUID_STACK);
+    ITypedIngredient<FluidStack> fluid = input.cast(NeoForgeTypes.FLUID_STACK);
     if (fluid != null) {
       return fluidCache.filterRecipes(fluid.getIngredient());
     }

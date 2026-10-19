@@ -21,7 +21,7 @@ public class ShellMaterialContent extends SingleMaterialStatContent {
 
   @Override
   protected MaterialStatsId getStatType() {
-    return RepairStats.SHELL.getId();
+    return RepairStats.SHELL.getStatId();
   }
 
   @Override

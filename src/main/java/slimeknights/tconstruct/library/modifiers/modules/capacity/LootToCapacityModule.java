@@ -104,11 +104,14 @@ public record LootToCapacityModule(Ingredient consume, int amount, LevelingValue
   }
 
   @Accessors(fluent = true)
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder extends CapacitySourceModule.Builder<Builder> implements LevelingValue.Builder<LootToCapacityModule>  {
     private final Ingredient consume;
     @Setter
     private int amount;
+
+    public Builder(Ingredient consume) {
+      this.consume = consume;
+    }
 
     @Override
     public LootToCapacityModule amount(float flat, float eachLevel) {

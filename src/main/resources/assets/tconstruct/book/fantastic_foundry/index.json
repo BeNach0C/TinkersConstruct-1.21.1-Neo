@@ -81,9 +81,11 @@
       }
     },
     "condition": {
-      "type": "tconstruct:tag_not_empty",
-      "registry": "minecraft:item",
-      "tag": "tconstruct:modifiable/book_armor/fantastic_foundry"
+      "type": "neoforge:not",
+      "value": {
+        "type": "neoforge:tag_empty",
+        "tag": "tconstruct:modifiable/book_armor/fantastic_foundry"
+      }
     },
     "data": "no-load",
     "extraData": {

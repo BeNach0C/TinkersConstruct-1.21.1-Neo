@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.record.SingletonLoader;
 import slimeknights.tconstruct.library.modifiers.Modifier;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
@@ -39,6 +39,7 @@ public enum OverburnModule implements ModifierModule, InventoryTickModifierHook,
 
   @Getter
   private final SingletonLoader<OverburnModule> loader = new SingletonLoader<>(this);
+  @Override public SingletonLoader<OverburnModule> getLoader() { return this.loader; }
 
   @Override
   public List<ModuleHook<?>> getDefaultHooks() {
@@ -48,7 +49,7 @@ public enum OverburnModule implements ModifierModule, InventoryTickModifierHook,
   @Nullable
   @Override
   public Component onRemoved(IToolStackView tool, Modifier modifier) {
-    tool.getPersistentData().remove(modifier.getId());
+    tool.getPersistentData().remove(net.minecraft.resources.ResourceLocation.parse(modifier.getId().toString()));
     return null;
   }
 
@@ -95,7 +96,7 @@ public enum OverburnModule implements ModifierModule, InventoryTickModifierHook,
       // must have overslime and space to fill
       if (OverslimeModule.INSTANCE.getAmount(tool) < OverslimeModule.getCapacity(tool)) {
         // find current fuel info
-        ResourceLocation key = modifier.getId();
+        ResourceLocation key = net.minecraft.resources.ResourceLocation.parse(modifier.getId().toString());
         FuelInfo info = FuelInfo.read(tool, key);
 
         // if we have no fuel, try and find some

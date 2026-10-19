@@ -28,8 +28,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
 
-/** Module for repairing a tool using a non-tool part material */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class MaterialRepairModule implements MaterialRepairToolHook, ToolModule, IAmLoadable.Record {
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<MaterialRepairModule>defaultHooks(ToolHooks.MATERIAL_REPAIR);
   private static final LoadableField<MaterialId,MaterialRepairModule> MATERIAL_FIELD = MaterialId.PARSER.requiredField("material", m -> m.material);
@@ -40,8 +38,16 @@ public class MaterialRepairModule implements MaterialRepairToolHook, ToolModule,
   /** Material used for repairing */
   protected final MaterialId material;
   /** Amount to repair */
-  @Getter(AccessLevel.PROTECTED)
   protected int repairAmount;
+
+  public MaterialRepairModule(MaterialId material, int repairAmount) {
+    this.material = material;
+    this.repairAmount = repairAmount;
+  }
+
+  protected int getRepairAmount() {
+    return this.repairAmount;
+  }
 
   /** Creates a new module using a constant durability */
   public static MaterialRepairModule of(MaterialId material, int repairAmount) {
@@ -142,11 +148,13 @@ public class MaterialRepairModule implements MaterialRepairToolHook, ToolModule,
   }
 
 
-  /** Builder logic */
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class ArmorBuilder implements ArmorModuleBuilder<MaterialRepairModule> {
     private final MaterialId material;
     private final int[] durability = new int[4];
+
+    public ArmorBuilder(MaterialId material) {
+      this.material = material;
+    }
 
     /** Sets the durability for the piece based on the given factor */
     public ArmorBuilder durabilityFactor(float maxDamageFactor) {

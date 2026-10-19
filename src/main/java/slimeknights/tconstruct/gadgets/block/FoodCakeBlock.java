@@ -41,17 +41,17 @@ public class FoodCakeBlock extends CakeBlock {
   }
 
   @Override
-  public void appendHoverText(ItemStack pStack, @Nullable BlockGetter pLevel, List<Component> tooltip, TooltipFlag pFlag) {
+  public void appendHoverText(ItemStack pStack, net.minecraft.world.item.Item.TooltipContext context, List<Component> tooltip, TooltipFlag pFlag) {
     ContainerFoodItem.addEffectTooltip(food, tooltip);
   }
 
   @Override
-  public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+  protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
     InteractionResult result = this.eatSlice(world, pos, state, player);
     if (result.consumesAction()) {
       return result;
     }
-    if (world.isClientSide() && player.getItemInHand(handIn).isEmpty()) {
+    if (world.isClientSide() && player.getItemInHand(InteractionHand.MAIN_HAND).isEmpty()) {
       return InteractionResult.CONSUME;
     }
     return InteractionResult.PASS;
@@ -59,9 +59,10 @@ public class FoodCakeBlock extends CakeBlock {
 
   /** Checks if the given player has all potion effects from the food */
   private boolean hasAllEffects(Player player) {
-    for (Pair<MobEffectInstance,Float> pair : food.getEffects()) {
-      if (pair.getFirst() != null) {
-        MobEffectInstance current = player.getEffect(pair.getFirst().getEffect());
+    for (FoodProperties.PossibleEffect possibleEffect : food.effects()) {
+      MobEffectInstance inst = possibleEffect.effect();
+      if (inst != null) {
+        MobEffectInstance current = player.getEffect(inst.getEffect());
         if (current == null || current.getDuration() < 100) {
           return false;
         }
@@ -81,17 +82,19 @@ public class FoodCakeBlock extends CakeBlock {
     }
     player.awardStat(Stats.EAT_CAKE_SLICE);
     // apply food stats
-    player.getFoodData().eat(food.getNutrition(), food.getSaturationModifier());
-    for (Pair<MobEffectInstance,Float> pair : food.getEffects()) {
-      if (!world.isClientSide() && pair.getFirst() != null && world.getRandom().nextFloat() < pair.getSecond()) {
-        MobEffectInstance effect = new MobEffectInstance(pair.getFirst());
+    player.getFoodData().eat(food.nutrition(), food.saturation());
+    for (FoodProperties.PossibleEffect possibleEffect : food.effects()) {
+      MobEffectInstance first = possibleEffect.effect();
+      if (!world.isClientSide() && first != null && world.getRandom().nextFloat() < possibleEffect.probability()) {
+        int duration = first.getDuration();
         // if adding, increase duration by current duration, provided its an exact level match
         if (combination == EffectCombination.ADD) {
-          MobEffectInstance current = player.getEffect(effect.getEffect());
-          if (current != null && current.getAmplifier() == effect.getAmplifier()) {
-            effect.duration += current.getDuration();
+          MobEffectInstance current = player.getEffect(first.getEffect());
+          if (current != null && current.getAmplifier() == first.getAmplifier()) {
+            duration += current.getDuration();
           }
         }
+        MobEffectInstance effect = new MobEffectInstance(first.getEffect(), duration, first.getAmplifier(), first.isAmbient(), first.isVisible(), first.showIcon());
         player.addEffect(effect);
       }
     }

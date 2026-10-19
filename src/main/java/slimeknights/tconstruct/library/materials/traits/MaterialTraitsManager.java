@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.library.materials.traits;
+import slimeknights.tconstruct.TConstruct;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -77,7 +78,7 @@ public class MaterialTraitsManager extends MergingJsonDataLoader<MaterialTraits.
    */
   public <T extends IMaterialStats> void registerStatTypeFallback(MaterialStatsId statType, MaterialStatsId fallback) {
     if (statTypeFallbacks.containsKey(statType)) {
-      throw TinkerAPIMaterialException.materialStatsTypeRegisteredTwice(statType);
+      throw TinkerAPIMaterialException.materialStatsTypeRegisteredTwice(statType.getId());
     }
     statTypeFallbacks.put(statType, fallback);
   }
@@ -146,8 +147,8 @@ public class MaterialTraitsManager extends MergingJsonDataLoader<MaterialTraits.
     map.entrySet().stream().sorted(Entry.comparingByKey()).forEach(entry -> {
       MaterialTraits traits = entry.getValue().build(statTypeFallbacks);
       builder.put(new MaterialId(entry.getKey()), traits);
-      if (log.isDebugEnabled() && Config.COMMON.debugLogResourceValues.get()) {
-        log.debug("Loaded traits for material '{}': \n\tDefault - {}{}",
+      if (TConstruct.LOG.isDebugEnabled() && Config.COMMON.debugLogDatapackValues.get()) {
+        TConstruct.LOG.debug("Loaded traits for material '{}': \n\tDefault - {}{}",
           entry.getKey(),
           Arrays.toString(traits.getDefaultTraits().toArray()),
           Util.toIndentedStringList(traits.getTraitsPerStats().entrySet().stream()
@@ -164,7 +165,7 @@ public class MaterialTraitsManager extends MergingJsonDataLoader<MaterialTraits.
   public void onResourceManagerReload(ResourceManager manager) {
     long time = System.nanoTime();
     super.onResourceManagerReload(manager);
-    log.info("{} traits loaded for {} materials in {} ms",
+    TConstruct.LOG.info("{} traits loaded for {} materials in {} ms",
              materialTraits.values().stream().mapToInt(traits -> traits.getTraitsPerStats().size() + (traits.getDefaultTraits().isEmpty() ? 0 : 1)).sum(),
              materialTraits.size(), (System.nanoTime() - time) / 1000000f);
   }

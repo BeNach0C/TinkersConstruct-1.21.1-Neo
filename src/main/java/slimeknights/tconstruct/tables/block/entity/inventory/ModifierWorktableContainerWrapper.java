@@ -12,11 +12,17 @@ import javax.annotation.Nullable;
 
 import static slimeknights.tconstruct.tables.block.entity.table.TinkerStationBlockEntity.TINKER_SLOT;
 
-@RequiredArgsConstructor
 public class ModifierWorktableContainerWrapper implements ITinkerableContainer.Mutable {
   private final ModifierWorktableBlockEntity worktable;
   @Nullable @Setter
   private Player player;
+  public ModifierWorktableContainerWrapper(ModifierWorktableBlockEntity worktable) {
+    this.worktable = worktable;
+  }
+
+  public void setPlayer(@Nullable Player player) {
+    this.player = player;
+  }
 
   /** Cached tool instance to save lookup effort */
   @Nullable

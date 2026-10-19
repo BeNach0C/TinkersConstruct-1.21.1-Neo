@@ -49,15 +49,15 @@ public class SlimeTreeConfig implements FeatureConfiguration {
   public static class Builder {
     private static final BlockStateProvider AIR_PROVIDER = BlockStateProvider.simple(Blocks.AIR);
 
-    @Setter
     private BlockStateProvider trunkProvider = AIR_PROVIDER;
-    @Setter
+      public Builder trunkProvider(BlockStateProvider trunkProvider) { this.trunkProvider = trunkProvider; return this; }
     private BlockStateProvider leavesProvider = AIR_PROVIDER;
+      public Builder leavesProvider(BlockStateProvider leavesProvider) { this.leavesProvider = leavesProvider; return this; }
     private BlockStateProvider vinesProvider = AIR_PROVIDER;
-    @Setter
     private int baseHeight = 5;
-    @Setter
+      public Builder baseHeight(int baseHeight) { this.baseHeight = baseHeight; return this; }
     private int randomHeight = 4;
+      public Builder randomHeight(int randomHeight) { this.randomHeight = randomHeight; return this; }
     private boolean canDoubleHeight = false;
     private boolean hasVines = false;
     private boolean planted = false;

@@ -32,7 +32,7 @@ import slimeknights.tconstruct.library.tools.nbt.IToolStackView;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.UUID;
+
 import java.util.function.Supplier;
 
 /**
@@ -44,7 +44,7 @@ import java.util.function.Supplier;
  * @param amount     Amount of the attribute to apply
  * @param condition  Standard modifier conditions
  */
-public record MeleeAttributeModule(String unique, Attribute attribute, UUID uuid, Operation operation, LevelingValue amount, IJsonPredicate<LivingEntity> target, ModifierCondition<IToolStackView> condition) implements ModifierModule, MeleeHitModifierHook, ConditionalModule<IToolStackView> {
+public record MeleeAttributeModule(String unique, Attribute attribute, net.minecraft.resources.ResourceLocation uuid, Operation operation, LevelingValue amount, IJsonPredicate<LivingEntity> target, ModifierCondition<IToolStackView> condition) implements ModifierModule, MeleeHitModifierHook, ConditionalModule<IToolStackView> {
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<MeleeAttributeModule>defaultHooks(ModifierHooks.MELEE_HIT);
   public static final RecordLoadable<MeleeAttributeModule> LOADER = RecordLoadable.create(
     new AttributeUniqueField<>(MeleeAttributeModule::unique),
@@ -60,7 +60,7 @@ public record MeleeAttributeModule(String unique, Attribute attribute, UUID uuid
   public MeleeAttributeModule {}
 
   private MeleeAttributeModule(String unique, Attribute attribute, Operation operation, LevelingValue amount, IJsonPredicate<LivingEntity> target, ModifierCondition<IToolStackView> condition) {
-    this(unique, attribute, UUID.nameUUIDFromBytes(unique.getBytes()), operation, amount, target, condition);
+    this(unique, attribute, net.minecraft.resources.ResourceLocation.parse(unique), operation, amount, target, condition);
   }
 
   @Override
@@ -73,11 +73,11 @@ public record MeleeAttributeModule(String unique, Attribute attribute, UUID uuid
     if (condition.matches(tool, modifier)) {
       LivingEntity target = context.getLivingTarget();
       if (target != null) {
-        AttributeInstance instance = target.getAttribute(attribute);
+        AttributeInstance instance = target.getAttribute(slimeknights.tconstruct.shared.TinkerAttributes.getHolder(attribute));
         if (instance != null) {
           // ensure we don't already have the modifier from someone misusing melee hooks or simultaneous attacks
           instance.removeModifier(uuid);
-          instance.addTransientModifier(new AttributeModifier(uuid, unique, amount.compute(modifier.getEffectiveLevel()), operation));
+          instance.addTransientModifier(new AttributeModifier(uuid, amount.compute(modifier.getEffectiveLevel()), operation));
         }
       }
     }
@@ -86,7 +86,7 @@ public record MeleeAttributeModule(String unique, Attribute attribute, UUID uuid
 
   private void removeAttribute(@Nullable LivingEntity target) {
     if (target != null) {
-      AttributeInstance instance = target.getAttribute(attribute);
+      AttributeInstance instance = target.getAttribute(slimeknights.tconstruct.shared.TinkerAttributes.getHolder(attribute));
       if (instance != null) {
         instance.removeModifier(uuid);
       }
@@ -120,12 +120,16 @@ public record MeleeAttributeModule(String unique, Attribute attribute, UUID uuid
 
   @Setter
   @Accessors(fluent = true)
-  @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
   public static class Builder extends ModuleBuilder.Stack<Builder> implements LevelingValue.Builder<MeleeAttributeModule>  {
     protected final Attribute attribute;
     protected final Operation operation;
     protected String unique = "";
     protected IJsonPredicate<LivingEntity> target = LivingEntityPredicate.ANY;
+
+    public Builder(Attribute attribute, Operation operation) {
+      this.attribute = attribute;
+      this.operation = operation;
+    }
 
     /**
      * Sets the unique string using a resource location

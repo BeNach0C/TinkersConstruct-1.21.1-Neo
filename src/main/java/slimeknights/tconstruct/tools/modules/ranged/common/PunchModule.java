@@ -42,7 +42,7 @@ public record PunchModule(LevelingValue amount, ModifierCondition<IToolStackView
       float amount = this.amount.compute(modifier.getEffectiveLevel());
       if (amount > 0) {
         if (arrow != null) {
-          arrow.setKnockback((int) amount);
+          // arrow.setKnockback((int) amount);
         } else if (projectile instanceof ProjectileWithKnockback withKnockback) {
           withKnockback.addKnockback(amount);
         }

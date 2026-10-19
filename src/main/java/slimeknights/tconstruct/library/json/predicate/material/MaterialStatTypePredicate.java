@@ -10,7 +10,7 @@ public record MaterialStatTypePredicate(MaterialStatsId statType) implements Mat
 
   @Override
   public boolean matches(MaterialVariantId variant) {
-    return statType.canUseMaterial(variant.getId());
+    return statType.canUseMaterial(variant.getMaterialId());
   }
 
   @Override

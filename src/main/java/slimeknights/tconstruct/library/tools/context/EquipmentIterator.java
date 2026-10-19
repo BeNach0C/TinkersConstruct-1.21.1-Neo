@@ -165,8 +165,7 @@ public class EquipmentIterator extends AbstractIterator<EquipmentEntry> {
   }
 
   /** Data class containing the current tool and modifier to run hooks */
-  @Accessors(fluent = true)
-  @Getter
+  
   public static class EquipmentEntry {
     /** Active tool for this iteration */
     private IToolStackView tool;
@@ -174,5 +173,9 @@ public class EquipmentIterator extends AbstractIterator<EquipmentEntry> {
     private EquipmentSlot slot;
     /** Active modifier */
     private ModifierEntry modifier;
+
+    public IToolStackView tool() { return this.tool; }
+    public EquipmentSlot slot() { return this.slot; }
+    public ModifierEntry modifier() { return this.modifier; }
   }
 }

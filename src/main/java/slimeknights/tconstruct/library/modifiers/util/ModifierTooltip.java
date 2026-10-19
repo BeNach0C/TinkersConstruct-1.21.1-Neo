@@ -16,7 +16,6 @@ import java.util.function.Predicate;
 
 /** Contexts for showing a modifier in tooltips */
 @Getter
-@RequiredArgsConstructor
 public enum ModifierTooltip {
   /** Shows in tooltips on tool items. */
   TOOL(false),
@@ -34,6 +33,10 @@ public enum ModifierTooltip {
 
   /** If true, this is a new flag type that did not exist with the old hook. */
   private final boolean isNew;
+
+  ModifierTooltip(boolean isNew) {
+    this.isNew = isNew;
+  }
 
   /** Predicate testing for a modifier tooltip. */
   public record ShowInTooltips(Set<ModifierTooltip> tooltips) implements Predicate<ModifierTooltip> {

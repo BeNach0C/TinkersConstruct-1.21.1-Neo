@@ -17,8 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
-import net.minecraftforge.common.crafting.AbstractIngredient;
-import net.minecraftforge.common.crafting.IIngredientSerializer;
+import net.neoforged.neoforge.common.crafting.ICustomIngredient;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.util.JsonHelper;
 import slimeknights.tconstruct.TConstruct;
@@ -31,7 +30,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Ingredient matching an {@link net.minecraft.world.item.InstrumentItem} with a particular instrument. */
-public class InstrumentIngredient extends AbstractIngredient {
+public class InstrumentIngredient implements ICustomIngredient {
   private static final String TAG_INSTRUMENT = "instrument";
   public static final ResourceLocation ID = TConstruct.getResource("instrument");
 
@@ -41,7 +40,6 @@ public class InstrumentIngredient extends AbstractIngredient {
   @Nullable
   private final TagKey<Instrument> ignore;
   protected InstrumentIngredient(Item item, @Nullable ResourceKey<Instrument> instrument, @Nullable TagKey<Instrument> ignore) {
-    super(Stream.of(new InstrumentValue(item, instrument)));
     this.item = item.asItem();
     this.instrument = instrument;
     this.ignore = ignore;
@@ -67,69 +65,30 @@ public class InstrumentIngredient extends AbstractIngredient {
     if (stack == null || !stack.is(item)) {
       return false;
     }
-    CompoundTag tag = stack.getTag();
-    if (tag != null) {
-      ResourceLocation key = ResourceLocation.tryParse(tag.getString(TAG_INSTRUMENT));
-      if (key != null) {
-        // if we just want the instrument to match, can just compare by ID over doing a fetch
-        if (this.instrument != null) {
-          return this.instrument.location().equals(key);
-        }
-        assert this.ignore != null;
-        // must valid and not in the tag
-        Optional<Holder.Reference<Instrument>> instrument = BuiltInRegistries.INSTRUMENT.getHolder(ResourceKey.create(Registries.INSTRUMENT, key));
-        return instrument.isPresent() && !instrument.get().is(ignore);
+    Holder<Instrument> inst = stack.get(net.minecraft.core.component.DataComponents.INSTRUMENT);
+    if (inst != null) {
+      if (this.instrument != null) {
+        return inst.is(this.instrument);
       }
+      if (this.ignore != null) {
+        return !inst.is(this.ignore);
+      }
+      return true;
     }
-    // if no instrument, its fine as long as we don't have a specific instrument
     return this.instrument == null;
   }
 
   @Override
-  public IIngredientSerializer<? extends Ingredient> getSerializer() {
-    return SERIALIZER;
-  }
-
-  @Override
-  public JsonElement toJson() {
-    JsonObject json = new JsonObject();
-    json.addProperty("type", ID.toString());
-    json.addProperty("item", Loadables.ITEM.getString(item));
+  public Stream<ItemStack> getItems() {
+    ItemStack stack = new ItemStack(item);
     if (instrument != null) {
-      json.addProperty("instrument", instrument.location().toString());
+      BuiltInRegistries.INSTRUMENT.getHolder(instrument).ifPresent(h -> stack.set(net.minecraft.core.component.DataComponents.INSTRUMENT, h));
     }
-    if (ignore != null) {
-      json.addProperty("ignore", ignore.location().toString());
-    }
-    return json;
+    return Stream.of(stack);
   }
 
-  private record InstrumentValue(Item item, @Nullable ResourceKey<Instrument> instrument) implements Value {
-    @Override
-    public Collection<ItemStack> getItems() {
-      ItemStack stack = new ItemStack(item);
-      // set the instrument on the stack
-      if (instrument != null) {
-        stack.getOrCreateTag().putString(TAG_INSTRUMENT, instrument.location().toString());
-      }
-      return List.of(stack);
-    }
-
-    @Override
-    public JsonObject serialize() {
-      JsonObject json = new JsonObject();
-      json.addProperty("item", Loadables.ITEM.getString(item));
-      if (instrument != null) {
-        json.addProperty("instrument", instrument.location().toString());
-      }
-      return json;
-    }
-  }
-
-  /** Serializer instance */
-  public static final IIngredientSerializer<InstrumentIngredient> SERIALIZER = new IIngredientSerializer<>() {
-    @Override
-    public InstrumentIngredient parse(JsonObject json) {
+  public static final net.neoforged.neoforge.common.crafting.IngredientType<InstrumentIngredient> TYPE = slimeknights.mantle.recipe.helper.LoadableIngredientSerializer.of(
+    json -> {
       Item item = Loadables.ITEM.getIfPresent(json, "item");
       ResourceKey<Instrument> instrument = null;
       TagKey<Instrument> ignore = null;
@@ -141,30 +100,17 @@ public class InstrumentIngredient extends AbstractIngredient {
         throw new JsonSyntaxException("Invalid InstrumentIngredient: must set either 'instrument' or 'ignore'");
       }
       return new InstrumentIngredient(item, instrument, ignore);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void write(FriendlyByteBuf buffer, InstrumentIngredient ingredient) {
-      buffer.writeId(BuiltInRegistries.ITEM, ingredient.item);
-      if (ingredient.instrument != null) {
-        buffer.writeBoolean(true);
-        buffer.writeResourceLocation(ingredient.instrument.location());
-      } else {
-        assert ingredient.ignore != null;
-        buffer.writeBoolean(false);
-        buffer.writeResourceLocation(ingredient.ignore.location());
+    },
+    (ing, json) -> {
+      json.add("item", Loadables.ITEM.serialize(ing.item));
+      if (ing.instrument != null) {
+        json.addProperty("instrument", ing.instrument.location().toString());
+      } else if (ing.ignore != null) {
+        json.add("ignore", TinkerLoadables.INSTRUMENT_TAGS.serialize(ing.ignore));
       }
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public InstrumentIngredient parse(FriendlyByteBuf buffer) {
-      Item item = buffer.readById(BuiltInRegistries.ITEM);
-      // swap missing items for barriers
-      if (item == null) {
-        item = Items.BARRIER;
-      }
+    },
+    buffer -> {
+      Item item = Loadables.ITEM.decode(buffer);
       ResourceKey<Instrument> instrument = null;
       TagKey<Instrument> ignore = null;
       if (buffer.readBoolean()) {
@@ -173,6 +119,22 @@ public class InstrumentIngredient extends AbstractIngredient {
         ignore = TagKey.create(Registries.INSTRUMENT, buffer.readResourceLocation());
       }
       return new InstrumentIngredient(item, instrument, ignore);
+    },
+    (buffer, ing) -> {
+      Loadables.ITEM.encode(buffer, ing.item);
+      if (ing.instrument != null) {
+        buffer.writeBoolean(true);
+        buffer.writeResourceLocation(ing.instrument.location());
+      } else {
+        assert ing.ignore != null;
+        buffer.writeBoolean(false);
+        buffer.writeResourceLocation(ing.ignore.location());
+      }
     }
-  };
+  );
+
+  @Override
+  public net.neoforged.neoforge.common.crafting.IngredientType<?> getType() {
+    return TYPE;
+  }
 }

@@ -91,7 +91,7 @@ public class FixedMaterialSwappingRecipe extends MaterialSwappingRecipe implemen
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     // copy the tool NBT to ensure the original tool is intact
     List<MaterialStatsId> materials = ToolMaterialHook.stats(inv.getTinkerable().getDefinition());
 
@@ -116,7 +116,7 @@ public class FixedMaterialSwappingRecipe extends MaterialSwappingRecipe implemen
         }
 
         // ensure this material is valid for the tool. If its not its really the recipes fault, but better a valid tool
-        if (MaterialRegistry.getInstance().getMaterialStats(material.getId(), materials.get(index)).isEmpty()) {
+        if (MaterialRegistry.getInstance().getMaterialStats(material.getMaterialId(), materials.get(index)).isEmpty()) {
           return INVALID_MATERIAL;
         }
 
@@ -148,7 +148,7 @@ public class FixedMaterialSwappingRecipe extends MaterialSwappingRecipe implemen
   private List<IDisplayToolModification> multiRecipes;
 
   @Override
-  public List<IDisplayToolModification> getRecipes(RegistryAccess access) {
+  public List<IDisplayToolModification> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       ItemStack[] tools = this.tools.getItems();
       MaterialVariant material = MaterialVariant.of(this.material);

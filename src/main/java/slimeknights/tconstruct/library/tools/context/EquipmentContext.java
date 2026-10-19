@@ -6,7 +6,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LazyOptional;
+
 import slimeknights.mantle.util.LogicHelper;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.tools.capability.TinkerDataCapability;
@@ -23,22 +23,22 @@ import java.util.function.Function;
 import static slimeknights.tconstruct.common.TinkerTags.Items.MODIFIABLE;
 
 /** Context for a modifier hook that runs on multiple equipment slots */
-@RequiredArgsConstructor
 public class EquipmentContext {
+  public EquipmentContext(net.minecraft.world.entity.LivingEntity entity) { this.entity = entity; }
   /** Entity who changed equipment */
-  @Getter
   private final LivingEntity entity;
+  public LivingEntity getEntity() { return this.entity; }
   /** Determines if the tool in the given slot was fetched */
-  protected final boolean[] fetchedTool = new boolean[6];
+  protected final boolean[] fetchedTool = new boolean[7];
   /** Array of tools currently on the entity */
-  protected final IToolStackView[] toolsInSlots = new IToolStackView[6];
+  protected final IToolStackView[] toolsInSlots = new IToolStackView[7];
   /** Cached tinker data capability, saves capability lookup times slightly */
-  private LazyOptional<TinkerDataCapability.Holder> tinkerData = null;
+  private TinkerDataCapability.Holder tinkerData = null;
 
   /** Creates a context with an existing tool instance */
   public static EquipmentContext withTool(LivingEntity living, IToolStackView tool, EquipmentSlot slot) {
     EquipmentContext context = new EquipmentContext(living);
-    int index = slot.getFilterFlag();
+    int index = slot.ordinal();
     context.toolsInSlots[index] = tool;
     context.fetchedTool[index] = true;
     return context;
@@ -65,7 +65,7 @@ public class EquipmentContext {
    */
   @Nullable
   public IToolStackView getToolInSlot(EquipmentSlot slotType) {
-    int index = slotType.getFilterFlag();
+    int index = slotType.ordinal();
     if (!fetchedTool[index]) {
       toolsInSlots[index] = getToolStackIfModifiable(entity.getItemBySlot(slotType));
       fetchedTool[index] = true;
@@ -95,7 +95,7 @@ public class EquipmentContext {
   }
 
   /** Gets the tinker data capability */
-  public LazyOptional<TinkerDataCapability.Holder> getTinkerData() {
+  public TinkerDataCapability.Holder getTinkerData() {
     if (tinkerData == null) {
       tinkerData = entity.getCapability(TinkerDataCapability.CAPABILITY);
     }
@@ -105,7 +105,7 @@ public class EquipmentContext {
   /** Gets the tinker data capability, or null if absent */
   @Nullable
   public TinkerDataCapability.Holder getDataHolder() {
-    return LogicHelper.orElseNull(getTinkerData());
+    return getTinkerData();
   }
 
 

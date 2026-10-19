@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.tools.modules.cosmetic;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -10,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.entity.BannerPatterns;
 import slimeknights.mantle.client.TooltipKey;
@@ -77,7 +79,7 @@ public enum BannerModule implements ModifierModule, DisplayNameModifierHook, Too
         for (int i = 0; i < patterns.size(); i++) {
           CompoundTag tag = patterns.getCompound(i);
           DyeColor dye = DyeColor.byId(tag.getInt(KEY_DYE));
-          Holder<BannerPattern> holder = BannerPattern.byHash(tag.getString(KEY_PATTERN));
+          Holder<net.minecraft.world.level.block.entity.BannerPattern> holder = null; // TODO 1.21.1 BannerPattern.byHash(tag.getString(KEY_PATTERN));
           if (holder != null) {
             // note that Forge is dumb in BannerItem with their patch - mojang already adds the mod ID to the tooltip key
             holder.unwrapKey().ifPresent(key ->
@@ -93,12 +95,12 @@ public enum BannerModule implements ModifierModule, DisplayNameModifierHook, Too
 
   /** Gets the key for the cache used in the model */
   public static ResourceLocation cacheKey(ModifierId modifier) {
-    return modifier.withSuffix("_cache");
+    return modifier.getId().withSuffix("_cache");
   }
 
   /** Gets the key for the pattern list in NBT */
   public static ResourceLocation patternKey(ModifierId modifier) {
-    return modifier.withSuffix("_patterns");
+    return modifier.getId().withSuffix("_patterns");
   }
 
   /** Copies the given list of patterns from banner format to the tool's NBT */
@@ -114,10 +116,10 @@ public enum BannerModule implements ModifierModule, DisplayNameModifierHook, Too
       hashCode = baseColor;
 
       // add in the base pattern, it only exists on shield NBT, but the recipe comes from banners
-      BannerPattern base = BuiltInRegistries.BANNER_PATTERN.get(BannerPatterns.BASE);
+      net.minecraft.world.level.block.entity.BannerPattern base = null; // TODO 1.21.1 BuiltInRegistries.BANNER_PATTERN.get(BannerPatterns.BASE);
       if (base != null) {
         CompoundTag basePattern = new CompoundTag();
-        basePattern.putString(KEY_PATTERN, base.getHashname());
+        // basePattern.putString(KEY_PATTERN, base.getHashname());
         basePattern.putInt(KEY_DYE, dye.getId());
         basePattern.putInt(KEY_COLOR, baseColor);
         patterns.add(basePattern);

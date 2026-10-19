@@ -14,8 +14,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.tconstruct.fluids.TinkerFluids;
 import slimeknights.tconstruct.fluids.util.ConstantFluidContainerWrapper;
 import slimeknights.tconstruct.library.recipe.FluidValues;
@@ -32,12 +31,12 @@ public class MagmaBottleItem extends Item {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+  public void appendHoverText(ItemStack stack, Item.TooltipContext worldIn, List<Component> tooltip, TooltipFlag flagIn) {
     super.appendHoverText(stack, worldIn, tooltip, flagIn);
     tooltip.add(Component.translatable(
       "potion.withDuration",
       Blocks.FIRE.getName(),
-      StringUtil.formatTickDuration(fireTime * 20)
+      StringUtil.formatTickDuration(fireTime * 20, 20.0f)
     ).withStyle(MobEffectCategory.HARMFUL.getTooltipFormatting()));
   }
 
@@ -48,7 +47,7 @@ public class MagmaBottleItem extends Item {
   }
 
   @Override
-  public int getUseDuration(ItemStack pStack) {
+  public int getUseDuration(ItemStack pStack, LivingEntity living) {
     return 32;
   }
 
@@ -59,7 +58,7 @@ public class MagmaBottleItem extends Item {
 
   @Override
   public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity living) {
-    living.setSecondsOnFire(fireTime);
+    living.igniteForSeconds(fireTime);
     ItemStack container = stack.getCraftingRemainingItem();
     Player player = living instanceof Player p ? p : null;
     if (player == null || !player.getAbilities().instabuild) {
@@ -77,9 +76,4 @@ public class MagmaBottleItem extends Item {
     return stack;
   }
 
-  @Nullable
-  @Override
-  public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
-    return new ConstantFluidContainerWrapper(new FluidStack(TinkerFluids.magma.get(), FluidValues.BOTTLE), stack);
-  }
 }

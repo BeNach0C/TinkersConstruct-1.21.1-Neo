@@ -12,6 +12,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlot.Type;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -20,6 +23,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.Rarity;
@@ -28,10 +32,10 @@ import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.common.ToolAction;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.common.ItemAbility;
 import slimeknights.mantle.client.SafeClientAccess;
+import slimeknights.tconstruct.tools.TinkerToolActions;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.client.item.ModifiableItemClientExtension;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
@@ -45,7 +49,6 @@ import slimeknights.tconstruct.library.modifiers.hook.interaction.SlotStackModif
 import slimeknights.tconstruct.library.modifiers.hook.interaction.UsingToolModifierHook;
 import slimeknights.tconstruct.library.modifiers.modules.build.RarityModule;
 import slimeknights.tconstruct.library.tools.IndestructibleItemEntity;
-import slimeknights.tconstruct.library.tools.capability.ToolCapabilityProvider;
 import slimeknights.tconstruct.library.tools.capability.inventory.ToolInventoryCapability;
 import slimeknights.tconstruct.library.tools.definition.ToolDefinition;
 import slimeknights.tconstruct.library.tools.definition.module.display.ToolNameHook;
@@ -61,7 +64,6 @@ import slimeknights.tconstruct.library.tools.item.ModifiableItem;
 import slimeknights.tconstruct.library.tools.nbt.IToolStackView;
 import slimeknights.tconstruct.library.tools.nbt.ModDataNBT;
 import slimeknights.tconstruct.library.tools.nbt.ToolStack;
-import slimeknights.tconstruct.tools.TinkerToolActions;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -113,22 +115,18 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
     return false;
   }
 
-  @Override
   public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment) {
-    return enchantment.isCurse() && super.canApplyAtEnchantingTable(stack, enchantment);
+    return false;
   }
 
-  @Override
   public int getEnchantmentValue() {
     return 0;
   }
 
-  @Override
   public int getEnchantmentLevel(ItemStack stack, Enchantment enchantment) {
     return EnchantmentModifierHook.getEnchantmentLevel(stack, enchantment);
   }
 
-  @Override
   public Map<Enchantment,Integer> getAllEnchantments(ItemStack stack) {
     return EnchantmentModifierHook.getAllEnchantments(stack);
   }
@@ -136,13 +134,6 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
 
   /* Loading */
 
-  @Nullable
-  @Override
-  public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
-    return new ToolCapabilityProvider(stack);
-  }
-
-  @Override
   public void verifyTagAfterLoad(CompoundTag nbt) {
     ToolStack.verifyTag(this, nbt, getToolDefinition());
   }
@@ -162,7 +153,6 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
     return ModifierUtil.checkVolatileFlag(stack, SHINY);
   }
 
-  @Override
   public Rarity getRarity(ItemStack stack) {
     return RarityModule.getRarity(stack);
   }
@@ -196,9 +186,13 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
     return false;
   }
 
-  @Override
   public boolean canBeDepleted() {
     return true;
+  }
+
+  @Override
+  public boolean isDamageable(ItemStack stack) {
+    return canBeDepleted();
   }
 
   @Override
@@ -222,7 +216,7 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
   }
 
   @Override
-  public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T damager, Consumer<T> onBroken) {
+  public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T damager, Consumer<Item> onBroken) {
     ToolDamageUtil.handleDamageItem(stack, amount, damager, onBroken);
     return 0;
   }
@@ -272,7 +266,7 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
   }
 
   @Override
-  public boolean canPerformAction(ItemStack stack, ToolAction toolAction) {
+  public boolean canPerformAction(ItemStack stack, ItemAbility toolAction) {
     return ModifierUtil.canPerformAction(ToolStack.from(stack), toolAction);
   }
 
@@ -282,15 +276,21 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
   }
 
   @Override
-  public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlot slot, ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
-    if (nbt == null || slot.getType() != Type.HAND) {
-      return ImmutableMultimap.of();
+  public ItemAttributeModifiers getDefaultAttributeModifiers(ItemStack stack) {
+    ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
+    ToolStack tool = ToolStack.from(stack);
+    for (EquipmentSlot slot : EquipmentSlot.values()) {
+      Multimap<Attribute, AttributeModifier> modifiers = getAttributeModifiers(tool, slot);
+      if (!modifiers.isEmpty()) {
+        EquipmentSlotGroup group = EquipmentSlotGroup.bySlot(slot);
+        modifiers.forEach((attr, mod) -> {
+          builder.add(slimeknights.tconstruct.shared.TinkerAttributes.getHolder(attr), mod, group);
+        });
+      }
     }
-    return getAttributeModifiers(ToolStack.from(stack), slot);
+    return builder.build();
   }
 
-  @Override
   public boolean canDisableShield(ItemStack stack, ItemStack shield, LivingEntity entity, LivingEntity attacker) {
     return canPerformAction(stack, TinkerToolActions.SHIELD_DISABLE);
   }
@@ -299,6 +299,10 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
   /* Arrow logic */
 
   @Override
+  public int getUseDuration(ItemStack pStack, LivingEntity entity) {
+    return getUseDuration(pStack);
+  }
+
   public int getUseDuration(ItemStack pStack) {
     return 72000;
   }
@@ -353,13 +357,8 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-    TooltipUtil.addInformation(this, stack, level, tooltip, SafeClientAccess.getTooltipKey(), flag);
-  }
-
-  @Override
-  public int getDefaultTooltipHideFlags(ItemStack stack) {
-    return TooltipUtil.getModifierHideFlags(getToolDefinition());
+  public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    TooltipUtil.addInformation(this, stack, context.level(), tooltip, SafeClientAccess.getTooltipKey(), flag);
   }
 
 
@@ -409,7 +408,6 @@ public abstract class ModifiableLauncherItem extends ProjectileWeaponItem implem
     return MiningSpeedToolHook.getDestroySpeed(stack, state);
   }
 
-  @Override
   public boolean onBlockStartBreak(ItemStack stack, BlockPos pos, Player player) {
     return ToolHarvestLogic.handleBlockBreak(stack, pos, player);
   }

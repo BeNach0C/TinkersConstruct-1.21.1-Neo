@@ -44,11 +44,13 @@ import java.util.function.Function;
 public class SlimeskullArmorModel extends MultilayerArmorModel {
   /** Singleton model instance, all data is passed in via setters */
   public static final SlimeskullArmorModel INSTANCE = new SlimeskullArmorModel();
+
   /** Cache of colors for materials */
-  static final SimpleCache<MaterialVariantId,Integer> MATERIAL_COLOR_CACHE = new SimpleCache<>(mat ->
+  static final SimpleCache<MaterialVariantId,Integer> MATERIAL_COLOR_CACHE = new SimpleCache<MaterialVariantId,Integer>(mat ->
     MaterialRenderInfoLoader.INSTANCE.getRenderInfo(mat)
             .map(MaterialRenderInfo::vertexColor)
             .orElse(-1));
+
   /** Listener to clear caches */
   public static final ISafeManagerReloadListener RELOAD_LISTENER = manager -> {
     HEAD_MODELS = null;
@@ -71,7 +73,7 @@ public class SlimeskullArmorModel extends MultilayerArmorModel {
   /** Prepares the model */
   public Model setup(LivingEntity living, ItemStack stack, HumanoidModel<?> base, ArmorModel model) {
     super.setup(living, stack, EquipmentSlot.HEAD, base, model);
-    MaterialId materialId = MaterialIdNBT.from(stack).getMaterial(0).getId();
+    MaterialId materialId = MaterialIdNBT.from(stack).getMaterial(0).getMaterialId();
     if (!materialId.equals(MaterialId.UNKNOWN)) {
       SkullModelBase skull = getHeadModel(materialId);
       ResourceLocation texture = HEAD_TEXTURES.get(materialId);
@@ -79,9 +81,9 @@ public class SlimeskullArmorModel extends MultilayerArmorModel {
         headModel = skull;
         headTexture = texture;
         // if dyed, color is the dye
-        ModifierId dyed = TinkerModifiers.dyed.getId();
+        slimeknights.tconstruct.library.modifiers.ModifierId dyed = TinkerModifiers.dyed.getId();
         if (ModifierUtil.getModifierLevel(stack, dyed) > 0) {
-          headColor = 0xFF000000 | ModifierUtil.getPersistentInt(stack, dyed, -1);
+          headColor = 0xFF000000 | ModifierUtil.getPersistentInt(stack, dyed.getId(), -1);
         } else {
           // if not dyed, color is the material, fallback to no tint if missing
           MaterialVariantId material = MaterialIdNBT.getMaterial(stack, 1);
@@ -106,10 +108,14 @@ public class SlimeskullArmorModel extends MultilayerArmorModel {
   }
 
   @Override
-  public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer vertexBuilder, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+  public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer vertexBuilder, int packedLightIn, int packedOverlayIn, int packedColor) {
     if (base != null && buffer != null) {
+      float alpha = (float)net.minecraft.util.FastColor.ARGB32.alpha(packedColor) / 255.0F;
+      float red = (float)net.minecraft.util.FastColor.ARGB32.red(packedColor) / 255.0F;
+      float green = (float)net.minecraft.util.FastColor.ARGB32.green(packedColor) / 255.0F;
+      float blue = (float)net.minecraft.util.FastColor.ARGB32.blue(packedColor) / 255.0F;
       if (headModel != null && headTexture != null) {
-        VertexConsumer heaadBuffer = ItemRenderer.getArmorFoilBuffer(buffer, RenderType.entityCutoutNoCullZOffset(headTexture), false, hasGlint);
+        VertexConsumer heaadBuffer = ItemRenderer.getArmorFoilBuffer(buffer, RenderType.entityCutoutNoCullZOffset(headTexture), hasGlint);
         matrixStackIn.pushPose();
         if (base.crouching) {
           matrixStackIn.translate(0, base.head.y / 16.0F, 0);
@@ -133,7 +139,7 @@ public class SlimeskullArmorModel extends MultilayerArmorModel {
         // offset and resize helmet to be around head
         matrixStackIn.translate(0.0D, base.young ? -0.09D : -0.025D, 0.0D);
         matrixStackIn.scale(1.1f, 1.1f, 1.1f);
-        super.renderToBuffer(matrixStackIn, vertexBuilder, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        super.renderToBuffer(matrixStackIn, vertexBuilder, packedLightIn, packedOverlayIn, packedColor);
         matrixStackIn.popPose();
       }
     }
@@ -144,6 +150,7 @@ public class SlimeskullArmorModel extends MultilayerArmorModel {
 
   /** Map of all skull factories */
   private static final Map<MaterialId,Function<EntityModelSet,? extends SkullModelBase>> HEAD_MODEL_FACTORIES = new HashMap<>();
+
   /** Map of texture for the skull textures */
   private static final Map<MaterialId,ResourceLocation> HEAD_TEXTURES = new HashMap<>();
 

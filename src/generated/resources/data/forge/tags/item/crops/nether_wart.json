@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:crops/nether_wart",
+                       "required":  false
+                   }
+               ]
+}

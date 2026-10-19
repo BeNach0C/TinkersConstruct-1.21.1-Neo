@@ -14,7 +14,6 @@ import java.util.Locale;
 import static slimeknights.mantle.Mantle.commonResource;
 
 /** Types of slime available in tinkers, all types notably have balls, congealed, and blocks */
-@Getter
 public enum SlimeType implements StringRepresentable {
   EARTH(0x01cd4e, MapColor.GRASS, false),
   SKY  (0x01cbcd, MapColor.DIAMOND, false),
@@ -38,7 +37,6 @@ public enum SlimeType implements StringRepresentable {
   private final boolean nether;
   /** Light level of slime blocks of this type */
   private final int lightLevel;
-  @Getter
   private final String serializedName = this.name().toLowerCase(Locale.ROOT);
 
   /* Tags */
@@ -56,6 +54,30 @@ public enum SlimeType implements StringRepresentable {
 
   SlimeType(int color, MapColor mapColor, boolean nether) {
     this(color, mapColor, nether, 0);
+  }
+
+  public int getColor() {
+    return color;
+  }
+
+  public MapColor getMapColor() {
+    return mapColor;
+  }
+
+  public boolean isNether() {
+    return nether;
+  }
+
+  public int getLightLevel() {
+    return lightLevel;
+  }
+
+  public String getSerializedName() {
+    return serializedName;
+  }
+
+  public TagKey<Item> getSlimeballTag() {
+    return slimeballTag;
   }
 
   private FoliageType foliageType;

@@ -1,11 +1,12 @@
 package slimeknights.tconstruct.tables.network;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.network.packet.BlockEntityPacket;
 import slimeknights.mantle.network.packet.IThreadsafePacket;
 import slimeknights.mantle.recipe.helper.RecipeHelper;
@@ -19,26 +20,30 @@ import slimeknights.tconstruct.tables.client.inventory.TinkerStationScreen;
  * TODO 1.21: make record.
  */
 public class UpdateTinkerStationRecipePacket implements IThreadsafePacket {
+  public static final net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<UpdateTinkerStationRecipePacket> TYPE = new net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("tconstruct", "update_tinker_station_recipe"));
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, UpdateTinkerStationRecipePacket> STREAM_CODEC = net.minecraft.network.codec.StreamCodec.ofMember(UpdateTinkerStationRecipePacket::encode, UpdateTinkerStationRecipePacket::new);
+
   private final BlockPos pos;
   private final ResourceLocation recipe;
-  public UpdateTinkerStationRecipePacket(BlockPos pos, ITinkerStationRecipe recipe) {
+  public UpdateTinkerStationRecipePacket(BlockPos pos, ResourceLocation recipe) {
     this.pos = pos;
-    this.recipe = recipe.getId();
+    this.recipe = recipe;
   }
 
-  public UpdateTinkerStationRecipePacket(FriendlyByteBuf buffer) {
+  public UpdateTinkerStationRecipePacket(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
     this.pos = buffer.readBlockPos();
     this.recipe = buffer.readResourceLocation();
   }
 
   @Override
-  public void encode(FriendlyByteBuf buffer) {
+  public void encode(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
     buffer.writeBlockPos(pos);
     buffer.writeResourceLocation(recipe);
   }
 
+  @Override public net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<UpdateTinkerStationRecipePacket> type() { return TYPE; }
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(IPayloadContext context) {
     HandleClient.handle(this);
   }
 

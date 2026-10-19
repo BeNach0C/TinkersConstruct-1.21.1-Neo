@@ -17,7 +17,7 @@ public record AttributeEntityVariable(Attribute attribute) implements EntityVari
 
   @Override
   public float getValue(LivingEntity entity) {
-    return (float)entity.getAttributeValue(attribute);
+    return (float)entity.getAttributeValue(slimeknights.tconstruct.shared.TinkerAttributes.getHolder(attribute));
   }
 
   @Override

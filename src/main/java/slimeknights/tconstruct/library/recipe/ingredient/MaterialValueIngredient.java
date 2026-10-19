@@ -9,8 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraftforge.common.crafting.AbstractIngredient;
-import net.minecraftforge.common.crafting.IIngredientSerializer;
+import net.neoforged.neoforge.common.crafting.ICustomIngredient;
 import slimeknights.mantle.data.loadable.field.LoadableField;
 import slimeknights.mantle.data.predicate.IJsonPredicate;
 import slimeknights.tconstruct.TConstruct;
@@ -28,7 +27,7 @@ import java.util.Arrays;
  */
 @Getter
 @RequiredArgsConstructor
-public class MaterialValueIngredient extends AbstractIngredient {
+public class MaterialValueIngredient implements ICustomIngredient {
   private final IJsonPredicate<MaterialVariantId> material;
   private final float minValue;
   private final float maxValue;
@@ -60,19 +59,17 @@ public class MaterialValueIngredient extends AbstractIngredient {
   }
 
   @Override
-  public ItemStack[] getItems() {
+  public java.util.stream.Stream<ItemStack> getItems() {
     if (items == null) {
       items = MaterialRecipeCache.getSortedRecipes().stream()
         .filter(this::test)
         .flatMap(material -> Arrays.stream(material.getIngredient().getItems()))
         .toArray(ItemStack[]::new);
     }
-    return items;
+    return Arrays.stream(items);
   }
 
-  @Override
-  protected void invalidate() {
-    super.invalidate();
+  public void invalidate() {
     this.items = null;
   }
 
@@ -118,40 +115,13 @@ public class MaterialValueIngredient extends AbstractIngredient {
 
   /* JSON */
 
-  @Override
-  public JsonElement toJson() {
-    JsonObject json = new JsonObject();
-    json.addProperty("type", Serializer.ID.toString());
-    Serializer.MATERIAL_FIELD.serialize(this, json);
-    if (minValue == maxValue) {
-      json.addProperty("value", minValue);
-    } else {
-      JsonObject value = new JsonObject();
-      if (minValue > 0) {
-        value.addProperty("min", minValue);
-      }
-      if (Float.isFinite(maxValue)) {
-        value.addProperty("max", maxValue);
-      }
-      json.add("value", value);
-    }
-    return json;
-  }
-
-  @Override
-  public IIngredientSerializer<? extends Ingredient> getSerializer() {
-    return Serializer.INSTANCE;
-  }
 
 
-  /** Serializer instance */
-  public enum Serializer implements IIngredientSerializer<MaterialValueIngredient> {
-    INSTANCE;
-    public static final ResourceLocation ID = TConstruct.getResource("material_value");
-    private static final LoadableField<IJsonPredicate<MaterialVariantId>, MaterialValueIngredient> MATERIAL_FIELD = new MaterialPredicateField<>("material", i -> i.material);
+  public static final ResourceLocation ID = TConstruct.getResource("material_value");
+  private static final LoadableField<IJsonPredicate<MaterialVariantId>, MaterialValueIngredient> MATERIAL_FIELD = new MaterialPredicateField<>("material", i -> i.material);
 
-    @Override
-    public MaterialValueIngredient parse(JsonObject json) {
+  public static final net.neoforged.neoforge.common.crafting.IngredientType<MaterialValueIngredient> TYPE = slimeknights.mantle.recipe.helper.LoadableIngredientSerializer.of(
+    json -> {
       float minValue, maxValue;
       JsonElement value = json.get("value");
       if (value.isJsonPrimitive()) {
@@ -162,22 +132,32 @@ public class MaterialValueIngredient extends AbstractIngredient {
         maxValue = GsonHelper.getAsFloat(object, "max", Float.POSITIVE_INFINITY);
       }
       return new MaterialValueIngredient(MATERIAL_FIELD.get(json), minValue, maxValue);
+    },
+    (ing, json) -> {
+      MATERIAL_FIELD.serialize(ing, json);
+      if (ing.minValue == ing.maxValue) {
+        json.addProperty("value", ing.minValue);
+      } else {
+        JsonObject value = new JsonObject();
+        if (ing.minValue > 0) value.addProperty("min", ing.minValue);
+        if (Float.isFinite(ing.maxValue)) value.addProperty("max", ing.maxValue);
+        json.add("value", value);
+      }
+    },
+    buffer -> new MaterialValueIngredient(
+      MATERIAL_FIELD.decode(buffer),
+      buffer.readFloat(),
+      buffer.readFloat()
+    ),
+    (buffer, ing) -> {
+      MATERIAL_FIELD.encode(buffer, ing);
+      buffer.writeFloat(ing.minValue);
+      buffer.writeFloat(ing.maxValue);
     }
+  );
 
-    @Override
-    public MaterialValueIngredient parse(FriendlyByteBuf buffer) {
-      return new MaterialValueIngredient(
-        MATERIAL_FIELD.decode(buffer),
-        buffer.readFloat(),
-        buffer.readFloat()
-      );
-    }
-
-    @Override
-    public void write(FriendlyByteBuf buffer, MaterialValueIngredient ingredient) {
-      MATERIAL_FIELD.encode(buffer, ingredient);
-      buffer.writeFloat(ingredient.minValue);
-      buffer.writeFloat(ingredient.maxValue);
-    }
+  @Override
+  public net.neoforged.neoforge.common.crafting.IngredientType<?> getType() {
+    return TYPE;
   }
 }

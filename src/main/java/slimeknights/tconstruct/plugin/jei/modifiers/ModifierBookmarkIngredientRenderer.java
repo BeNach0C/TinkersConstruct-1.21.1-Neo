@@ -31,26 +31,16 @@ public enum ModifierBookmarkIngredientRenderer implements IIngredientRenderer<Mo
     }
   }
 
-  @SuppressWarnings("removal")
+  
+
   @Override
   public List<Component> getTooltip(ModifierEntry entry, TooltipFlag flag) {
     List<Component> list = new ArrayList<>();
-    // not using the main method as that applies color
     list.add(Component.translatable(WRAPPER_KEY, Component.translatable(entry.getModifier().getTranslationKey())));
     list.addAll(entry.getModifier().getDescriptionList());
     if (flag.isAdvanced()) {
       list.add((Component.literal(entry.getId().toString())).withStyle(ChatFormatting.DARK_GRAY));
     }
     return list;
-  }
-
-  @SuppressWarnings("removal")
-  @Override
-  public void getTooltip(ITooltipBuilder tooltip, ModifierEntry entry, TooltipFlag flag) {
-    tooltip.add(Component.translatable(WRAPPER_KEY, Component.translatable(entry.getModifier().getTranslationKey())));
-    tooltip.addAll(entry.getModifier().getDescriptionList());
-    if (flag.isAdvanced()) {
-      tooltip.add((Component.literal(entry.getId().toString())).withStyle(ChatFormatting.DARK_GRAY));
-    }
   }
 }

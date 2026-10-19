@@ -2,9 +2,12 @@ package slimeknights.tconstruct.library.materials.traits;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.network.packet.IThreadsafePacket;
+import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.materials.MaterialRegistry;
 import slimeknights.tconstruct.library.materials.definition.MaterialId;
 
@@ -14,9 +17,17 @@ import java.util.Map;
 @Getter
 @AllArgsConstructor
 public class UpdateMaterialTraitsPacket implements IThreadsafePacket {
+  public static final CustomPacketPayload.Type<UpdateMaterialTraitsPacket> ID = new CustomPacketPayload.Type<>(TConstruct.getResource("update_material_traits"));
+  public static final StreamCodec<RegistryFriendlyByteBuf, UpdateMaterialTraitsPacket> CODEC = StreamCodec.of((buf, packet) -> packet.encode(buf), UpdateMaterialTraitsPacket::new);
+
+  @Override
+  public CustomPacketPayload.Type<UpdateMaterialTraitsPacket> type() {
+    return ID;
+  }
+
   protected final Map<MaterialId,MaterialTraits> materialToTraits;
 
-  public UpdateMaterialTraitsPacket(FriendlyByteBuf buffer) {
+  public UpdateMaterialTraitsPacket(RegistryFriendlyByteBuf buffer) {
     int materialCount = buffer.readInt();
     materialToTraits = new HashMap<>(materialCount);
     for (int i = 0; i < materialCount; i++) {
@@ -27,16 +38,16 @@ public class UpdateMaterialTraitsPacket implements IThreadsafePacket {
   }
 
   @Override
-  public void encode(FriendlyByteBuf buffer) {
+  public void encode(RegistryFriendlyByteBuf buffer) {
     buffer.writeInt(materialToTraits.size());
     materialToTraits.forEach((materialId, traits) -> {
-      buffer.writeResourceLocation(materialId);
+      buffer.writeResourceLocation(materialId.getId());
       traits.write(buffer);
     });
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(IPayloadContext context) {
     MaterialRegistry.updateMaterialTraitsFromServer(this);
   }
 }

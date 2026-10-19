@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:animal_foods",
+                       "required":  false
+                   }
+               ]
+}

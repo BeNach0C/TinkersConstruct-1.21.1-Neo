@@ -19,11 +19,12 @@ import javax.annotation.Nullable;
 public class PartBuilderContainerMenu extends TabbedContainerMenu<PartBuilderBlockEntity> {
   // slots
   @Getter
-  private final Slot patternSlot;
-  @Getter
+    private final Slot patternSlot;
+  public Slot getPatternSlot() { return patternSlot; }
   private final Slot inputSlot;
-  @Getter
+  public Slot getInputSlot() { return inputSlot; }
   private final LazyResultSlot outputSlot;
+  public LazyResultSlot getOutputSlot() { return outputSlot; }
 
   public PartBuilderContainerMenu(int windowIdIn, Inventory playerInventoryIn, @Nullable PartBuilderBlockEntity partBuilderTileEntity) {
     super(TinkerTables.partBuilderContainer.get(), windowIdIn, playerInventoryIn, partBuilderTileEntity);
@@ -41,10 +42,18 @@ public class PartBuilderContainerMenu extends TabbedContainerMenu<PartBuilderBlo
       this.addInventorySlots();
 
       // listen for the button to change in the tile
-      this.addDataSlot(new LambdaDataSlot(-1, tile::getSelectedIndex, i -> {
-        tile.selectRecipe(i);
-        this.updateScreen();
-      }));
+            this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+        @Override
+        public int get() {
+          return tile.getSelectedIndex();
+        }
+
+        @Override
+        public void set(int i) {
+          tile.selectRecipe(i);
+          PartBuilderContainerMenu.this.updateScreen();
+        }
+      });
       // update for the first time
       this.updateScreen();
     } else {

@@ -12,7 +12,6 @@ import slimeknights.tconstruct.library.recipe.RecipeResult;
 import javax.annotation.Nullable;
 
 /** Helper which contains a lazily loaded tool stack, used for recipe output to reduce NBT parsing */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class LazyToolStack {
   @Nullable
   private ItemStack stack;
@@ -20,6 +19,12 @@ public class LazyToolStack {
   private ToolStack tool;
   @Getter
   private final int size;
+
+  public LazyToolStack(@Nullable ItemStack stack, @Nullable ToolStack tool, int size) {
+    this.stack = stack;
+    this.tool = tool;
+    this.size = size;
+  }
 
   /* Constructors */
 

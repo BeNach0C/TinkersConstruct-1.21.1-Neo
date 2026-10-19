@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.smeltery.block.entity.controller;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,10 +14,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import slimeknights.mantle.block.entity.NameableBlockEntity;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.TinkerTags;
@@ -47,24 +45,38 @@ public class AlloyerBlockEntity extends NameableBlockEntity implements ITankBloc
   public static final BlockEntityTicker<AlloyerBlockEntity> SERVER_TICKER = (level, pos, state, self) -> self.tick(level, pos, state);
 
   /** Tank for this mixer */
-  @Getter
   protected final FluidTankAnimated tank = new FluidTankAnimated(TANK_CAPACITY, this);
-  /* Capability for return */
-  private final LazyOptional<IFluidHandler> tankHolder = LazyOptional.of(() -> tank);
 
   // modules
   /** Logic for a mixer alloying */
-  @Getter
   private final MixerAlloyTank alloyTank = new MixerAlloyTank(this, tank);
   /** Base alloy logic */
   private final SingleAlloyingModule alloyingModule = new SingleAlloyingModule(this, alloyTank);
   /** Fuel handling logic */
-  @Getter
   private final SolidFuelModule fuelModule;
 
+  public FluidTankAnimated getTank() {
+    return tank;
+  }
+
+  public MixerAlloyTank getAlloyTank() {
+    return alloyTank;
+  }
+
+  public SolidFuelModule getFuelModule() {
+    return fuelModule;
+  }
+
   /** Last comparator strength to reduce block updates */
-  @Getter @Setter
   private int lastStrength = -1;
+
+  public int getLastStrength() {
+    return lastStrength;
+  }
+
+  public void setLastStrength(int lastStrength) {
+    this.lastStrength = lastStrength;
+  }
 
   /** Internal tick counter */
   private int tick;
@@ -81,21 +93,6 @@ public class AlloyerBlockEntity extends NameableBlockEntity implements ITankBloc
   /*
    * Capability
    */
-
-  @Nonnull
-  @Override
-  public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-    if (capability == ForgeCapabilities.FLUID_HANDLER) {
-      return tankHolder.cast();
-    }
-    return super.getCapability(capability, facing);
-  }
-
-  @Override
-  public void invalidateCaps() {
-    super.invalidateCaps();
-    this.tankHolder.invalidate();
-  }
 
 
   /*
@@ -180,19 +177,19 @@ public class AlloyerBlockEntity extends NameableBlockEntity implements ITankBloc
   @Override
   public void saveSynced(CompoundTag tag) {
     super.saveSynced(tag);
-    tag.put(NBTTags.TANK, tank.writeToNBT(new CompoundTag()));
+    tag.put(NBTTags.TANK, tank.writeToNBT(level != null ? level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY, new CompoundTag()));
   }
 
   @Override
-  public void saveAdditional(CompoundTag tag) {
-    super.saveAdditional(tag);
+  public void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
+    super.saveAdditional(tag, provider);
     fuelModule.writeToTag(tag);
   }
 
   @Override
-  public void load(CompoundTag nbt) {
-    super.load(nbt);
-    tank.readFromNBT(nbt.getCompound(NBTTags.TANK));
+  public void loadAdditional(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider provider) {
+    super.loadAdditional(nbt, provider);
+    tank.readFromNBT(provider, nbt.getCompound(NBTTags.TANK));
     fuelModule.readFromTag(nbt);
   }
 }

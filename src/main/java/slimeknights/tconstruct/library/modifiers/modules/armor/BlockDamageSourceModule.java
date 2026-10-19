@@ -74,9 +74,12 @@ public record BlockDamageSourceModule(IJsonPredicate<DamageSource> source, Modif
     return new Builder(source);
   }
 
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder extends ModuleBuilder.Stack<Builder> {
     private final IJsonPredicate<DamageSource> source;
+
+    public Builder(IJsonPredicate<DamageSource> source) {
+      this.source = source;
+    }
 
     public BlockDamageSourceModule build() {
       return new BlockDamageSourceModule(source, condition);

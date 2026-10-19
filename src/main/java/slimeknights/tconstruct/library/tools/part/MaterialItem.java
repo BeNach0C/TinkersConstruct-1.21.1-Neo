@@ -51,7 +51,8 @@ public class MaterialItem extends Item implements IMaterialItem {
 
   @Override
   public MaterialVariantId getMaterial(ItemStack stack) {
-    return getMaterialId(stack.getTag());
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    return getMaterialId(customData != null ? customData.copyTag() : null);
   }
 
   @Nullable
@@ -91,7 +92,7 @@ public class MaterialItem extends Item implements IMaterialItem {
       }
     }
     // if variant did not work, do base material
-    Component component = getName(key, material.getId());
+    Component component = getName(key, material.getMaterialId());
     if (component != null) {
       return component;
     }
@@ -104,14 +105,17 @@ public class MaterialItem extends Item implements IMaterialItem {
     return getName(this, stack);
   }
 
-  @Override
   public Rarity getRarity(ItemStack stack) {
-    return MaterialRegistry.getMaterial(getMaterial(stack).getId()).getRarity();
+    return MaterialRegistry.getMaterial(getMaterial(stack).getMaterialId()).getRarity();
   }
 
-  @Override
   public boolean isFoil(ItemStack stack) {
-    return MaterialRegistry.getInstance().isInTag(getMaterial(stack).getId(), TinkerTags.Materials.SHINY);
+    return MaterialRegistry.getInstance().isInTag(getMaterial(stack).getMaterialId(), TinkerTags.Materials.SHINY);
+  }
+
+  /** Helper to append the material ID to the tool part. */
+  public static void appendHoverText(IMaterialItem self, ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    appendHoverText(self, stack, tooltip, flag);
   }
 
   /** Helper to append the material ID to the tool part. */
@@ -125,8 +129,8 @@ public class MaterialItem extends Item implements IMaterialItem {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flag) {
-    appendHoverText(this, stack, tooltip, flag);
+  public void appendHoverText(ItemStack stack, Item.TooltipContext worldIn, List<Component> tooltip, TooltipFlag flag) {
+    appendHoverText(this, stack, worldIn, tooltip, flag);
   }
 
   /** Gets the creator mod ID based on the material. */
@@ -134,7 +138,7 @@ public class MaterialItem extends Item implements IMaterialItem {
   public static String getCreatorModId(IMaterialItem self, ItemStack stack) {
     MaterialVariantId material = self.getMaterial(stack);
     if (!MaterialId.UNKNOWN.equals(material)) {
-      String namespace = material.getId().getNamespace();
+      String namespace = material.getMaterialId().getNamespace();
       // skip if it's a tinkers material; we want addon tool parts to prefer showing their mod ID as end users mistake those for us
       if (!TConstruct.MOD_ID.equals(namespace)) {
         return namespace;
@@ -144,7 +148,6 @@ public class MaterialItem extends Item implements IMaterialItem {
   }
 
   @Nullable
-  @Override
   public String getCreatorModId(ItemStack stack) {
     return getCreatorModId(this, stack);
   }
@@ -167,7 +170,7 @@ public class MaterialItem extends Item implements IMaterialItem {
     // if the material exists and was changed, update it
     MaterialVariantId id = getMaterialId(nbt);
     if (!id.equals(MaterialId.UNKNOWN)) {
-      MaterialId original = id.getId();
+      MaterialId original = id.getMaterialId();
       MaterialId resolved = MaterialRegistry.getInstance().resolve(original);
       if (original != resolved) {
         nbt.putString(MATERIAL_TAG, MaterialVariantId.create(resolved, id.getVariant()).toString());
@@ -175,7 +178,6 @@ public class MaterialItem extends Item implements IMaterialItem {
     }
   }
 
-  @Override
   public void verifyTagAfterLoad(CompoundTag nbt) {
     verifyTag(nbt);
   }

@@ -117,7 +117,7 @@ public class HeatingStructureScreen extends MultiModuleScreen<HeatingStructureCo
     SCALA.draw(graphics, 8, 16, 110);
 
     // draw the bucket icon if nothing is in the bucket slot
-    if (menu.getBucketContainer().getItem(0).isEmpty()) {
+    if (this.getMenu().getBucketContainer().getItem(0).isEmpty()) {
       BUCKET_ICON.draw(graphics, 125, 46);
     }
 
@@ -126,7 +126,7 @@ public class HeatingStructureScreen extends MultiModuleScreen<HeatingStructureCo
       BUTTON_HOVER.draw(graphics, 124, 69);
     }
     // draw the button icon
-    (switch (menu.getTransferDirection()) {
+    (switch (this.getMenu().getTransferDirection()) {
       default -> MODE_AUTO;
       case EMPTY_ITEM -> MODE_EMPTY;
       case FILL_ITEM -> MODE_FILL;
@@ -148,7 +148,7 @@ public class HeatingStructureScreen extends MultiModuleScreen<HeatingStructureCo
 
     // add the hover text giving info on the button
     if (bucketButtonHovered(mouseX - leftPos, mouseY - topPos)) {
-      graphics.renderTooltip(font, switch (menu.getTransferDirection()) {
+      graphics.renderTooltip(font, switch (this.getMenu().getTransferDirection()) {
         default -> TOOLTIP_AUTO;
         case EMPTY_ITEM -> TOOLTIP_EMPTY;
         case FILL_ITEM -> TOOLTIP_FILL;

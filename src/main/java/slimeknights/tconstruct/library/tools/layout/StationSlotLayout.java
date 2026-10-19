@@ -24,7 +24,6 @@ import static java.util.Objects.requireNonNullElse;
 /**
  * A full layout for the tinker station
  */
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class StationSlotLayout {
   private static final ResourceLocation EMPTY_NAME = TConstruct.getResource("empty");
   public static final StationSlotLayout EMPTY = new StationSlotLayout("", LayoutIcon.EMPTY, null, LayoutSlot.EMPTY, Collections.emptyList());
@@ -37,6 +36,21 @@ public class StationSlotLayout {
   private final Integer sortIndex;
   private final LayoutSlot tool_slot;
   private final List<LayoutSlot> input_slots;
+  protected StationSlotLayout(String translation_key, LayoutIcon icon, @Nullable Integer sortIndex, LayoutSlot tool_slot, List<LayoutSlot> input_slots) {
+    this.translation_key = translation_key;
+    this.icon = icon;
+    this.sortIndex = sortIndex;
+    this.tool_slot = tool_slot;
+    this.input_slots = input_slots;
+  }
+
+  public ResourceLocation getName() {
+    return name;
+  }
+
+  protected void setName(ResourceLocation name) {
+    this.name = name;
+  }
 
   /** Creates a new builder instance */
   public static Builder builder() {

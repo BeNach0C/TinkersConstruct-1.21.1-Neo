@@ -1,15 +1,11 @@
 {
-  "level_display": "tconstruct:single_level",
+  "level_display": "tconstruct:default",
   "modules": [
     {
       "type": "tconstruct:reduce_tool_damage",
       "formula": [
-        0.01,
-        "$level",
-        "*",
-        0.04,
-        "+",
         "$light",
+        0.05,
         "*"
       ],
       "reinforced_tooltip": true,

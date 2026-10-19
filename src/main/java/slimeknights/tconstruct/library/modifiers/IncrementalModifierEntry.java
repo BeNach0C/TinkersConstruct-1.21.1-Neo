@@ -19,7 +19,7 @@ public class IncrementalModifierEntry extends ModifierEntry {
   private final float effectiveLevel;
 
   protected IncrementalModifierEntry(LazyModifier modifier, int level, int amount, int needed) {
-    super(modifier, level);
+    super(modifier.getId(), level);
     this.amount = Math.max(0, amount);
     this.needed = Math.max(0, needed);
     if (amount >= needed) {
@@ -40,11 +40,11 @@ public class IncrementalModifierEntry extends ModifierEntry {
   public static ModifierEntry of(LazyModifier modifier, int level, int amount, int needed) {
     // If we have a full level, no need to be incremental
     if (needed == 0 || amount >= needed) {
-      return new ModifierEntry(modifier, level);
+      return new ModifierEntry(modifier.getId(), level);
     }
     // no sense saving the needed if amount is 0, thats just the lower level
     if (amount <= 0) {
-      return new ModifierEntry(modifier, level - 1);
+      return new ModifierEntry(modifier.getId(), level - 1);
     }
     return new IncrementalModifierEntry(modifier, level, amount, needed);
   }
@@ -106,7 +106,7 @@ public class IncrementalModifierEntry extends ModifierEntry {
     }
     // if passed in a fulfilled need, then we just completed our level, drop the incremental
     if (amount >= needed) {
-      return new ModifierEntry(modifier, level);
+      return new ModifierEntry(modifier.getId(), level);
     }
     // no full level passed, need to validate the scales
     if (needed == this.needed) {

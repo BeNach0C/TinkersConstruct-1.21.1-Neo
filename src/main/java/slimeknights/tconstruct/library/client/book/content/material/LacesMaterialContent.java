@@ -21,7 +21,7 @@ public class LacesMaterialContent extends SingleMaterialStatContent {
 
   @Override
   protected MaterialStatsId getStatType() {
-    return RepairStats.LACES.getId();
+    return RepairStats.LACES.getStatId();
   }
 
   @Override

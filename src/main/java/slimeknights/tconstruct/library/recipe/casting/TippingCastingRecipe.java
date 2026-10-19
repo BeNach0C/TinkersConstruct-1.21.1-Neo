@@ -6,15 +6,15 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.field.LoadableField;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 import slimeknights.tconstruct.library.modifiers.ModifierId;
 import slimeknights.tconstruct.library.recipe.casting.potion.ModifierPotionCastingRecipe;
@@ -32,7 +32,7 @@ import java.util.List;
 public class TippingCastingRecipe extends ModifierPotionCastingRecipe {
   protected static final LoadableField<Ingredient, ModifierPotionCastingRecipe> TOOL_FIELD = ModifierPotionCastingRecipe.TOOL_FIELD;
   public static final RecordLoadable<TippingCastingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
     TOOL_FIELD, FLUID_FIELD, COOLING_TIME_FIELD, MODIFIER_FIELD, TippingCastingRecipe::new);
 
   public TippingCastingRecipe(TypeAwareRecipeSerializer<?> serializer, ResourceLocation id, String group, Ingredient tool, FluidIngredient fluid, int coolingTime, ModifierId modifier) {
@@ -46,18 +46,18 @@ public class TippingCastingRecipe extends ModifierPotionCastingRecipe {
       // must also have a specific potion, it's what we are going to copy
       // but it can't match what is already on the stack
       CompoundTag fluidTag = inv.getFluidTag();
-      return fluidTag != null && fluidTag.contains(PotionUtils.TAG_POTION, Tag.TAG_STRING)
-        && !ModifierUtil.getPersistentString(inv.getStack(), modifier).equals(fluidTag.getString(PotionUtils.TAG_POTION));
+      return fluidTag != null && fluidTag.contains("Potion", Tag.TAG_STRING)
+        && !ModifierUtil.getPersistentString(inv.getStack(), modifier.getId()).equals(fluidTag.getString("Potion"));
     }
     return false;
   }
 
   @Override
-  public ItemStack assemble(ICastingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ICastingContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ItemStack result = inv.getStack().copy();
     CompoundTag tag = inv.getFluidTag();
     if (tag != null) {
-      ToolStack.from(result).getPersistentData().putString(modifier, tag.getString(PotionUtils.TAG_POTION));
+      ToolStack.from(result).getPersistentData().putString(modifier.getId(), tag.getString("Potion"));
     }
     return result;
   }
@@ -66,20 +66,21 @@ public class TippingCastingRecipe extends ModifierPotionCastingRecipe {
   /* JEI */
 
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
       // first, get a list of potion IDs
       List<String> potions = getPotionIds();
-      List<CompoundTag> potionNBT = potions.stream().map(id -> {
-        CompoundTag fluidNBT = new CompoundTag();
-        fluidNBT.putString(PotionUtils.TAG_POTION, id);
-        return fluidNBT;
-      }).toList();
 
       // next, make 1 copy of the potion fluid with NBT list per potion fluid
       List<FluidStack> basePotions = this.fluid.getFluids();
       List<FluidStack> fluids = basePotions.stream()
-        .flatMap(fluid -> potionNBT.stream().map(nbt -> new FluidStack(fluid.getFluid(), fluid.getAmount(), nbt)))
+        .flatMap(fluid -> potions.stream().map(id -> {
+          FluidStack copy = fluid.copy();
+          CompoundTag tag = new CompoundTag();
+          tag.putString("Potion", id);
+          copy.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(tag));
+          return copy;
+        }))
         .toList();
 
       // finally, create 1 recipe per input tool

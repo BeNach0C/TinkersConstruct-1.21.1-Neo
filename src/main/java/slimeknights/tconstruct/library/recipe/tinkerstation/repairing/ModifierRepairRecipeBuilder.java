@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.library.recipe.tinkerstation.repairing;
 
 import lombok.RequiredArgsConstructor;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
@@ -25,20 +25,20 @@ public class ModifierRepairRecipeBuilder extends AbstractRecipeBuilder<ModifierR
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer) {
-    save(consumer, modifier);
+  public void save(RecipeOutput consumer) {
+    save(consumer, modifier.getId());
   }
 
   /** Builds the recipe for the crafting table using a repair kit */
-  public ModifierRepairRecipeBuilder buildCraftingTable(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
-    ResourceLocation advancementId = buildOptionalAdvancement(id, "tinker_station");
-    consumer.accept(new LoadableFinishedRecipe<>(new ModifierRepairCraftingRecipe(id, modifier, ingredient, repairAmount), ModifierRepairCraftingRecipe.LOADER, advancementId));
+  public ModifierRepairRecipeBuilder buildCraftingTable(RecipeOutput consumer, ResourceLocation id) {
+    net.minecraft.advancements.AdvancementHolder advancementId = buildOptionalAdvancement(id, "tinker_station");
+    consumer.accept(id, new ModifierRepairCraftingRecipe(net.minecraft.world.item.crafting.CraftingBookCategory.EQUIPMENT, modifier, ingredient, repairAmount), null);
     return this;
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
-    ResourceLocation advancementId = buildOptionalAdvancement(id, "tinker_station");
-    consumer.accept(new LoadableFinishedRecipe<>(new ModifierRepairTinkerStationRecipe(id, modifier, ingredient, repairAmount), ModifierRepairTinkerStationRecipe.LOADER, advancementId));
+  public void save(RecipeOutput consumer, ResourceLocation id) {
+    net.minecraft.advancements.AdvancementHolder advancementId = buildOptionalAdvancement(id, "tinker_station");
+    consumer.accept(id, new ModifierRepairTinkerStationRecipe(id, modifier, ingredient, repairAmount), null);
   }
 }

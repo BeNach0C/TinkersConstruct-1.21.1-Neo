@@ -28,7 +28,7 @@ public interface IMaterialItem extends ItemLike, IMaterialUser {
 
   /** Sets the material on the existing stack. */
   default ItemStack setMaterial(ItemStack stack, MaterialVariantId material) {
-    if (canUseMaterial(material.getId())) {
+    if (canUseMaterial(material.getMaterialId())) {
       return setMaterialForced(stack, material);
     }
     return stack;
@@ -37,7 +37,7 @@ public interface IMaterialItem extends ItemLike, IMaterialUser {
   /** Sets the material on the existing stack, bypassing the valid material check. */
   default ItemStack setMaterialForced(ItemStack stack, MaterialVariantId material) {
     // FIXME: it is odd that we assume the NBT format in this method but not in getMaterial, should be consistent in the implementation location
-    stack.getOrCreateTag().putString(MATERIAL_TAG, material.toString());
+    net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, tag -> tag.putString(MATERIAL_TAG, material.toString()));
     return stack;
   }
 
@@ -73,7 +73,7 @@ public interface IMaterialItem extends ItemLike, IMaterialUser {
       boolean added = false;
       if (!showOnlyMaterial.isEmpty()) {
         MaterialVariantId materialId = MaterialVariantId.tryParse(showOnlyMaterial);
-        if (materialId != null && canUseMaterial(materialId.getId())) {
+        if (materialId != null && canUseMaterial(materialId.getMaterialId())) {
           items.accept(this.withMaterialForDisplay(materialId));
           added = true;
         }

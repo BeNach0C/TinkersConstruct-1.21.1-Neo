@@ -11,9 +11,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import slimeknights.mantle.block.entity.MantleBlockEntity;
 import slimeknights.tconstruct.common.TinkerDamageTypes;
 import slimeknights.tconstruct.common.TinkerTags.EntityTypes;
@@ -31,7 +31,6 @@ import java.util.function.Supplier;
 /**
  * Module to handle fetching items from the bounds and interacting with entities in the structure
  */
-@RequiredArgsConstructor
 public class EntityMeltingModule {
   // TODO: migrate to whatever mojang is doing
   private final MantleBlockEntity parent;
@@ -42,6 +41,13 @@ public class EntityMeltingModule {
   private final Function<ItemStack, ItemStack> insertFunction;
   /** Function that returns the bounds to check for entities */
   private final Supplier<AABB> bounds;
+  public EntityMeltingModule(MantleBlockEntity parent, IFluidHandler tank, BooleanSupplier canMeltEntities, Function<ItemStack, ItemStack> insertFunction, Supplier<AABB> bounds) {
+    this.parent = parent;
+    this.tank = tank;
+    this.canMeltEntities = canMeltEntities;
+    this.insertFunction = insertFunction;
+    this.bounds = bounds;
+  }
 
 
   @Nullable

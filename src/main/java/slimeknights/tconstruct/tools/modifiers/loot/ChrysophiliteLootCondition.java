@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.Serializer;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParam;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
@@ -18,14 +17,13 @@ import java.util.Set;
 
 /** Condition to check if the enemy has the chrysophilite modifier */
 public class ChrysophiliteLootCondition implements LootItemCondition {
-  public static final ChrysophiliteSerializer SERIALIZER = new ChrysophiliteSerializer();
   public static final ChrysophiliteLootCondition INSTANCE = new ChrysophiliteLootCondition();
 
   private ChrysophiliteLootCondition() {}
 
   @Override
   public boolean test(LootContext context) {
-    return context.getParamOrNull(LootContextParams.THIS_ENTITY) instanceof LivingEntity living && living.getAttributeValue(TinkerAttributes.CHRYSOPHILITE.get()) >= 1;
+    return context.getParamOrNull(LootContextParams.THIS_ENTITY) instanceof LivingEntity living && living.getAttributeValue(TinkerAttributes.CHRYSOPHILITE) >= 1;
   }
 
   @Override
@@ -33,19 +31,10 @@ public class ChrysophiliteLootCondition implements LootItemCondition {
     return ImmutableSet.of(LootContextParams.THIS_ENTITY);
   }
 
+  public static final com.mojang.serialization.MapCodec<ChrysophiliteLootCondition> CODEC = com.mojang.serialization.MapCodec.unit(INSTANCE);
+
   @Override
   public LootItemConditionType getType() {
     return TinkerModifiers.chrysophiliteLootCondition.get();
-  }
-
-  /** Loot serializer instance */
-  private static class ChrysophiliteSerializer implements Serializer<ChrysophiliteLootCondition> {
-    @Override
-    public void serialize(JsonObject json, ChrysophiliteLootCondition loot, JsonSerializationContext context) {}
-
-    @Override
-    public ChrysophiliteLootCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
-      return INSTANCE;
-    }
   }
 }

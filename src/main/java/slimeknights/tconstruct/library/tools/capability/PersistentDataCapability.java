@@ -1,144 +1,103 @@
 package slimeknights.tconstruct.library.tools.capability;
 
-import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.attachment.IAttachmentHolder;
+import net.neoforged.neoforge.attachment.IAttachmentSerializer;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.bus.api.EventPriority;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.network.SyncPersistentDataPacket;
 import slimeknights.tconstruct.common.network.TinkerNetwork;
 import slimeknights.tconstruct.library.tools.nbt.ModDataNBT;
+import slimeknights.tconstruct.library.tools.nbt.ModifierNBT;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
- * Capability to store persistent NBT data on an entity. For players, this is automatically synced to the client on load, but not during gameplay.
+ * Data attachment to store persistent NBT data on an entity. For players, this is automatically synced to the client on load, but not during gameplay.
  * Persists after death, will reassess if we need some data to not persist death
  */
 public class PersistentDataCapability {
   private PersistentDataCapability() {}
 
-  /** Capability ID */
-  private static final ResourceLocation ID = TConstruct.getResource("persistent_data");
-  /** Capability type */
-  public static final Capability<ModDataNBT> CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {});
+  /** Shared attachment register for Tinkers entity data */
+  public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, TConstruct.MOD_ID);
 
-  /** Gets the data or warns if its missing */
+  /** Attachment type */
+  public static final Supplier<AttachmentType<ModDataNBT>> CAPABILITY = ATTACHMENTS.register("persistent_data", () -> AttachmentType.builder(() -> new ModDataNBT())
+    .serialize(new IAttachmentSerializer<CompoundTag, ModDataNBT>() {
+      @Override
+      public ModDataNBT read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
+        return ModDataNBT.readFromNBT(tag);
+      }
+
+      @Nullable
+      @Override
+      public CompoundTag write(ModDataNBT attachment, HolderLookup.Provider provider) {
+        CompoundTag tag = attachment.getCopy();
+        return tag.isEmpty() ? null : tag;
+      }
+    })
+    .copyOnDeath()
+    .build());
+
+  /** Modifiers attachment type */
+  public static final Supplier<AttachmentType<EntityModifierCapability.Holder>> MODIFIERS = ATTACHMENTS.register("modifiers", () -> AttachmentType.builder(EntityModifierCapability.Holder::new)
+    .serialize(new IAttachmentSerializer<ListTag, EntityModifierCapability.Holder>() {
+      @Override
+      public EntityModifierCapability.Holder read(IAttachmentHolder holder, ListTag tag, HolderLookup.Provider provider) {
+        EntityModifierCapability.Holder data = new EntityModifierCapability.Holder();
+        data.setModifiers(ModifierNBT.readFromNBT(tag));
+        return data;
+      }
+
+      @Nullable
+      @Override
+      public ListTag write(EntityModifierCapability.Holder attachment, HolderLookup.Provider provider) {
+        return attachment.getModifiers().isEmpty() ? null : attachment.getModifiers().serializeToNBT();
+      }
+    })
+    .build());
+
+  /** Gets the data for the given entity, creating it if missing */
+  public static ModDataNBT get(Entity entity) {
+    return entity.getData(CAPABILITY);
+  }
+
+  /** Gets the data or warns if its missing. Kept for API compatibility, attachments are always present. */
   public static ModDataNBT getOrWarn(Entity entity) {
-    Optional<ModDataNBT> data = entity.getCapability(CAPABILITY).resolve();
-    if (data.isEmpty()) {
-      TConstruct.LOG.warn("Missing Tinkers NBT on entity {}, this should not happen", entity.getType());
-      return new ModDataNBT();
-    }
-    return data.get();
+    return get(entity);
   }
 
-  /** Registers this capability */
+  private static boolean registered = false;
+
+  /** Initializes the deferred register during mod construction */
+  public static void init(net.neoforged.bus.api.IEventBus bus) {
+    ATTACHMENTS.register(bus);
+  }
+
+  /** Registers listeners for this attachment */
   public static void register() {
-    FMLJavaModLoadingContext.get().getModEventBus().addListener(EventPriority.NORMAL, false, RegisterCapabilitiesEvent.class, PersistentDataCapability::register);
-    MinecraftForge.EVENT_BUS.addGenericListener(Entity.class, PersistentDataCapability::attachCapability);
-    MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, PlayerEvent.Clone.class, PersistentDataCapability::playerClone);
-    MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, PlayerEvent.PlayerRespawnEvent.class, PersistentDataCapability::playerRespawn);
-    MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, PlayerEvent.PlayerChangedDimensionEvent.class, PersistentDataCapability::playerChangeDimension);
-    MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, PlayerEvent.PlayerLoggedInEvent.class, PersistentDataCapability::playerLoggedIn);
-  }
-
-  /** Registers the capability with the event bus */
-  private static void register(RegisterCapabilitiesEvent event) {
-    event.register(ModDataNBT.class);
-  }
-
-  /** Event listener to attach the capability */
-  private static void attachCapability(AttachCapabilitiesEvent<Entity> event) {
-    Entity entity = event.getObject();
-    // must be on living entities as we use this for potions, but also support anything else with modifiers, this is their data
-    if (entity instanceof LivingEntity || EntityModifierCapability.supportCapability(entity)) {
-      Provider provider = new Provider();
-      event.addCapability(ID, provider);
-      event.addListener(provider);
+    if (registered) {
+      return;
     }
+    registered = true;
+    NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, PlayerEvent.PlayerRespawnEvent.class, event -> sync(event.getEntity()));
+    NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, PlayerEvent.PlayerChangedDimensionEvent.class, event -> sync(event.getEntity()));
+    NeoForge.EVENT_BUS.addListener(EventPriority.NORMAL, false, PlayerEvent.PlayerLoggedInEvent.class, event -> sync(event.getEntity()));
   }
 
   /** Syncs the data to the given player */
   private static void sync(Player player) {
-    player.getCapability(CAPABILITY).ifPresent(data -> TinkerNetwork.getInstance().sendTo(new SyncPersistentDataPacket(data.getCopy()), player));
-  }
-
-  /** copy caps when the player respawns/returns from the end */
-  private static void playerClone(PlayerEvent.Clone event) {
-    Player original = event.getOriginal();
-    original.reviveCaps();
-    original.getCapability(CAPABILITY).ifPresent(oldData -> {
-      CompoundTag nbt = oldData.getCopy();
-      if (!nbt.isEmpty()) {
-        event.getEntity().getCapability(CAPABILITY).ifPresent(newData -> newData.copyFrom(nbt));
-      }
-    });
-    original.invalidateCaps();
-  }
-
-  /** sync caps when the player respawns/returns from the end */
-  private static void playerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-    sync(event.getEntity());
-  }
-
-  /** sync caps when the player changes dimensions */
-  private static void playerChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-    sync(event.getEntity());
-  }
-
-  /** sync caps when the player logs in */
-  private static void playerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-    sync(event.getEntity());
-  }
-
-  /** Capability provider instance */
-  private static class Provider implements ICapabilitySerializable<CompoundTag>, Runnable {
-    private Lazy<CompoundTag> nbt;
-    private LazyOptional<ModDataNBT> capability;
-    private Provider() {
-      this.nbt = Lazy.of(CompoundTag::new);
-      this.capability = LazyOptional.of(() -> ModDataNBT.readFromNBT(nbt.get()));
-    }
-
-    @Nonnull
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-      return CAPABILITY.orEmpty(cap, capability);
-    }
-
-    @Override
-    public void run() {
-      // called when capabilities invalidate, create a new cap just in case they are revived later
-      capability.invalidate();
-      capability = LazyOptional.of(() -> ModDataNBT.readFromNBT(nbt.get()));
-    }
-
-    @Override
-    public CompoundTag serializeNBT() {
-      return nbt.get().copy();
-    }
-
-    @Override
-    public void deserializeNBT(CompoundTag nbt) {
-      this.nbt = Lazy.of(() -> nbt);
-      run();
-    }
+    TinkerNetwork.getInstance().sendTo(new SyncPersistentDataPacket(get(player).getCopy()), player);
   }
 }

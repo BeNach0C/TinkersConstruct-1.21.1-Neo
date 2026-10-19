@@ -96,12 +96,19 @@ public class TinkerTabsWidget implements Renderable, GuiEventListener, Narratabl
     }
   }
 
+  public static long lastTabClickTime = 0;
+  public static double savedCursorX = 0;
+  public static double savedCursorY = 0;
+
   private void onNewTabSelection(BlockPos pos) {
     Level level = this.parent.getMinecraft().level;
 
     if (level != null) {
       BlockState state = level.getBlockState(pos);
       if (state.getBlock() instanceof ITabbedBlock) {
+        lastTabClickTime = System.currentTimeMillis();
+        savedCursorX = this.parent.getMinecraft().mouseHandler.xpos();
+        savedCursorY = this.parent.getMinecraft().mouseHandler.ypos();
         TinkerNetwork.getInstance().sendToServer(new StationTabPacket(pos));
 
         // sound!
@@ -184,7 +191,7 @@ public class TinkerTabsWidget implements Renderable, GuiEventListener, Narratabl
       }
 
       // TODO: renderComponentTooltip->renderTooltip
-      graphics.renderComponentTooltip(parent.font, Lists.newArrayList(title), mouseX, mouseY);
+      graphics.renderComponentTooltip(net.minecraft.client.Minecraft.getInstance().font, Lists.newArrayList(title), mouseX, mouseY);
     }
   }
 

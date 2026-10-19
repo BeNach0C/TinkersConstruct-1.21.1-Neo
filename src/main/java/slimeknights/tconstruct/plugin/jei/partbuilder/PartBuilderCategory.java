@@ -53,17 +53,13 @@ public class PartBuilderCategory extends AbstractRecipeCategory<IDisplayPartBuil
 
   @Override
   public void createRecipeExtras(IRecipeExtrasBuilder builder, IDisplayPartBuilderRecipe recipe, IFocusGroup focuses) {
-    builder.addRecipeArrowWidget().setPosition(66, 15);
+    builder.addRecipeArrow().setPosition(66, 15);
     Component title = recipe.getDisplayTitle();
     if (title != null && recipe.getMaterials().isEmpty()) {
-      ITextWidget widget = builder.addText(title, 118, 9)
+      builder.addText(title, 118, 9)
         .setPosition(3, 2)
         .setColor(-1)
         .setShadow(true);
-      List<Component> tooltip = recipe.getTooltip();
-      if (!tooltip.isEmpty()) {
-        widget.setTooltip(tooltip);
-      }
     }
   }
 
@@ -134,11 +130,6 @@ public class PartBuilderCategory extends AbstractRecipeCategory<IDisplayPartBuil
         builder.createFocusLink(linked.toArray(IRecipeSlotBuilder[]::new));
       }
     }
-  }
-
-  @Override
-  public ResourceLocation getRegistryName(IDisplayPartBuilderRecipe recipe) {
-    return recipe.getId();
   }
 
   /** Tooltip for the pattern showing the cost */

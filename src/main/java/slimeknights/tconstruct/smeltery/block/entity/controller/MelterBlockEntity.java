@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.smeltery.block.entity.controller;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,12 +15,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 import slimeknights.mantle.block.entity.NameableBlockEntity;
 import slimeknights.tconstruct.TConstruct;
@@ -53,13 +51,25 @@ public class MelterBlockEntity extends NameableBlockEntity implements ITankInven
 
   /* Tank */
   /** Internal fluid tank output */
-  @Getter
   protected final FluidTankAnimated tank = new FluidTankAnimated(TANK_CAPACITY, this);
   /** Capability holder for the tank */
-  private final LazyOptional<IFluidHandler> tankHolder = LazyOptional.of(() -> tank);
   /** Last comparator strength to reduce block updates */
-  @Getter @Setter
   private int lastStrength = -1;
+
+  @Override
+  public FluidTankAnimated getTank() {
+    return tank;
+  }
+
+  @Override
+  public int getLastStrength() {
+    return lastStrength;
+  }
+
+  @Override
+  public void setLastStrength(int lastStrength) {
+    this.lastStrength = lastStrength;
+  }
 
   /** Internal tick counter */
   private int tick;
@@ -68,11 +78,14 @@ public class MelterBlockEntity extends NameableBlockEntity implements ITankInven
   /** Handles all the melting needs */
   private final MeltingModuleInventory meltingInventory = new MeltingModuleInventory(this, tank, Config.COMMON.melterOreRate, 3);
   /** Capability holder for the tank */
-  private final LazyOptional<IItemHandler> inventoryHolder = LazyOptional.of(() -> meltingInventory);
 
   /** Fuel handling logic */
   @Getter
   private final SolidFuelModule fuelModule;
+
+  public SolidFuelModule getFuelModule() {
+    return fuelModule;
+  }
 
   /** Main constructor */
   public MelterBlockEntity(BlockPos pos, BlockState state) {
@@ -106,25 +119,6 @@ public class MelterBlockEntity extends NameableBlockEntity implements ITankInven
     return ModelData.builder()
                     .with(ModelProperties.FLUID_STACK, tank.getFluid())
                     .with(ModelProperties.TANK_CAPACITY, tank.getCapacity()).build();
-  }
-
-  @Nonnull
-  @Override
-  public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-    if (capability == ForgeCapabilities.FLUID_HANDLER) {
-      return tankHolder.cast();
-    }
-    if (capability == ForgeCapabilities.ITEM_HANDLER) {
-      return inventoryHolder.cast();
-    }
-    return super.getCapability(capability, facing);
-  }
-
-  @Override
-  public void invalidateCaps() {
-    super.invalidateCaps();
-    this.tankHolder.invalidate();
-    this.inventoryHolder.invalidate();
   }
 
   /*
@@ -193,25 +187,26 @@ public class MelterBlockEntity extends NameableBlockEntity implements ITankInven
   }
 
   @Override
-  public void load(CompoundTag tag) {
-    super.load(tag);
-    tank.readFromNBT(tag.getCompound(NBTTags.TANK));
+  public void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
+    super.loadAdditional(tag, provider);
+    tank.readFromNBT(provider, tag.getCompound(NBTTags.TANK));
     fuelModule.readFromTag(tag);
     if (tag.contains(TAG_INVENTORY, Tag.TAG_COMPOUND)) {
-      meltingInventory.readFromTag(tag.getCompound(TAG_INVENTORY));
+      meltingInventory.readFromTag(tag.getCompound(TAG_INVENTORY), provider);
     }
   }
 
   @Override
   public void saveSynced(CompoundTag tag) {
     super.saveSynced(tag);
-    tag.put(NBTTags.TANK, tank.writeToNBT(new CompoundTag()));
-    tag.put(TAG_INVENTORY, meltingInventory.writeToTag());
+    net.minecraft.core.HolderLookup.Provider provider = level != null ? level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY;
+    tag.put(NBTTags.TANK, tank.writeToNBT(provider, new CompoundTag()));
+    tag.put(TAG_INVENTORY, meltingInventory.writeToTag(provider));
   }
 
   @Override
-  public void saveAdditional(CompoundTag tag) {
-    super.saveAdditional(tag);
+  public void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
+    super.saveAdditional(tag, provider);
     fuelModule.writeToTag(tag);
   }
 }

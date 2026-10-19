@@ -2,7 +2,9 @@ package slimeknights.tconstruct.plugin.jei.modifiers;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
+import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
@@ -42,7 +44,13 @@ public class ModifierWorktableCategory extends AbstractRecipeCategory<IModifierW
     builder.addText(recipe.getTitle(), 115, 9)
       .setPosition(3, 2)
       .setColor(0x404040);
-    builder.addTooltipArea(0, 2, 121, 11).setTooltip(recipe.getDescription(null));
+  }
+
+  @Override
+  public void getTooltip(ITooltipBuilder tooltip, IModifierWorktableRecipe recipe, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
+    if (mouseX >= 0 && mouseX <= 121 && mouseY >= 2 && mouseY <= 13) {
+      tooltip.add(recipe.getDescription(null));
+    }
   }
 
   @Override
@@ -72,10 +80,5 @@ public class ModifierWorktableCategory extends AbstractRecipeCategory<IModifierW
     if (recipe.linkToolsModifiers() && tools.size() == modifiers.size()) {
       builder.createFocusLink(toolSlot, modifierSlot);
     }
-  }
-
-  @Override
-  public ResourceLocation getRegistryName(IModifierWorktableRecipe recipe) {
-    return recipe.getId();
   }
 }

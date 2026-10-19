@@ -1,0 +1,11 @@
+﻿{
+    "values":  [
+                   "tconstruct:soul_glass_pane",
+                   {
+                       "id":  "#c:glass_panes",
+                       "required":  false
+                   },
+                   "minecraft:glass_pane",
+                   "tconstruct:clear_glass_pane"
+               ]
+}

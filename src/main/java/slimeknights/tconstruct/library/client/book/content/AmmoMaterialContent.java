@@ -55,7 +55,7 @@ public class AmmoMaterialContent extends AbstractMaterialContent {
   protected String getTextKey(MaterialId material) {
     // TODO 1.21: drop legacy key
     if (detailed) {
-      String legacyKey = "material." + material.toLanguageKey() + ".ammo";
+      String legacyKey = net.minecraft.Util.makeDescriptionId("material", material.getId()) + ".ammo";
       if (Util.canTranslate(legacyKey)) {
         return legacyKey;
       }

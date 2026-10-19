@@ -73,7 +73,7 @@ public abstract class MaterialIndexSwappingRecipe extends MaterialSwappingRecipe
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     // copy the tool NBT to ensure the original tool is intact
     List<MaterialStatsId> materials = ToolMaterialHook.stats(inv.getTinkerable().getDefinition());
 
@@ -107,7 +107,7 @@ public abstract class MaterialIndexSwappingRecipe extends MaterialSwappingRecipe
 
         // ensure this material is valid for the tool
         // may not be if the part you choose is not the tool part for this tool
-        if (MaterialRegistry.getInstance().getMaterialStats(partVariant.getId(), materials.get(index)).isEmpty()) {
+        if (MaterialRegistry.getInstance().getMaterialStats(partVariant.getMaterialId(), materials.get(index)).isEmpty()) {
           return INVALID_MATERIAL;
         }
 

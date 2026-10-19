@@ -4,9 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.network.packet.IThreadsafePacket;
 import slimeknights.tconstruct.TConstruct;
 
@@ -16,10 +18,18 @@ import java.util.Map.Entry;
 /** Packet to sync tool definitions to the client */
 @RequiredArgsConstructor
 public class UpdateToolDefinitionDataPacket implements IThreadsafePacket {
+  public static final CustomPacketPayload.Type<UpdateToolDefinitionDataPacket> ID = new CustomPacketPayload.Type<>(TConstruct.getResource("update_tool_definition_data"));
+  public static final StreamCodec<RegistryFriendlyByteBuf, UpdateToolDefinitionDataPacket> CODEC = StreamCodec.of((buf, packet) -> packet.encode(buf), UpdateToolDefinitionDataPacket::new);
+
+  @Override
+  public CustomPacketPayload.Type<UpdateToolDefinitionDataPacket> type() {
+    return ID;
+  }
+
   @Getter(AccessLevel.PROTECTED)
   private final Map<ResourceLocation, ToolDefinitionData> dataMap;
 
-  public UpdateToolDefinitionDataPacket(FriendlyByteBuf buffer) {
+  public UpdateToolDefinitionDataPacket(RegistryFriendlyByteBuf buffer) {
     int size = buffer.readVarInt();
     ImmutableMap.Builder<ResourceLocation, ToolDefinitionData> builder = ImmutableMap.builder();
     for (int i = 0; i < size; i++) {
@@ -36,7 +46,7 @@ public class UpdateToolDefinitionDataPacket implements IThreadsafePacket {
   }
 
   @Override
-  public void encode(FriendlyByteBuf buffer) {
+  public void encode(RegistryFriendlyByteBuf buffer) {
     buffer.writeVarInt(dataMap.size());
     for (Entry<ResourceLocation, ToolDefinitionData> entry : dataMap.entrySet()) {
       ResourceLocation name = entry.getKey();
@@ -51,7 +61,7 @@ public class UpdateToolDefinitionDataPacket implements IThreadsafePacket {
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(IPayloadContext context) {
     ToolDefinitionLoader.getInstance().updateDataFromServer(dataMap);
   }
 }

@@ -39,7 +39,7 @@ public record ThornsModule(ResourceKey<DamageType> damageType, LevelingValue cha
 
   /** Creates a new builder instance */
   public static CounterModule.Builder<ThornsModule> type(ResourceKey<DamageType> type) {
-    return new CounterModule.Builder<>((chance, constant, random, durability, defender, attacker, condition) -> new ThornsModule(type, chance, constant, random, durability, defender, attacker, condition));
+    return new CounterModule.Builder<ThornsModule>((chance, constant, random, durability, defender, attacker, condition) -> new ThornsModule(type, chance, constant, random, durability, defender, attacker, condition));
   }
 
   @Override

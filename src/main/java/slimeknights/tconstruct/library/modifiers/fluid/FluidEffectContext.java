@@ -29,8 +29,8 @@ import static slimeknights.tconstruct.library.tools.helper.ModifierUtil.asPlayer
 
 /** Context for calling fluid effects */
 @Getter
-@RequiredArgsConstructor
 public abstract class FluidEffectContext {
+  protected FluidEffectContext(Level level, @Nullable LivingEntity entity, @Nullable Player player, @Nullable Projectile projectile, ItemStack stack) { this.level = level; this.entity = entity; this.player = player; this.projectile = projectile; this.stack = stack; }
   protected final Level level;
   /** Entity using the fluid */
   @Nullable
@@ -102,7 +102,7 @@ public abstract class FluidEffectContext {
 
   /** If true, this context is not allowed to place blocks at the given position */
   public boolean placeRestricted(ItemStack stack) {
-    return player != null && !player.mayBuild() && !stack.hasAdventureModePlaceTagForBlock(level.registryAccess().registryOrThrow(Registries.BLOCK), new BlockInWorld(level, getBlockPos(), false));
+    return player != null && !player.mayBuild(); // TODO 1.21.1 hasAdventureModePlaceTagForBlock
   }
 
   /** Context for fluid effects targeting an entity */
@@ -111,8 +111,11 @@ public abstract class FluidEffectContext {
     private final net.minecraft.world.entity.Entity target;
     @Nullable
     private final LivingEntity livingTarget;
+    public net.minecraft.world.entity.Entity getTarget() { return this.target; }
+    public LivingEntity getLivingTarget() { return this.livingTarget; }
     @Getter
     private final Vec3 location;
+    @Override public Vec3 getLocation() { return this.location; }
 
     private Entity(Level level, @Nullable LivingEntity holder, @Nullable Player player, @Nullable Projectile projectile, ItemStack stack, net.minecraft.world.entity.Entity target, @Nullable LivingEntity livingTarget, @Nullable Vec3 location) {
       super(level, holder, player, projectile, stack);
@@ -217,9 +220,12 @@ public abstract class FluidEffectContext {
   }
 
   @Accessors(fluent = true)
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   @CanIgnoreReturnValue
   public static class Builder {
+    protected Builder(Level level) { this.level = level; }
+    public Builder projectile(Projectile projectile) { this.projectile = projectile; return this; }
+    public Builder location(Vec3 location) { this.location = location; return this; }
+    public Builder stack(ItemStack stack) { this.stack = stack; return this; }
     /** Context level */
     private final Level level;
     private LivingEntity entity = null;

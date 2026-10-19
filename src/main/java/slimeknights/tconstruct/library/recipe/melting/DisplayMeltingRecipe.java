@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.helper.FluidOutput;
 import slimeknights.tconstruct.common.config.Config;
 import slimeknights.tconstruct.library.recipe.melting.IMeltingContainer.OreRateType;
@@ -47,7 +47,6 @@ public class DisplayMeltingRecipe implements IDisplayableMeltingRecipe {
 
   @Setter
   @Accessors(fluent = true)
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder {
     private final ResourceLocation id;
     private List<ItemStack> inputs;
@@ -55,6 +54,10 @@ public class DisplayMeltingRecipe implements IDisplayableMeltingRecipe {
     private List<FluidStack> outputs;
     /** List of byproducts before scaling */
     private final List<List<FluidStack>> byproducts = new ArrayList<>();
+
+    public Builder(ResourceLocation id) {
+      this.id = id;
+    }
     private int temperature = 0;
     private int time = 0;
     private OreRateType oreType = null;

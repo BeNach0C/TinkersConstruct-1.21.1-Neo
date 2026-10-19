@@ -2,8 +2,6 @@ package slimeknights.tconstruct.tables.recipe;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,7 +12,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.TinkerTags;
@@ -25,7 +22,7 @@ import slimeknights.tconstruct.library.recipe.RecipeResult;
 import slimeknights.tconstruct.library.recipe.display.RecipeSlot;
 import slimeknights.tconstruct.library.recipe.display.RecipeSlots;
 import slimeknights.tconstruct.library.recipe.material.MaterialRecipe;
-import slimeknights.tconstruct.library.recipe.tinkerstation.IDisplayCraftingTinkering;
+import slimeknights.tconstruct.library.recipe.tinkerstation.IDisplayToolModification;
 import slimeknights.tconstruct.library.recipe.tinkerstation.IMutableTinkerStationContainer;
 import slimeknights.tconstruct.library.recipe.tinkerstation.ITinkerStationContainer;
 import slimeknights.tconstruct.library.recipe.tinkerstation.ITinkerStationRecipe;
@@ -58,10 +55,9 @@ import java.util.stream.IntStream;
  * @see slimeknights.mantle.recipe.helper.SimpleFinishedRecipe
  */
 @RequiredArgsConstructor
-public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisplayCraftingTinkering> {
+public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisplayToolModification> {
   public static final Component TITLE = TConstruct.makeTranslation("recipe", "tool_repair");
   private static final Component TOOLTIP = TConstruct.makeTranslation("recipe", "tool_repair.tooltip");
-  private static final List<Component> INFORMATION = List.of(TITLE, TConstruct.makeTranslation("recipe", "tool_repair.crafting_table").withStyle(ChatFormatting.GRAY));
   public static final Component REPAIRED = TConstruct.makeTranslation("recipe", "tool_repair.fully_repaired");
   protected static final RecipeResult<LazyToolStack> FULLY_REPAIRED = RecipeResult.failure(REPAIRED);
   /** No action int consumer for recipe result */
@@ -80,7 +76,7 @@ public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRe
     // try repair kit first
     ItemStack item = inv.getInput(slot);
     if (item.getItem() instanceof IRepairKitItem kit) {
-      return kit.getMaterial(item).getId();
+      return kit.getMaterial(item).getMaterialId();
     }
     // material recipe fallback
     MaterialRecipe recipe = inv.getInputMaterial(slot);
@@ -167,7 +163,7 @@ public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRe
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ToolStack tool = inv.getTinkerable();
     if (tool.getDefinition() == ToolDefinition.EMPTY) {
       return RecipeResult.pass();
@@ -256,21 +252,21 @@ public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRe
 
   /* JEI */
 
-  private List<IDisplayCraftingTinkering> displayRecipes;
+  private List<IDisplayToolModification> displayRecipes;
 
   @Override
-  public List<IDisplayCraftingTinkering> getRecipes(RegistryAccess access) {
+  public List<IDisplayToolModification> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
       CompoundTag stats = StatsNBT.builder().set(ToolStats.DURABILITY, 1000).build().serializeToNBT();
       MaterialNBT displayMaterials = new MaterialNBT(IntStream.range(0, 5).mapToObj(i -> MaterialVariant.of(ToolBuildHandler.getRenderMaterial(i))).toList());
       IRepairKitItem repairKit = TinkerToolParts.repairKit.get();
 
       // list of materials to try for repair
-      List<IDisplayCraftingTinkering> recipes = new ArrayList<>();
+      List<IDisplayToolModification> recipes = new ArrayList<>();
       Set<Item> dynamicTools = new HashSet<>();
       List<ItemStack> dynamicToolStacks = new ArrayList<>();
       for (Holder<Item> holder : BuiltInRegistries.ITEM.getTagOrEmpty(TinkerTags.Items.DURABILITY)) {
-        if (holder.isBound() && holder.get() instanceof IModifiable modifiable) {
+        if (holder.isBound() && holder.value() instanceof IModifiable modifiable) {
           CompoundTag tag = new CompoundTag();
           ToolStack tool = ToolStack.from(modifiable.asItem(), modifiable.getToolDefinition(), tag);
           // assign display materials if needed
@@ -321,30 +317,12 @@ public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRe
     return displayRecipes;
   }
 
-  /** Used in JEI to override the crafting table ID for the display recipes. */
-  @Internal
-  public static void setCraftingId(List<IDisplayCraftingTinkering> recipes, ResourceLocation id) {
-    for (IDisplayCraftingTinkering recipe : recipes) {
-      if (recipe instanceof DisplayRecipe display) {
-        display.setId(id);
-      }
-    }
-  }
-
-  /** Common logic for {@link FixedDisplayRecipe} and {@link DynamicDisplayRecipe} */
-  @Getter
-  private static abstract class DisplayRecipe implements IDisplayCraftingTinkering {
-    /** ID for crafting table tab */
-    @Setter
-    private ResourceLocation id;
+  @RequiredArgsConstructor
+  private static abstract class DisplayRecipe implements IDisplayToolModification {
+    @Getter
     private final ResourceLocation recipeId;
+    @Getter
     private final List<ItemStack> toolWithoutModifier;
-
-    private DisplayRecipe(ResourceLocation id, List<ItemStack> toolWithoutModifier) {
-      this.id = id;
-      this.recipeId = id;
-      this.toolWithoutModifier = toolWithoutModifier;
-    }
 
     @Override
     public Component getTitle() {
@@ -354,11 +332,6 @@ public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRe
     @Override
     public Component getTooltip() {
       return TOOLTIP;
-    }
-
-    @Override
-    public List<Component> getInformation() {
-      return INFORMATION;
     }
 
     @Override
@@ -414,7 +387,7 @@ public class TinkerStationRepairRecipe implements ITinkerStationRecipe, IMultiRe
         // fetch info on the input item, will change how we repair later
         ItemStack materialItem = inputs.get(0);
         IRepairKitItem repairKit = TinkerToolParts.repairKit.get();
-        MaterialId material = repairKit.getMaterial(materialItem).getId();
+        MaterialId material = repairKit.getMaterial(materialItem).getMaterialId();
         // did we find a material?
         if (!MaterialId.UNKNOWN.equals(material)) {
           ItemStack toolStack = toolSlot.get();

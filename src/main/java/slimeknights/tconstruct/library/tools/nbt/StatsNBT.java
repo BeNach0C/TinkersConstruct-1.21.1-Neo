@@ -29,7 +29,6 @@ import java.util.Set;
  * Generic container for tool stats, allows addons to select which stats they wish to use
  */
 @SuppressWarnings("ClassCanBeRecord")
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @EqualsAndHashCode
 @ToString
 public class StatsNBT {
@@ -40,6 +39,10 @@ public class StatsNBT {
 
   /** All currently contained stats */
   private final Map<IToolStat<?>, Object> stats;
+
+  StatsNBT(Map<IToolStat<?>, Object> stats) {
+    this.stats = stats;
+  }
 
   /** Creates a new stats builder */
   public static Builder builder() {

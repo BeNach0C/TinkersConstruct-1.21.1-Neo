@@ -5,7 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.field.LoadableField;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
@@ -13,6 +13,7 @@ import slimeknights.mantle.data.predicate.IJsonPredicate;
 import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.tconstruct.library.json.TinkerLoadables;
 import slimeknights.tconstruct.library.json.predicate.material.MaterialPredicate;
 import slimeknights.tconstruct.library.materials.definition.MaterialVariant;
@@ -33,7 +34,7 @@ import java.util.List;
 public class MaterialCastingRecipe extends AbstractMaterialCastingRecipe implements IMultiRecipe<IDisplayableCastingRecipe> {
   protected static final LoadableField<IMaterialItem,MaterialCastingRecipe> RESULT_FIELD = TinkerLoadables.MATERIAL_ITEM.requiredField("result", r -> r.result);
   public static final RecordLoadable<MaterialCastingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(),
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(),
     ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP, CAST_FIELD,
     ITEM_COST_FIELD, RESULT_FIELD, MATERIALS_FIELD, CAST_CONSUMED_FIELD, SWITCH_SLOTS_FIELD,
     MaterialCastingRecipe::new);
@@ -63,12 +64,12 @@ public class MaterialCastingRecipe extends AbstractMaterialCastingRecipe impleme
   }
 
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return new ItemStack(result);
   }
 
   @Override
-  public ItemStack assemble(ICastingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ICastingContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     return result.withMaterial(getFluidRecipe(inv).getOutput().getVariant());
   }
 
@@ -77,7 +78,7 @@ public class MaterialCastingRecipe extends AbstractMaterialCastingRecipe impleme
   protected List<IDisplayableCastingRecipe> multiRecipes;
 
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       List<MaterialFluidRecipe> recipes = MaterialCastingLookup.getSortedCastingFluids();
       List<FluidStack> fluids = new ArrayList<>(recipes.size());

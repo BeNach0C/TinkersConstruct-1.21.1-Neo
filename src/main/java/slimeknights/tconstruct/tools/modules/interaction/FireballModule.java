@@ -154,9 +154,7 @@ public record FireballModule(List<FireballType> options, DamageTypePair damageTy
         Vec3 lookVec = entity.getLookAngle().scale(2);
         RandomSource random = entity.getRandom();
         CustomFireball projectile = new CustomFireball(level, entity, lookVec.x + random.nextGaussian() * inaccuracy, lookVec.y, lookVec.z + random.nextGaussian() * inaccuracy);
-        projectile.xPower *= velocity;
-        projectile.yPower *= velocity;
-        projectile.zPower *= velocity;
+        projectile.setDeltaMovement(projectile.getDeltaMovement().scale(velocity));
         projectile.setPower(power);
         projectile.setPos(projectile.getX(), entity.getY(0.5D) + 0.5D, projectile.getZ());
 
@@ -212,10 +210,10 @@ public record FireballModule(List<FireballType> options, DamageTypePair damageTy
 
   @Override
   public boolean startInteract(IToolStackView tool, ModifierEntry modifier, Player player, EquipmentSlot slot, TooltipKey keyModifier) {
-    if (keyModifier == TooltipKey.NORMAL && condition.matches(tool, modifier) && !tool.isBroken() && !player.hasEffect(TinkerModifiers.fireballCooldownEffect.get())) {
+    if (keyModifier == TooltipKey.NORMAL && condition.matches(tool, modifier) && !tool.isBroken() && !player.hasEffect(TinkerModifiers.fireballCooldownEffect)) {
       if (shoot(tool, modifier, player, player, slot)) {
         if (!player.level().isClientSide) {
-          player.addEffect(new MobEffectInstance(TinkerModifiers.fireballCooldownEffect.get(), GeneralInteractionModifierHook.getDrawtime(tool, player, 1)));
+          player.addEffect(new MobEffectInstance(TinkerModifiers.fireballCooldownEffect, GeneralInteractionModifierHook.getDrawtime(tool, player, 1)));
         }
         return true;
       }
@@ -229,8 +227,7 @@ public record FireballModule(List<FireballType> options, DamageTypePair damageTy
     return new Builder();
   }
 
-  @Setter
-  @Accessors(fluent = true)
+  
   @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder extends ModuleBuilder.Stack<Builder> {
     private final List<FireballType> options = new ArrayList<>();
@@ -241,6 +238,11 @@ public record FireballModule(List<FireballType> options, DamageTypePair damageTy
     private SoundEvent sound = SoundEvents.BLAZE_SHOOT;
 
     /** Adds the given modifiers */
+    public Builder damageType(DamageTypePair damageType) { this.damageType = damageType; return this; }
+    public Builder damageMultiplier(float damageMultiplier) { this.damageMultiplier = damageMultiplier; return this; }
+    public Builder durability(LevelingInt durability) { this.durability = durability; return this; }
+    public Builder sound(SoundEvent sound) { this.sound = sound; return this; }
+
     public Builder modifier(ModifierEntry... modifiers) {
       Collections.addAll(this.ammoModifiers, modifiers);
       return this;
@@ -269,11 +271,9 @@ public record FireballModule(List<FireballType> options, DamageTypePair damageTy
       return fireball(Ingredient.of(item));
     }
 
-    @Setter
-    @Accessors(fluent = true)
-    @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
     public class Fireball {
       private final Ingredient match;
+      protected Fireball(net.minecraft.world.item.crafting.Ingredient match) { this.match = match; }
       private final List<ModifierEntry> ammoModifiers = new ArrayList<>();
       @Nullable
       private DamageTypePair damageType;

@@ -8,10 +8,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.ToolAction;
+import net.neoforged.neoforge.common.ItemAbility;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.modifiers.ModifierHooks;
-import slimeknights.tconstruct.library.modifiers.hook.behavior.ToolActionModifierHook;
+
 import slimeknights.tconstruct.library.modifiers.hook.interaction.EntityInteractionModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.InteractionSource;
 import slimeknights.tconstruct.library.modifiers.impl.NoLevelsModifier;
@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 /** @deprecated use {@link ShearsModule} */
 @Deprecated(forRemoval = true)
 @RequiredArgsConstructor
-public class ShearsAbilityModifier extends NoLevelsModifier implements EntityInteractionModifierHook, ToolActionModifierHook {
+public class ShearsAbilityModifier extends NoLevelsModifier implements EntityInteractionModifierHook, slimeknights.tconstruct.library.modifiers.hook.behavior.ItemAbilityModifierHook {
   private final ShearsModule shears;
   @Getter
   private final int priority;
@@ -64,8 +64,8 @@ public class ShearsAbilityModifier extends NoLevelsModifier implements EntityInt
   }
 
   @Override
-  public boolean canPerformAction(IToolStackView tool, ModifierEntry modifier, ToolAction toolAction) {
-    return isShears(tool) && shears.canPerformAction(tool, modifier, toolAction);
+  public boolean canPerformAction(IToolStackView tool, ModifierEntry modifier, ItemAbility ItemAbility) {
+    return isShears(tool) && shears.canPerformAction(tool, modifier, ItemAbility);
   }
 
   /**

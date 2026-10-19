@@ -26,6 +26,12 @@ import java.util.function.Consumer;
  * Tile entity that displays items in world. TODO: better name?
  */
 public abstract class TableBlockEntity extends InventoryBlockEntity {
+  protected net.neoforged.neoforge.items.IItemHandlerModifiable itemHandler;
+  protected Object itemHandlerCap;
+
+  public net.neoforged.neoforge.items.IItemHandler getItemHandler() {
+    return itemHandler;
+  }
   /** tick sound was last played for each player */
   private final Map<UUID, Integer> lastSoundTick = new HashMap<>();
 
@@ -54,11 +60,16 @@ public abstract class TableBlockEntity extends InventoryBlockEntity {
   }
 
   @Override
-  public CompoundTag getUpdateTag() {
-    CompoundTag nbt = super.getUpdateTag();
+  public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) {
+    CompoundTag nbt = super.getUpdateTag(registries);
     // inventory is already in main NBT, include it in update tag
     writeInventoryToNBT(nbt);
     return nbt;
+  }
+
+  @Override
+  public CompoundTag getUpdateTag() {
+    return getUpdateTag(this.level != null ? this.level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY);
   }
 
   /**

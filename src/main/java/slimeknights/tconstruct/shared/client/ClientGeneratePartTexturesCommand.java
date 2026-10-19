@@ -57,8 +57,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Actual logic to generate tool textures */
-@Log4j2
 public class ClientGeneratePartTexturesCommand {
+  private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(ClientGeneratePartTexturesCommand.class);
   private static final String SUCCESS_KEY = TConstruct.makeTranslationKey("command", "generate_part_textures.finish");
   private static final String FAILURE_KEY = TConstruct.makeTranslationKey("command", "generate_part_textures.failure");
   private static final Component NO_PARTS = TConstruct.makeTranslation("command", "generate_part_textures.no_parts");
@@ -95,7 +95,7 @@ public class ClientGeneratePartTexturesCommand {
 
       // Predicate to check if a material ID is valid
       // TODO: variant filter?
-      Predicate<MaterialVariantId> validMaterialId = loc -> (modId.isEmpty() || modId.equals(loc.getId().getNamespace())) && (materialPath.isEmpty() || materialPath.equals(loc.getId().getPath()));
+      Predicate<MaterialVariantId> validMaterialId = loc -> (modId.isEmpty() || modId.equals(loc.getMaterialId().getNamespace())) && (materialPath.isEmpty() || materialPath.equals(loc.getMaterialId().getPath()));
 
       // get all materials, filtered by the given parameters
       List<MaterialSpriteInfo> materialSprites = loadMaterialRenderInfoGenerators(manager, validMaterialId);
@@ -207,7 +207,7 @@ public class ClientGeneratePartTexturesCommand {
 
     // each namespace loads separately
     for (String namespace : manager.getNamespaces()) {
-      ResourceLocation location = new ResourceLocation(namespace, GENERATOR_PART_TEXTURES);
+      ResourceLocation location = ResourceLocation.fromNamespaceAndPath(namespace, GENERATOR_PART_TEXTURES);
       List<Resource> resources = manager.getResourceStack(location);
       if (!resources.isEmpty()) {
         // if the namespace has the file, we will start building

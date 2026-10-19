@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.smeltery.block.entity;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -10,9 +11,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.Nullable;
 import slimeknights.mantle.block.entity.MantleBlockEntity;
 import slimeknights.mantle.fluid.FluidTransferHelper;
@@ -27,8 +25,10 @@ public class ProxyTankBlockEntity extends MantleBlockEntity implements IFluidTan
   /** Direct access to the fluid handler and item handler */
   @Getter
   private final ProxyItemTank<ProxyTankBlockEntity> itemTank = new ProxyItemTank<>(this);
-  /** Capability instance for both items and fluids */
-  private final LazyOptional<ProxyItemTank<?>> capability = LazyOptional.of(() -> itemTank);
+
+  public ProxyItemTank<ProxyTankBlockEntity> getItemTank() {
+    return itemTank;
+  }
   /** Last comparator strength to reduce block updates */
   private int lastStrength = -1;
   protected ProxyTankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -41,20 +41,6 @@ public class ProxyTankBlockEntity extends MantleBlockEntity implements IFluidTan
 
 
   /* Capability */
-
-  @Override
-  public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-    if (cap == ForgeCapabilities.ITEM_HANDLER || cap == ForgeCapabilities.FLUID_HANDLER) {
-      return capability.cast();
-    }
-    return super.getCapability(cap, side);
-  }
-
-  @Override
-  public void invalidateCaps() {
-    super.invalidateCaps();
-    capability.invalidate();
-  }
 
 
   /* Comparators */
@@ -146,16 +132,16 @@ public class ProxyTankBlockEntity extends MantleBlockEntity implements IFluidTan
   }
 
   @Override
-  public void load(CompoundTag tag) {
-    super.load(tag);
+  public void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
+    super.loadAdditional(tag, provider);
     if (tag.contains(TAG_ITEM, Tag.TAG_COMPOUND)) {
-      itemTank.readFromNBT(tag.getCompound(TAG_ITEM));
+      itemTank.readFromNBT(provider, tag.getCompound(TAG_ITEM));
     }
   }
 
   @Override
-  protected void saveSynced(CompoundTag tag) {
-    super.saveSynced(tag);
-    tag.put(TAG_ITEM, itemTank.writeToNBT());
+  public void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
+    super.saveAdditional(tag, provider);
+    tag.put(TAG_ITEM, itemTank.writeToNBT(provider));
   }
 }

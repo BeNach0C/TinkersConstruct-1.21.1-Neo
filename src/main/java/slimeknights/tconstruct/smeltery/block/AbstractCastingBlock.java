@@ -45,19 +45,32 @@ public abstract class AbstractCastingBlock extends TableBlock {
     return null;
   }
 
-  @Deprecated
   @Override
-  public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult rayTraceResult) {
+  public net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack heldStack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult rayTraceResult) {
+    if (player.isShiftKeyDown() || heldStack.isEmpty()) {
+      return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+    BlockEntity te = world.getBlockEntity(pos);
+    if (te instanceof CastingBlockEntity) {
+      ((CastingBlockEntity) te).interact(player, hand);
+      return net.minecraft.world.ItemInteractionResult.sidedSuccess(world.isClientSide);
+    }
+    return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+  }
+
+  @Override
+  public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult rayTraceResult) {
     if (player.isShiftKeyDown()) {
       return InteractionResult.PASS;
     }
     BlockEntity te = world.getBlockEntity(pos);
     if (te instanceof CastingBlockEntity) {
-      ((CastingBlockEntity) te).interact(player, hand);
-      return InteractionResult.SUCCESS;
+      ((CastingBlockEntity) te).interact(player, InteractionHand.MAIN_HAND);
+      return InteractionResult.sidedSuccess(world.isClientSide);
     }
-    return super.use(state, world, pos, player, hand, rayTraceResult);
+    return super.useWithoutItem(state, world, pos, player, rayTraceResult);
   }
+
 
   @SuppressWarnings("deprecation")
   @Deprecated

@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:ore_rates/dense",
+                       "required":  false
+                   }
+               ]
+}

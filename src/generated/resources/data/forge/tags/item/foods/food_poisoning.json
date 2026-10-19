@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:foods/food_poisoning",
+                       "required":  false
+                   }
+               ]
+}

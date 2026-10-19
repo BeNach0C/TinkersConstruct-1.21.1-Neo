@@ -75,7 +75,7 @@ public class ModifierRepairTinkerStationRecipe implements ITinkerStationRecipe, 
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ToolStack tool = inv.getTinkerable();
     int amountPerItem = tool.getModifierLevel(modifier) * repairAmount;
     if (amountPerItem <= 0) {
@@ -202,11 +202,12 @@ public class ModifierRepairTinkerStationRecipe implements ITinkerStationRecipe, 
         .map(item -> {
           if (item instanceof IModifiableDisplay modifiable) {
             ItemStack stack = modifiable.getRenderTool().copy();
-            CompoundTag tag = stack.getOrCreateTag();
-            tag.put(ToolStack.TAG_STATS, stats);
-            tag.put(ToolStack.TAG_UPGRADES, modifiers);
-            tag.put(ToolStack.TAG_MODIFIERS, modifiers);
-            tag.putInt(ToolStack.TAG_DAMAGE, 200); // mostly broken
+            net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, tag -> {
+              tag.put(ToolStack.TAG_STATS, stats);
+              tag.put(ToolStack.TAG_UPGRADES, modifiers);
+              tag.put(ToolStack.TAG_MODIFIERS, modifiers);
+              tag.putInt(ToolStack.TAG_DAMAGE, 200); // mostly broken
+            });
             return stack;
           }
           return ItemStack.EMPTY;
@@ -222,7 +223,9 @@ public class ModifierRepairTinkerStationRecipe implements ITinkerStationRecipe, 
     if (toolWithModifier == null) {
       toolWithModifier = getToolWithoutModifier().stream().map(stack -> {
         stack = stack.copy();
-        stack.getOrCreateTag().putInt(ToolStack.TAG_DAMAGE, 200 - repairAmount);
+        net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, tag -> {
+          tag.putInt(ToolStack.TAG_DAMAGE, 200 - repairAmount);
+        });
         return stack;
       }).toList();
     }

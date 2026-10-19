@@ -4,13 +4,13 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.UseAnim;
-import net.minecraftforge.common.ToolAction;
-import net.minecraftforge.common.ToolActions;
+import net.neoforged.neoforge.common.ItemAbility;
+import net.neoforged.neoforge.common.ItemAbilities;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.loadable.record.SingletonLoader;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.modifiers.ModifierHooks;
-import slimeknights.tconstruct.library.modifiers.hook.behavior.ToolActionModifierHook;
+import slimeknights.tconstruct.library.modifiers.hook.behavior.ItemAbilityModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.GeneralInteractionModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.InteractionSource;
 import slimeknights.tconstruct.library.modifiers.modules.ModifierModule;
@@ -21,7 +21,7 @@ import slimeknights.tconstruct.library.tools.nbt.IToolStackView;
 import java.util.List;
 
 /** Module implementing {@link slimeknights.tconstruct.tools.data.ModifierIds#blocking} */
-public enum BlockingModule implements ModifierModule, GeneralInteractionModifierHook, ToolActionModifierHook {
+public enum BlockingModule implements ModifierModule, GeneralInteractionModifierHook, ItemAbilityModifierHook {
   INSTANCE;
 
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<BlockingModule>defaultHooks(ModifierHooks.GENERAL_INTERACT, ModifierHooks.TOOL_ACTION);
@@ -44,8 +44,8 @@ public enum BlockingModule implements ModifierModule, GeneralInteractionModifier
   }
 
   @Override
-  public boolean canPerformAction(IToolStackView tool, ModifierEntry entry, ToolAction toolAction) {
-    return toolAction == ToolActions.SHIELD_BLOCK;
+  public boolean canPerformAction(IToolStackView tool, ModifierEntry entry, ItemAbility ItemAbility) {
+    return ItemAbility == ItemAbilities.SHIELD_BLOCK;
   }
 
   @Override

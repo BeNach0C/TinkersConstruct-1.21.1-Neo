@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import java.util.Locale;
 
 /** Variants of slimy dirt */
-@Getter
 public enum DirtType implements StringRepresentable {
   EARTH  (Tiers.STONE,   MapColor.GRASS),
   SKY    (Tiers.GOLD,    MapColor.WARPED_STEM),
@@ -29,7 +28,6 @@ public enum DirtType implements StringRepresentable {
   private final Tiers harvestTier;
   /** Color for this block on maps */
   private final MapColor mapColor;
-  @Getter
   private final String serializedName = this.name().toLowerCase(Locale.ROOT);
 
   /* Tags */
@@ -40,6 +38,22 @@ public enum DirtType implements StringRepresentable {
     this.harvestTier = harvestTier;
     this.mapColor = mapColor;
     this.blockTag = BlockTags.create(TConstruct.getResource("slimy_soil/" + this.getSerializedName()));
+  }
+
+  public Tiers getHarvestTier() {
+    return harvestTier;
+  }
+
+  public MapColor getMapColor() {
+    return mapColor;
+  }
+
+  public String getSerializedName() {
+    return serializedName;
+  }
+
+  public TagKey<Block> getBlockTag() {
+    return blockTag;
   }
 
   private SlimeType slimeType;

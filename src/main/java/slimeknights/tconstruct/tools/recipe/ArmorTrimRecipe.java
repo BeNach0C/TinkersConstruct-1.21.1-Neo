@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ArmorTrimRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisplayModifierRecipe> {
+  @Override public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider p) { return ItemStack.EMPTY; }
+  @Override public java.util.List<IDisplayModifierRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider p) { return java.util.List.of(); }
   protected static final String KEY_INVALID_MATERIAL = TConstruct.makeTranslationKey("recipe", "modifier.armor_trim.invalid_material");
   protected static final String KEY_INVALID_PATTERN = TConstruct.makeTranslationKey("recipe", "modifier.armor_trim.invalid_pattern");
 
@@ -50,6 +52,10 @@ public class ArmorTrimRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisp
   public ArmorTrimRecipe(ResourceLocation id) {
     this.id = id;
     ModifierRecipeLookup.addRecipeModifier(null, TinkerModifiers.trim);
+  }
+
+  public ArmorTrimRecipe() {
+    this(TConstruct.getResource("armor_trim"));
   }
 
   /** Match for the trim item finding method */
@@ -96,7 +102,7 @@ public class ArmorTrimRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisp
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     // first need to find our trim and material instances
     TrimItems trimItems = findInputs(inv);
     // should never happen
@@ -144,7 +150,6 @@ public class ArmorTrimRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisp
   private List<IDisplayModifierRecipe> displayRecipes = null;
 
   @SuppressWarnings("deprecation")
-  @Override
   public List<IDisplayModifierRecipe> getRecipes(RegistryAccess access) {
     if (displayRecipes == null) {
       List<ItemStack> trims = RegistryHelper.getTagValueStream(BuiltInRegistries.ITEM, ItemTags.TRIM_TEMPLATES)
@@ -152,7 +157,7 @@ public class ArmorTrimRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisp
       List<ItemStack> toolInputs = RegistryHelper.getTagValueStream(BuiltInRegistries.ITEM, TinkerTags.Items.TRIM)
                                                  .map(IModifiableDisplay::getDisplayStack).toList();
       if (!trims.isEmpty() && !toolInputs.isEmpty()) {
-        ResourceLocation id = getId();
+        ResourceLocation id = net.minecraft.resources.ResourceLocation.withDefaultNamespace("dummy");
         // one recipe per material
         // TODO: worth using just a single material? focus link material to output tool?
         displayRecipes = access.registryOrThrow(Registries.TRIM_MATERIAL).holders()
@@ -167,14 +172,14 @@ public class ArmorTrimRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisp
 
   private static class DisplayRecipe implements IDisplayModifierRecipe {
     private static final IntRange LEVELS = new IntRange(1, 1);
-    private final ModifierEntry RESULT = new ModifierEntry(TinkerModifiers.trim, 1);
+    private final ModifierEntry RESULT = new ModifierEntry(TinkerModifiers.trim.getId(), 1);
 
     @Getter
     private final ResourceLocation recipeId;
-    @Getter
     private final List<ItemStack> toolWithoutModifier;
-    @Getter
+    @Override public List<ItemStack> getToolWithoutModifier() { return this.toolWithoutModifier; }
     private final List<ItemStack> toolWithModifier;
+    @Override public List<ItemStack> getToolWithModifier() { return this.toolWithModifier; }
     private final List<ItemStack> trim;
     private final Reference<TrimMaterial> material;
     private final List<ItemStack> materialItem;
@@ -186,8 +191,8 @@ public class ArmorTrimRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisp
       this.material = holder;
       toolWithoutModifier = tools;
       this.trim = trim;
-      TrimMaterial material = holder.get();
-      this.materialItem = List.of(new ItemStack(material.ingredient().get()));
+      TrimMaterial material = holder.value();
+      this.materialItem = List.of(new ItemStack(material.ingredient().value()));
       this.variant = material.description().plainCopy();
 
       String materialName = holder.key().location().toString();

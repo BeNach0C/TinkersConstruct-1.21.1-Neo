@@ -13,6 +13,7 @@ import slimeknights.mantle.client.screen.MultiModuleScreen;
 import slimeknights.mantle.client.screen.ScalableElementScreen;
 import slimeknights.mantle.client.screen.SliderWidget;
 import slimeknights.mantle.inventory.BaseContainerMenu;
+import slimeknights.mantle.inventory.WrapperSlot;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.tables.client.inventory.widget.BorderWidget;
 
@@ -44,6 +45,10 @@ public class SideInventoryScreen<P extends MultiModuleScreen<?>, C extends Abstr
   protected int columns;
   @Getter
   protected int slotCount;
+
+  public int getSlotCount() {
+    return this.slotCount;
+  }
 
   protected int firstSlotId;
   protected int lastSlotId;
@@ -105,9 +110,8 @@ public class SideInventoryScreen<P extends MultiModuleScreen<?>, C extends Abstr
     return this.firstSlotId <= slot.getSlotIndex() && this.lastSlotId > slot.getSlotIndex();
   }
 
-  @Override
   public boolean isHovering(Slot slotIn, double mouseX, double mouseY) {
-    return super.isHovering(slotIn, mouseX, mouseY) && this.shouldDrawSlot(slotIn);
+    return this.isHovering(slotIn.x, slotIn.y, 16, 16, mouseX, mouseY) && this.shouldDrawSlot(slotIn);
   }
 
   public void updateSlotCount(int newSlotCount) {
@@ -242,6 +246,17 @@ public class SideInventoryScreen<P extends MultiModuleScreen<?>, C extends Abstr
         slot.x = 0;
         slot.y = 0;
       }
+
+      // sync with wrapper slot in parent menu if present
+      if (this.parent != null && this.parent.getMenu() != null) {
+        for (Slot parentSlot : this.parent.getMenu().slots) {
+          if (parentSlot instanceof WrapperSlot wrapper && wrapper.parent == slot) {
+            wrapper.x = slot.x;
+            wrapper.y = slot.y;
+            break;
+          }
+        }
+      }
     }
   }
 
@@ -324,11 +339,11 @@ public class SideInventoryScreen<P extends MultiModuleScreen<?>, C extends Abstr
   }
 
   @Override
-  public boolean handleMouseScrolled(double mouseX, double mouseY, double scrollData) {
+  public boolean handleMouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
     if (!this.slider.isEnabled()) {
-      return super.handleMouseScrolled(mouseX, mouseY, scrollData);
+      return super.handleMouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
-    return this.slider.mouseScrolled(scrollData, !this.isMouseOverFullSlot(mouseX, mouseY) && this.isMouseInModule((int) mouseX, (int) mouseY));
+    return this.slider.mouseScrolled(scrollY, !this.isMouseOverFullSlot(mouseX, mouseY) && this.isMouseInModule((int) mouseX, (int) mouseY));
   }
 }

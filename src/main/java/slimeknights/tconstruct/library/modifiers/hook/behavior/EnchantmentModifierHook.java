@@ -56,7 +56,7 @@ public interface EnchantmentModifierHook {
    * @return  Enchantment level
    */
   static int getEnchantmentLevel(ItemStack stack, Enchantment enchantment) {
-    int level = EnchantmentHelper.getTagEnchantmentLevel(enchantment, stack);
+    int level = EnchantmentHelper.getTagEnchantmentLevel(net.minecraft.core.Holder.direct(enchantment), stack);
     IToolStackView tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
       level = entry.getHook(ModifierHooks.ENCHANTMENTS).updateEnchantmentLevel(tool, entry, enchantment, level);
@@ -71,7 +71,11 @@ public interface EnchantmentModifierHook {
    * @return  All contained enchantments
    */
   static Map<Enchantment,Integer> getAllEnchantments(ItemStack stack) {
-    Map<Enchantment,Integer> enchantments = EnchantmentHelper.getEnchantments(stack);
+    Map<Enchantment,Integer> enchantments = new java.util.HashMap<>();
+    net.minecraft.world.item.enchantment.ItemEnchantments itemEnchantments = stack.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY);
+    for (var entry : itemEnchantments.entrySet()) {
+      enchantments.put(entry.getKey().value(), entry.getIntValue());
+    }
     IToolStackView tool = ToolStack.from(stack);
     for (ModifierEntry entry : tool.getModifierList()) {
       entry.getHook(ModifierHooks.ENCHANTMENTS).updateEnchantments(tool, entry, enchantments);

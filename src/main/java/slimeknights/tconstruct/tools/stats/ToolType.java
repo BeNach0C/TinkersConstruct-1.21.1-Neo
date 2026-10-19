@@ -12,8 +12,6 @@ import javax.annotation.Nullable;
 import java.util.Locale;
 
 /** Helper for registering the different effects for modifiers that change behavior based on the tool type */
-@RequiredArgsConstructor
-@Getter
 public enum ToolType implements StringRepresentable {
   /** Held melee weapons such as swords, does not include unarmed. */
   MELEE(TinkerTags.Items.MELEE_WEAPON),
@@ -31,7 +29,14 @@ public enum ToolType implements StringRepresentable {
   public static final ToolType[] NO_MELEE = {HARVEST, RANGED, ARMOR};
 
   private final TagKey<Item> tag;
+
+  ToolType(TagKey<Item> tag) {
+      this.tag = tag;
+  }
   private final String serializedName = name().toLowerCase(Locale.ROOT);
+
+  public TagKey<Item> getTag() { return this.tag; }
+  @Override public String getSerializedName() { return this.serializedName; }
 
   @Nullable
   public static ToolType from(Item item, ToolType... types) {

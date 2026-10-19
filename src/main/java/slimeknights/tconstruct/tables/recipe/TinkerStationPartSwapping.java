@@ -89,7 +89,7 @@ public class TinkerStationPartSwapping extends MaterialSwappingRecipe implements
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     // copy the tool NBT to ensure the original tool is intact
     List<IToolPart> parts = ToolPartsHook.parts(inv.getTinkerable().getDefinition());
 
@@ -145,7 +145,7 @@ public class TinkerStationPartSwapping extends MaterialSwappingRecipe implements
   private List<IDisplayToolModification> multiRecipes;
 
   @Override
-  public List<IDisplayToolModification> getRecipes(RegistryAccess access) {
+  public List<IDisplayToolModification> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       IMaterialRegistry registry = MaterialRegistry.getInstance();
       Collection<IMaterial> materials = registry.getVisibleMaterials();

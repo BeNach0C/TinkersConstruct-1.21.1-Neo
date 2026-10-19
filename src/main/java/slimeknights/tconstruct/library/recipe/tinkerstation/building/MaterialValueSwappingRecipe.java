@@ -93,7 +93,7 @@ public class MaterialValueSwappingRecipe extends MaterialIndexSwappingRecipe imp
   private List<IDisplayToolModification> multiRecipes;
 
   @Override
-  public List<IDisplayToolModification> getRecipes(RegistryAccess access) {
+  public List<IDisplayToolModification> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       // since each tool may have its own valid materials, we may need to filter this list again
       // however, we can avoid duplicating the stacks more than once since the cost is constant, along with apply the common filter

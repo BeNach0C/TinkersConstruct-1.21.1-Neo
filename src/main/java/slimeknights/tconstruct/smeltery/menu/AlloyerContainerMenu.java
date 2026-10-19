@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.smeltery.menu;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -11,9 +13,8 @@ import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.templates.EmptyFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.templates.EmptyFluidHandler;
 import slimeknights.mantle.fluid.FluidTransferHelper;
 import slimeknights.mantle.fluid.transfer.IFluidContainerTransfer.TransferDirection;
 import slimeknights.mantle.fluid.transfer.IFluidContainerTransfer.TransferResult;
@@ -32,8 +33,11 @@ import java.util.function.Consumer;
 public class AlloyerContainerMenu extends TriggeringBaseContainerMenu<AlloyerBlockEntity> {
   public static final ResourceLocation TOOLTIP_FORMAT = TConstruct.getResource("alloyer");
 
-  @Getter
   private boolean hasFuelSlot = false;
+
+  public boolean isHasFuelSlot() {
+    return hasFuelSlot;
+  }
   public AlloyerContainerMenu(int id, @Nullable Inventory inv, @Nullable AlloyerBlockEntity alloyer) {
     super(TinkerSmeltery.alloyerContainer.get(), id, inv, alloyer);
 
@@ -55,10 +59,11 @@ public class AlloyerContainerMenu extends TriggeringBaseContainerMenu<AlloyerBlo
       if (world != null && world.getBlockState(down).is(TinkerTags.Blocks.FUEL_TANKS)) {
         BlockEntity te = world.getBlockEntity(down);
         if (te != null) {
-          hasFuelSlot = te.getCapability(ForgeCapabilities.ITEM_HANDLER).filter(handler -> {
+          IItemHandler handler = world.getCapability(Capabilities.ItemHandler.BLOCK, down, Direction.UP);
+          if (handler != null) {
             this.addSlot(new SmartItemHandlerSlot(handler, 0, 151, 32));
-            return true;
-          }).isPresent();
+            hasFuelSlot = true;
+          }
         }
       }
 

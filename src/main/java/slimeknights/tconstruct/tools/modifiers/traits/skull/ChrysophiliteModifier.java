@@ -24,7 +24,7 @@ public class ChrysophiliteModifier extends NoLevelsModifier {
 
   @Override
   protected void registerHooks(Builder hookBuilder) {
-    hookBuilder.addModule(GoldenAttributeModule.builder(TinkerAttributes.CHRYSOPHILITE, Operation.ADDITION).amount(1, 1));
+    hookBuilder.addModule(GoldenAttributeModule.builder(TinkerAttributes.CHRYSOPHILITE, Operation.ADD_VALUE).amount(1, 1));
   }
 
   /** @deprecated use {@link GoldenAttributeModule#hasGold(EquipmentChangeContext, EquipmentSlot)} */
@@ -37,7 +37,7 @@ public class ChrysophiliteModifier extends NoLevelsModifier {
   @Deprecated(forRemoval = true)
   public static int getTotalGold(@Nullable Entity entity) {
     return Optional.ofNullable(entity)
-                   .flatMap(e -> e.getCapability(TinkerDataCapability.CAPABILITY).resolve())
+                   .map(e -> e.getCapability(TinkerDataCapability.CAPABILITY))
                    .map(data -> data.get(ChrysophiliteModifier.TOTAL_GOLD))
                    .map(TotalGold::getTotalGold)
                    .orElse(0);

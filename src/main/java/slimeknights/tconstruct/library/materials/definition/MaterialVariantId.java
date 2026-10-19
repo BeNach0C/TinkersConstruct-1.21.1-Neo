@@ -28,13 +28,13 @@ public sealed interface MaterialVariantId permits MaterialId, MaterialVariantIdI
     return location;
   }, MaterialVariantId::toString);
   ContextKey<MaterialVariantId> CONTEXT_KEY = new ContextKey<>("material_variant");
-  EntityDataSerializer<MaterialVariantId> DATA_ACCESSOR = EntityDataSerializer.simple((buffer, material) -> material.toNetwork(buffer), MaterialVariantId::fromNetwork);
+  EntityDataSerializer<MaterialVariantId> DATA_ACCESSOR = EntityDataSerializer.forValueType(net.minecraft.network.codec.StreamCodec.of((buffer, material) -> material.toNetwork(buffer), MaterialVariantId::fromNetwork));
 
   /** Variant ID that will match normal {@link MaterialId} with no variant, to allow checking for non-variant materials specifically. */
   String DEFAULT_VARIANT = "default";
 
   /** Gets the material ID */
-  MaterialId getId();
+  MaterialId getMaterialId();
 
   /** Gets the variant */
   String getVariant();
@@ -50,7 +50,7 @@ public sealed interface MaterialVariantId permits MaterialId, MaterialVariantIdI
   /** Replaces the default variant with the ID by itself */
   default MaterialVariantId normalizeVariant() {
     if (isDefaultVariant()) {
-      return getId();
+      return getMaterialId();
     }
     return this;
   }
@@ -83,7 +83,7 @@ public sealed interface MaterialVariantId permits MaterialId, MaterialVariantIdI
 
   /** Checks if two material variants match */
   default boolean sameId(MaterialVariantId other) {
-    return this.getId().equals(other.getId());
+    return this.getMaterialId().equals(other.getMaterialId());
   }
 
   /** Checks if two material variants match */

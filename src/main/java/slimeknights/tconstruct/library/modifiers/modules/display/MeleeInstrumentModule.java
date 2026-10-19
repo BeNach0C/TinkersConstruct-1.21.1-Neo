@@ -126,11 +126,14 @@ public record MeleeInstrumentModule(@Nullable MaterialId material, TagKey<Instru
     return new Builder(tag);
   }
 
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   @Accessors(fluent = true)
   @Setter
   public static class Builder extends Stack<Builder> {
     private final TagKey<Instrument> tag;
+
+    public Builder(TagKey<Instrument> tag) {
+      this.tag = tag;
+    }
     @Nullable
     private MaterialId material = null;
     private IJsonPredicate<LivingEntity> attacker = LivingEntityPredicate.ANY;

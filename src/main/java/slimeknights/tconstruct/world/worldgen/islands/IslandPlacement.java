@@ -23,6 +23,11 @@ public enum IslandPlacement implements StringRepresentable {
   /** Island that generates in the air */
   SKY {
     @Override
+    public String getSerializedName() {
+      return "sky";
+    }
+
+    @Override
     int getHeight(ChunkPos chunkPos, ChunkGenerator generator, LevelHeightAccessor pLevel, Rotation rotation, RandomSource random, RandomState randomState) {
       int xOffset;
       int yOffset;
@@ -59,6 +64,11 @@ public enum IslandPlacement implements StringRepresentable {
   /** Island that generates on the ocean surface */
   SEA {
     @Override
+    public String getSerializedName() {
+      return "sea";
+    }
+
+    @Override
     int getHeight(ChunkPos chunkPos, ChunkGenerator generator, LevelHeightAccessor pLevel, Rotation rotation, RandomSource random, RandomState randomState) {
       return Math.max(generator.getSeaLevel() - 7, 0);
     }
@@ -85,8 +95,11 @@ public enum IslandPlacement implements StringRepresentable {
     return world.isEmptyBlock(pos) || world.getBlockState(pos).getBlock() instanceof LiquidBlock;
   }
 
-  @Getter
   private final String serializedName = this.name().toLowerCase(Locale.ROOT);
+
+  public String getSerializedName() {
+    return serializedName;
+  }
 
   /** Checks if the given position is valid for this island */
   public boolean isPositionValid(WorldGenLevel world, BlockPos pos, ChunkGenerator generator) {

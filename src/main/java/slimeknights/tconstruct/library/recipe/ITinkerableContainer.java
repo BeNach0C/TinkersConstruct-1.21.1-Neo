@@ -6,7 +6,7 @@ import slimeknights.mantle.recipe.container.IRecipeContainer;
 import slimeknights.tconstruct.library.tools.nbt.ToolStack;
 
 /** Container that contains a tinkerable stack and a number of inputs after */
-public interface ITinkerableContainer extends IRecipeContainer {
+public interface ITinkerableContainer extends IRecipeContainer, net.minecraft.world.item.crafting.RecipeInput {
   /**
    * Gets the stack in the tinkerable slot.
    *
@@ -65,6 +65,10 @@ public interface ITinkerableContainer extends IRecipeContainer {
   }
 
   /** @deprecated use {@link #getInputCount()} */
+  @Deprecated
+  @Override
+  default int size() { return getContainerSize(); }
+
   @Deprecated
   @Override
   default int getContainerSize() {

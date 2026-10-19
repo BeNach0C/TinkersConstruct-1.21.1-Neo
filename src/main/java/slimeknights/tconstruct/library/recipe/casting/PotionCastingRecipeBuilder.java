@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -165,23 +165,23 @@ public class PotionCastingRecipeBuilder extends AbstractRecipeBuilder<PotionCast
    * @param consumerIn  Recipe consumer
    */
   @Override
-  public void save(Consumer<FinishedRecipe> consumerIn) {
+  public void save(RecipeOutput consumerIn) {
     this.save(consumerIn, Loadables.ITEM.getKey(this.result));
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
+  public void save(RecipeOutput consumer, ResourceLocation id) {
     if (this.fluid == FluidIngredient.EMPTY) {
       throw new IllegalStateException("Casting recipes require a fluid input");
     }
     if (this.coolingTime < 0) {
       throw new IllegalStateException("Cooling time is too low, must be at least 0");
     }
-    ResourceLocation advancementId = this.buildOptionalAdvancement(id, "casting");
+    net.minecraft.advancements.AdvancementHolder advancementId = this.buildOptionalAdvancement(id, "casting");
     if (modifier != null) {
-      consumer.accept(new LoadableFinishedRecipe<>(new TippingCastingRecipe(recipeSerializer, id, group, bottle, fluid, coolingTime, modifier), TippingCastingRecipe.LOADER, advancementId));
+      consumer.accept(id, new TippingCastingRecipe(recipeSerializer, id, group, bottle, fluid, coolingTime, modifier), null);
     } else {
-      consumer.accept(new LoadableFinishedRecipe<>(new PotionCastingRecipe(recipeSerializer, id, group, bottle, fluid, result, coolingTime), PotionCastingRecipe.LOADER, advancementId));
+      consumer.accept(id, new PotionCastingRecipe(recipeSerializer, id, group, bottle, fluid, result, coolingTime), null);
     }
   }
 }

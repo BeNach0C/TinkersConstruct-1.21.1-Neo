@@ -95,7 +95,7 @@ public class MaterialIdNBT {
     ImmutableList.Builder<MaterialVariantId> builder = ImmutableList.builder();
     IMaterialRegistry registry = MaterialRegistry.getInstance();
     for (MaterialVariantId id : materials) {
-      MaterialId original = id.getId();
+      MaterialId original = id.getMaterialId();
       MaterialId resolved = registry.resolve(original);
       if (resolved != original) {
         changed = true;
@@ -156,8 +156,9 @@ public class MaterialIdNBT {
    * @return  MaterialNBT instance
    */
   public static MaterialIdNBT from(ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
-    if (nbt != null) {
+    net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    if (customData != null) {
+      CompoundTag nbt = customData.copyTag();
       return readFromNBT(nbt.getList(ToolStack.TAG_MATERIALS, Tag.TAG_STRING));
     }
     return EMPTY;
@@ -165,8 +166,9 @@ public class MaterialIdNBT {
 
   /** Helper to quickly fetch a single material ID from a stack. Use {@link #from(ItemStack)} and {@link #getMaterial(int)} instead if you need to parse multiple. */
   public static MaterialVariantId getMaterial(ItemStack stack, int index) {
-    CompoundTag nbt = stack.getTag();
-    if (nbt != null) {
+    net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    if (customData != null) {
+      CompoundTag nbt = customData.copyTag();
       ListTag list = nbt.getList(ToolStack.TAG_MATERIALS, Tag.TAG_STRING);
       if (index < list.size()) {
         return tryParse(list.getString(index));
@@ -177,7 +179,9 @@ public class MaterialIdNBT {
 
   /** Writes this material list to the given stack */
   public ItemStack updateStack(ItemStack stack) {
-    stack.getOrCreateTag().put(ToolStack.TAG_MATERIALS, serializeToNBT());
+    net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, tag -> {
+      tag.put(ToolStack.TAG_MATERIALS, serializeToNBT());
+    });
     return stack;
   }
 

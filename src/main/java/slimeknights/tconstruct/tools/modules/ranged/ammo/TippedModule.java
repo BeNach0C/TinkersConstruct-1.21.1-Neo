@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.tools.modules.ranged.ammo;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -13,9 +15,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.phys.EntityHitResult;
 import slimeknights.mantle.client.TooltipKey;
@@ -65,7 +67,7 @@ public enum TippedModule implements ModifierModule, ProjectileLaunchModifierHook
 
   @Override
   public void onProjectileShoot(IToolStackView tool, ModifierEntry modifier, @Nullable LivingEntity shooter, ItemStack ammo, Projectile projectile, @Nullable AbstractArrow arrow, ModDataNBT persistentData, boolean primary) {
-    ResourceLocation key = modifier.getId();
+    ResourceLocation key = net.minecraft.resources.ResourceLocation.parse(modifier.getId().toString());
     IModDataView toolData = tool.getPersistentData();
     if (toolData.contains(key, Tag.TAG_STRING)) {
       persistentData.putString(key, toolData.getString(key));
@@ -75,7 +77,7 @@ public enum TippedModule implements ModifierModule, ProjectileLaunchModifierHook
   @Nullable
   @Override
   public Component onRemoved(IToolStackView tool, Modifier modifier) {
-    tool.getPersistentData().remove(modifier.getId());
+    tool.getPersistentData().remove(net.minecraft.resources.ResourceLocation.parse(modifier.getId().toString()));
     return null;
   }
 
@@ -89,7 +91,7 @@ public enum TippedModule implements ModifierModule, ProjectileLaunchModifierHook
 
   @Override
   public boolean onProjectileHitEntity(ModifierNBT modifiers, ModDataNBT persistentData, ModifierEntry modifier, Projectile projectile, EntityHitResult hit, @Nullable LivingEntity attacker, @Nullable LivingEntity target) {
-    ResourceLocation key = modifier.getId();
+    ResourceLocation key = net.minecraft.resources.ResourceLocation.parse(modifier.getId().toString());
     if (target != null && persistentData.contains(key, Tag.TAG_STRING)) {
       ResourceLocation id = ResourceLocation.tryParse(persistentData.getString(key));
       if (id != null) {
@@ -99,7 +101,7 @@ public enum TippedModule implements ModifierModule, ProjectileLaunchModifierHook
         target.invulnerableTime = 0;
         // not a problem if the ID is invalid, will just do nothing
         for (MobEffectInstance instance : BuiltInRegistries.POTION.get(id).getEffects()) {
-          MobEffect effect = instance.getEffect();
+          net.minecraft.world.effect.MobEffect effect = instance.getEffect().value();
           if (effect.isInstantenous()) {
             effect.applyInstantenousEffect(projectile, projectile.getOwner(), target, instance.getAmplifier(), 1f / (divisor * 0.75f));
           } else {
@@ -116,16 +118,16 @@ public enum TippedModule implements ModifierModule, ProjectileLaunchModifierHook
   /* Display */
 
   @Override
-  public void addTooltip(IToolStackView tool, ModifierEntry modifier, @Nullable Player player, List<Component> tooltip, TooltipKey tooltipKey, TooltipFlag tooltipFlag) {
-    ResourceLocation key = modifier.getId();
+  public void addTooltip(IToolStackView tool, ModifierEntry modifier, @Nullable Player player, List<Component> tooltip, TooltipKey tooltipKey, net.minecraft.world.item.TooltipFlag tooltipFlag) {
+    ResourceLocation key = net.minecraft.resources.ResourceLocation.parse(modifier.getId().toString());
     IModDataView toolData = tool.getPersistentData();
     if (toolData.contains(key, Tag.TAG_STRING)) {
       ResourceLocation id = ResourceLocation.tryParse(toolData.getString(key));
       if (id != null) {
-        Potion potion = BuiltInRegistries.POTION.get(id);
-        if (potion != Potions.EMPTY) {
-          PotionUtils.getColor(potion);
-          PotionUtils.addPotionTooltip(potion.getEffects(), tooltip, 1f / getDivisor(modifier));
+        var potionHolder = net.minecraft.core.registries.BuiltInRegistries.POTION.getHolder(id);
+        if (potionHolder.isPresent()) {
+          net.minecraft.world.item.alchemy.PotionContents.getColor(potionHolder.get());
+          net.minecraft.world.item.alchemy.PotionContents.addPotionTooltip(potionHolder.get().value().getEffects(), tooltip::add, 1f / getDivisor(modifier), 20.0f);
         }
       }
     }
@@ -133,18 +135,14 @@ public enum TippedModule implements ModifierModule, ProjectileLaunchModifierHook
 
   @Override
   public Component getDisplayName(IToolStackView tool, ModifierEntry entry, Component name, @Nullable RegistryAccess access) {
-    ResourceLocation key = entry.getId();
+    ResourceLocation key = net.minecraft.resources.ResourceLocation.parse(entry.getId().toString());
     IModDataView toolData = tool.getPersistentData();
     if (toolData.contains(key, Tag.TAG_STRING)) {
       ResourceLocation id = ResourceLocation.tryParse(toolData.getString(key));
       if (id != null) {
-        Potion potion = BuiltInRegistries.POTION.get(id);
-        if (potion != Potions.EMPTY) {
-          // formats as Tipped <level> (<potion>)
-          return Component.translatable(FORMAT,
-            RomanNumeralHelper.getNumeral(entry.getLevel()),
-            Component.translatable(potion.getName("item.minecraft.potion.effect."))
-          ).withStyle(style -> style.withColor(PotionUtils.getColor(potion)));
+        var potionHolder = net.minecraft.core.registries.BuiltInRegistries.POTION.getHolder(id);
+        if (potionHolder.isPresent()) {
+          return Component.translatable(FORMAT, RomanNumeralHelper.getNumeral(entry.getLevel()), Component.translatable(net.minecraft.Util.makeDescriptionId("item.minecraft.potion.effect", potionHolder.get().unwrapKey().get().location()))).withStyle(style -> style.withColor(net.minecraft.world.item.alchemy.PotionContents.getColor(potionHolder.get())));
         }
       }
     }

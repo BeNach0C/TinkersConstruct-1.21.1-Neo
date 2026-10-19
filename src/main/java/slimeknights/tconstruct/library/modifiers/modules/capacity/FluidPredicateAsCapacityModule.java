@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.library.modifiers.modules.capacity;
 
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.predicate.IJsonPredicate;
 import slimeknights.mantle.data.predicate.fluid.FluidPredicate;
@@ -60,7 +60,7 @@ public record FluidPredicateAsCapacityModule(ToolTankHelper helper, IJsonPredica
     // only allow draining; growing the fluid is just going to cause exploits as this is a predicate; we don't know the type
     FluidStack fluid = helper.getFluid(tool);
     if (amount < fluid.getAmount() && this.fluid.matches(fluid.getFluid())) {
-      helper.setFluid(tool, new FluidStack(fluid, amount));
+      helper.setFluid(tool, fluid.copyWithAmount(amount));
     }
   }
 }

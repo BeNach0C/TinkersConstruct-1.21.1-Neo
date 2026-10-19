@@ -37,14 +37,14 @@ import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec2;
-import net.minecraftforge.client.model.BakedModelWrapper;
-import net.minecraftforge.client.model.IModelBuilder;
-import net.minecraftforge.client.model.IQuadTransformer;
-import net.minecraftforge.client.model.QuadTransformers;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.client.model.geometry.IGeometryBakingContext;
-import net.minecraftforge.client.model.geometry.IGeometryLoader;
-import net.minecraftforge.client.model.geometry.IUnbakedGeometry;
+import net.neoforged.neoforge.client.model.BakedModelWrapper;
+import net.neoforged.neoforge.client.model.IModelBuilder;
+import net.neoforged.neoforge.client.model.IQuadTransformer;
+import net.neoforged.neoforge.client.model.QuadTransformers;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.geometry.IGeometryBakingContext;
+import net.neoforged.neoforge.client.model.geometry.IGeometryLoader;
+import net.neoforged.neoforge.client.model.geometry.IUnbakedGeometry;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import slimeknights.mantle.client.model.util.ColoredBlockModel;
@@ -507,13 +507,13 @@ public class ToolModel implements IUnbakedGeometry<ToolModel> {
   }
 
   @Override
-  public BakedModel bake(IGeometryBakingContext owner, ModelBaker baker, Function<Material,TextureAtlasSprite> spriteGetter, ModelState modelTransform, ItemOverrides overrides, ResourceLocation modelLocation) {
+  public BakedModel bake(IGeometryBakingContext owner, ModelBaker baker, Function<Material,TextureAtlasSprite> spriteGetter, ModelState modelTransform, ItemOverrides overrides) {
     // warn on deprecated keys
     if (showTraits) {
-      TConstruct.LOG.warn("Using deprecated key 'show_traits' in tool model {}, use 'constant' in modifier model maps with 'tconstruct:trait' instead", modelLocation);
+      TConstruct.LOG.warn("Using deprecated key 'show_traits' in tool model {}, use 'constant' in modifier model maps with 'tconstruct:trait' instead", owner.getModelName());
     }
     if (!firstModifiers.isEmpty()) {
-      TConstruct.LOG.warn("Using deprecated key 'first_modifiers' in tool model {}, use 'constant' in modifier model maps with 'tconstruct:crafted' and an early ID instead", modelLocation);
+      TConstruct.LOG.warn("Using deprecated key 'first_modifiers' in tool model {}, use 'constant' in modifier model maps with 'tconstruct:crafted' and an early ID instead", owner.getModelName());
     }
     for (FirstModifier modifier : firstModifiers) {
       if (modifier.forced) {
@@ -538,7 +538,8 @@ public class ToolModel implements IUnbakedGeometry<ToolModel> {
       }
     }
     // load modifier models
-    ModifierModelMap modifierModels = ModifierModelMapManager.INSTANCE.getModelsForTool(spriteGetter, this.modifierModels, smallModifierRoots, largeModifierRoots, modelLocation);
+    ResourceLocation modelLocation = ResourceLocation.tryParse(owner.getModelName());
+    ModifierModelMap modifierModels = ModifierModelMapManager.INSTANCE.getModelsForTool(spriteGetter, this.modifierModels, smallModifierRoots, largeModifierRoots, modelLocation != null ? modelLocation : ResourceLocation.fromNamespaceAndPath("tconstruct", "tool"));
 
     // build transforms for various states
     // large tools are stretched in X and Y by 200%, and get a special offset
@@ -827,11 +828,11 @@ public class ToolModel implements IUnbakedGeometry<ToolModel> {
       ItemStack ammo;
       ModDataNBT persistentData = tool.getPersistentData();
       if (ammoKey != null && persistentData.contains(ammoKey, Tag.TAG_COMPOUND)) {
-        ammo = ItemStack.of(persistentData.getCompound(ammoKey));
+        ammo = ItemStack.parseOptional(net.minecraft.core.RegistryAccess.fromRegistryOfRegistries(net.minecraft.core.registries.BuiltInRegistries.REGISTRY), persistentData.getCompound(ammoKey));
         builder.add(ammo.getItem());
-        CompoundTag tag = ammo.getTag();
-        if (tag != null) {
-          builder.add(tag);
+        net.minecraft.world.item.component.CustomData customData = ammo.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        if (customData != null) {
+          builder.add(customData.copyTag());
         }
       } else {
         ammo = ItemStack.EMPTY;

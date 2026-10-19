@@ -22,7 +22,7 @@ public class MooshroomDemushroomingRecipe extends SeveringRecipe {
   public static final RecordLoadable<MooshroomDemushroomingRecipe> LOADER = RecordLoadable.create(ContextKey.ID.requiredField(), BASE_CHANCE_FIELD, LOOTING_BONUS_FIELD, MooshroomDemushroomingRecipe::new);
 
   public MooshroomDemushroomingRecipe(ResourceLocation id, float baseChance, float lootingBonus) {
-    super(id, EntityIngredient.of(EntityType.MOOSHROOM), ItemOutput.fromItem(Items.RED_MUSHROOM, 5), baseChance, lootingBonus);
+    super(id, null, ItemOutput.fromItem(Items.RED_MUSHROOM, 5), baseChance, lootingBonus);
   }
 
   @Override

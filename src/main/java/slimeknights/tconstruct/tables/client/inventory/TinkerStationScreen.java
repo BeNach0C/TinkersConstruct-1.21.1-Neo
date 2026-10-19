@@ -105,6 +105,7 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
   /** Currently selected tool */
   @Nonnull @Getter
   private StationSlotLayout currentLayout;
+  public StationSlotLayout getCurrentLayout() { return currentLayout; }
 
   // components
   protected EditBox textField;
@@ -122,7 +123,7 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
     super(container, playerInventory, title);
 
     this.tinkerInfo.yOffset = 5;
-    this.modifierInfo.yOffset = this.tinkerInfo.imageHeight + 9;
+    this.modifierInfo.yOffset = this.tinkerInfo.getImageHeight() + 9;
 
     this.imageHeight = 184;
 
@@ -162,10 +163,10 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
     this.tinkerInfo.xOffset = 2;
     this.tinkerInfo.yOffset = this.centerBeam.h + this.panelDecorationL.h;
     this.modifierInfo.xOffset = this.tinkerInfo.xOffset;
-    this.modifierInfo.yOffset = this.tinkerInfo.yOffset + this.tinkerInfo.imageHeight + 4;
+    this.modifierInfo.yOffset = this.tinkerInfo.yOffset + this.tinkerInfo.getImageHeight() + 4;
 
     for (ModuleScreen<?,?> module : this.modules) {
-      module.topPos += 4;
+      module.yOffset += 4;
     }
 
     int x = (this.width - this.imageWidth) / 2;
@@ -203,6 +204,7 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
 
     // init after we set the enable boolean
     super.init();
+
     this.buttonsScreen = new TinkerStationButtonsWidget(this, this.cornerX - TinkerStationButtonsWidget.width(COLUMN_COUNT) - 2,
       this.cornerY + this.centerBeam.h + this.buttonDecorationTop.h, layouts, buttonsStyle);
 
@@ -212,6 +214,17 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
   }
 
   /** Updates all slots for the current slot layout */
+    private static void setSlotPos(Slot slot, int x, int y) {
+    try {
+      java.lang.reflect.Field fx = Slot.class.getDeclaredField("x");
+      fx.setAccessible(true);
+      fx.setInt(slot, x);
+      java.lang.reflect.Field fy = Slot.class.getDeclaredField("y");
+      fy.setAccessible(true);
+      fy.setInt(slot, y);
+    } catch (Exception ignored) {}
+  }
+
   public void updateLayout() {
     int stillFilled = 0;
     for (int i = 0; i <= maxInputs; i++) {
@@ -219,15 +232,13 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
       LayoutSlot layoutSlot = currentLayout.getSlot(i);
       if (layoutSlot.isHidden()) {
         // put the position in the still filled line
-        slot.x = STILL_FILLED_X - STILL_FILLED_SPACING * stillFilled;
-        slot.y = STILL_FILLED_Y;
+        setSlotPos(slot, STILL_FILLED_X - STILL_FILLED_SPACING * stillFilled, STILL_FILLED_Y);
         stillFilled++;
         if (slot instanceof TinkerStationSlot tinkerSlot) {
           tinkerSlot.deactivate();
         }
       } else {
-        slot.x = layoutSlot.getX();
-        slot.y = layoutSlot.getY();
+        setSlotPos(slot, layoutSlot.getX(), layoutSlot.getY());
         if (slot instanceof TinkerStationSlot tinkerSlot) {
           tinkerSlot.activate(layoutSlot);
         }
@@ -382,34 +393,38 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
     }
 
     // sidebar beams
-    x = this.buttonsScreen.getLeftPos() - this.leftBeam.w;
-    y = this.cornerY;
-    // draw the beams at the top
-    this.leftBeam.draw(graphics, x, y);
-    x += this.leftBeam.w;
-    x += this.centerBeam.drawScaledX(graphics, x, y, this.buttonsScreen.getImageWidth());
-    this.rightBeam.draw(graphics, x, y);
+    if (this.buttonsScreen != null) {
+      x = this.buttonsScreen.getLeftPos() - this.leftBeam.w;
+      y = this.cornerY;
+      // draw the beams at the top
+      this.leftBeam.draw(graphics, x, y);
+      x += this.leftBeam.w;
+      x += this.centerBeam.drawScaledX(graphics, x, y, this.buttonsScreen.getImageWidth());
+      this.rightBeam.draw(graphics, x, y);
+    }
 
-    x = tinkerInfo.leftPos - this.leftBeam.w;
+    x = this.tinkerInfo.getLeftPos() - this.leftBeam.w;
     this.leftBeam.draw(graphics, x, y);
     x += this.leftBeam.w;
-    x += this.centerBeam.drawScaledX(graphics, x, y, this.tinkerInfo.imageWidth);
+    x += this.centerBeam.drawScaledX(graphics, x, y, this.tinkerInfo.getImageWidth());
     this.rightBeam.draw(graphics, x, y);
 
     // draw the decoration for the buttons
-    for (SlotButtonItem button : this.buttonsScreen.getButtons()) {
-      this.buttonDecorationTop.draw(graphics, button.getX(), button.getY() - this.buttonDecorationTop.h);
-      // don't draw the bottom for the buttons in the last row
-      if (button.buttonId < this.buttonsScreen.getButtons().size() - COLUMN_COUNT) {
-        this.buttonDecorationBot.draw(graphics, button.getX(), button.getY() + button.getHeight());
+    if (this.buttonsScreen != null) {
+      for (SlotButtonItem button : this.buttonsScreen.getButtons()) {
+        this.buttonDecorationTop.draw(graphics, button.getX(), button.getY() - this.buttonDecorationTop.h);
+        // don't draw the bottom for the buttons in the last row
+        if (button.buttonId < this.buttonsScreen.getButtons().size() - COLUMN_COUNT) {
+          this.buttonDecorationBot.draw(graphics, button.getX(), button.getY() + button.getHeight());
+        }
       }
     }
 
     // draw the decorations for the panels
-    this.panelDecorationL.draw(graphics, this.tinkerInfo.leftPos + 5, this.tinkerInfo.topPos - this.panelDecorationL.h);
-    this.panelDecorationR.draw(graphics, this.tinkerInfo.guiRight() - 5 - this.panelDecorationR.w, this.tinkerInfo.topPos - this.panelDecorationR.h);
-    this.panelDecorationL.draw(graphics, this.modifierInfo.leftPos + 5, this.modifierInfo.topPos - this.panelDecorationL.h);
-    this.panelDecorationR.draw(graphics, this.modifierInfo.guiRight() - 5 - this.panelDecorationR.w, this.modifierInfo.topPos - this.panelDecorationR.h);
+    this.panelDecorationL.draw(graphics, this.tinkerInfo.getLeftPos() + 5, this.tinkerInfo.getTopPos() - this.panelDecorationL.h);
+    this.panelDecorationR.draw(graphics, this.tinkerInfo.guiRight() - 5 - this.panelDecorationR.w, this.tinkerInfo.getTopPos() - this.panelDecorationR.h);
+    this.panelDecorationL.draw(graphics, this.modifierInfo.getLeftPos() + 5, this.modifierInfo.getTopPos() - this.panelDecorationL.h);
+    this.panelDecorationR.draw(graphics, this.modifierInfo.guiRight() - 5 - this.panelDecorationR.w, this.modifierInfo.getTopPos() - this.panelDecorationR.h);
 
     // render slot background icons
     for (int i = 0; i <= maxInputs; i++) {
@@ -469,17 +484,17 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
     return super.mouseDragged(mouseX, mouseY, clickedMouseButton, timeSinceLastClick, unkowwn);
   }
 
-  @Override
-  public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-    if (this.tinkerInfo.handleMouseScrolled(mouseX, mouseY, delta)) {
+    @Override
+  public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    if (this.tinkerInfo.handleMouseScrolled(mouseX, mouseY, scrollY)) {
       return false;
     }
 
-    if (this.modifierInfo.handleMouseScrolled(mouseX, mouseY, delta)) {
+    if (this.modifierInfo.handleMouseScrolled(mouseX, mouseY, scrollY)) {
       return false;
     }
 
-    return super.mouseScrolled(mouseX, mouseY, delta);
+    return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
   }
 
   @Override
@@ -612,14 +627,16 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
   @Override
   public List<Rect2i> getModuleAreas() {
     List<Rect2i> list = super.getModuleAreas();
-    list.add(this.buttonsScreen.getArea());
+    if (this.buttonsScreen != null) {
+      list.add(this.buttonsScreen.getArea());
+    }
     return list;
   }
 
   @Override
   protected boolean hasClickedOutside(double mouseX, double mouseY, int guiLeft, int guiTop, int mouseButton) {
     return super.hasClickedOutside(mouseX, mouseY, guiLeft, guiTop, mouseButton)
-      && !this.buttonsScreen.isMouseOver(mouseX, mouseY);
+      && (this.buttonsScreen == null || !this.buttonsScreen.isMouseOver(mouseX, mouseY));
   }
 
 
@@ -635,7 +652,7 @@ public class TinkerStationScreen extends ToolTableScreen<TinkerStationBlockEntit
   @Override
   public void containerTick() {
     super.containerTick();
-    this.textField.tick();
+    /* this.textField.tick(); */
   }
 
   @Override

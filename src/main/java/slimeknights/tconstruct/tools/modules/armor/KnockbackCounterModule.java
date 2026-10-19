@@ -5,7 +5,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.common.ToolActions;
+import net.neoforged.neoforge.common.ItemAbilities;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
@@ -35,7 +35,7 @@ import java.util.List;
 public record KnockbackCounterModule(TinkerDataKey<SlotInCharge> slotInCharge, LevelingValue chance, LevelingValue flat, LevelingValue random, int durabilityUsage, IJsonPredicate<LivingEntity> defender, IJsonPredicate<LivingEntity> attacker, ModifierCondition<IToolStackView> condition) implements CounterModule, ConditionalModule<IToolStackView> {
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<KnockbackCounterModule>defaultHooks(ModifierHooks.ON_ATTACKED);
   public static final RecordLoadable<KnockbackCounterModule> LOADER = RecordLoadable.create(
-    ContextKey.ID.mappedField((id, error) -> TinkerDataKey.of(id)),
+    ContextKey.ID.mappedField((id, error) -> slimeknights.tconstruct.library.tools.capability.TinkerDataCapability.TinkerDataKey.<SlotInCharge>of(id)),
     CounterModule.CHANCE_FIELD,
     LevelingValue.LOADABLE.defaultField("flat_knockback", LevelingValue.ZERO, KnockbackCounterModule::flat),
     LevelingValue.LOADABLE.defaultField("random_knockback", LevelingValue.ZERO, KnockbackCounterModule::random),
@@ -49,7 +49,7 @@ public record KnockbackCounterModule(TinkerDataKey<SlotInCharge> slotInCharge, L
 
   /** Creates a new builder instance */
   public static CounterModule.Builder<KnockbackCounterModule> builder() {
-    return new CounterModule.Builder<>((chance, flat, random, durabilityUsage, defender, attacker,condition)
+    return new CounterModule.Builder<KnockbackCounterModule>((chance, flat, random, durabilityUsage, defender, attacker,condition)
       -> new KnockbackCounterModule(TConstruct.createKey("dummy"), chance, flat, random, durabilityUsage, defender, attacker, condition));
   }
 
@@ -91,7 +91,7 @@ public record KnockbackCounterModule(TinkerDataKey<SlotInCharge> slotInCharge, L
         EquipmentSlot checkSlot = Util.getSlotType(defender.getUsedItemHand());
         IToolStackView blockingTool = context.getValidTool(checkSlot);
         // TODO: CounterModule.isBlocking?
-        if (blockingTool != null && ModifierUtil.canPerformAction(blockingTool, ToolActions.SHIELD_BLOCK) && defender.getItemBySlot(checkSlot).getUseDuration() - defender.getUseItemRemainingTicks() >= 5) {
+        if (blockingTool != null && ModifierUtil.canPerformAction(blockingTool, ItemAbilities.SHIELD_BLOCK) && defender.getItemBySlot(checkSlot).getUseDuration(defender) - defender.getUseItemRemainingTicks() >= 5) {
           blockingSlot = checkSlot;
         }
       }

@@ -1,7 +1,3 @@
-UNOFFICIAL 1.21.1 Neoforge Tinker's Construct Port (WIP)
-I do NOT know much about Java programming, this project is being ported mostly by Google's Antigravity for my own consumption, since a lot of childhood's mods have been ported to this version.
-
-Official Tinker's Readme:
 # [Tinkers' Construct](https://slimeknights.github.io/projects/#tinkers-construct)
 
 Tinkers' Construct is a mod about putting tools together in a wide variety of ways, then modifying them until they turn into something else. The tools never disappear and can be named and changed to your heart's desire. Once you make them, they're yours forever. Many different materials can be used to make your tools. Tools can be forged in the part builder, or by melting down metals in the multiblock smeltery.

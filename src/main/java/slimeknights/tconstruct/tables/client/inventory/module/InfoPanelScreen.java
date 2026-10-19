@@ -57,6 +57,22 @@ public class InfoPanelScreen<P extends MultiModuleScreen<?>, C extends AbstractC
 
   protected SliderWidget slider = new SliderWidget(SLIDER_NORMAL, SLIDER_HOVER, SLIDER_HOVER, SLIDER_TOP, SLIDER_BOTTOM, SLIDER_BAR);
 
+    public int getLeftPos() {
+    return this.leftPos;
+  }
+
+  public int getTopPos() {
+    return this.topPos;
+  }
+
+  public int getImageWidth() {
+    return this.imageWidth;
+  }
+
+  public int getImageHeight() {
+    return this.imageHeight;
+  }
+
   protected Component caption;
   protected List<Component> text;
   protected List<Component> tooltips;
@@ -65,6 +81,7 @@ public class InfoPanelScreen<P extends MultiModuleScreen<?>, C extends AbstractC
 
   @Setter
   protected float textScale = 1.0f;
+  public void setTextScale(float textScale) { this.textScale = textScale; }
   public InfoPanelScreen(P parent, C container, Inventory playerInventory, Component title) {
     super(parent, container, playerInventory, title, true, false);
 
@@ -408,7 +425,6 @@ public class InfoPanelScreen<P extends MultiModuleScreen<?>, C extends AbstractC
     return mouseX >= this.slider.xPos && mouseY >= this.slider.yPos && mouseX <= this.slider.xPos + this.slider.width && mouseY <= this.slider.yPos + this.slider.height;
   }
 
-  @Override
   public boolean handleMouseScrolled(double mouseX, double mouseY, double scrollData) {
     if (!this.slider.isEnabled() || !this.isMouseInModule((int) mouseX, (int) mouseY) || this.isMouseOverFullSlot(mouseX, mouseY)) {
       return false;

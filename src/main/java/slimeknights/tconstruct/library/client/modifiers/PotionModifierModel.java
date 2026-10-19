@@ -10,9 +10,10 @@ import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import java.util.Optional;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.alchemy.PotionUtils;
-import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.alchemy.PotionContents;
 import slimeknights.mantle.client.model.util.MantleItemLayerModel;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.util.ItemLayerPixels;
@@ -63,7 +64,7 @@ public class PotionModifierModel implements SimpleModifierModel {
   @Override
   public Object getCacheKey(IToolStackView tool, ModifierEntry entry) {
     ModifierId modifier = entry.getId();
-    return new CacheKey(modifier, tool.getPersistentData().getString(modifier));
+    return new CacheKey(modifier, tool.getPersistentData().getString(modifier.getId()));
   }
 
   @SuppressWarnings("deprecation")
@@ -71,14 +72,14 @@ public class PotionModifierModel implements SimpleModifierModel {
   public void addQuads(IToolStackView tool, ModifierEntry modifier, Function<Material,TextureAtlasSprite> spriteGetter, Transformation transforms, boolean isLarge, int startTintIndex, Consumer<Collection<BakedQuad>> quadConsumer, @Nullable ItemLayerPixels pixels) {
     Material texture = isLarge ? large : small;
     if (texture != null) {
-      ResourceLocation key = modifier.getId();
+      ResourceLocation key = modifier.getId().getId();
       IModDataView toolData = tool.getPersistentData();
       if (toolData.contains(key, Tag.TAG_STRING)) {
         ResourceLocation id = ResourceLocation.tryParse(toolData.getString(key));
         if (id != null) {
-          Potion potion = BuiltInRegistries.POTION.get(id);
-          if (potion != Potions.EMPTY) {
-            quadConsumer.accept(MantleItemLayerModel.getQuadsForSprite(0xFF000000 | PotionUtils.getColor(potion), -1, spriteGetter.apply(texture), transforms, 0, pixels));
+          Optional<Holder.Reference<Potion>> potionHolder = BuiltInRegistries.POTION.getHolder(id);
+          if (potionHolder.isPresent()) {
+            quadConsumer.accept(MantleItemLayerModel.getQuadsForSprite(0xFF000000 | PotionContents.getColor(potionHolder.get()), -1, spriteGetter.apply(texture), transforms, 0, pixels));
           }
         }
       }

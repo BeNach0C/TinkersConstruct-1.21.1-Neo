@@ -12,8 +12,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.common.crafting.AbstractIngredient;
-import net.minecraftforge.common.crafting.IIngredientSerializer;
+import net.neoforged.neoforge.common.crafting.ICustomIngredient;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.TinkerTags;
@@ -28,12 +27,11 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /** Ingredient that only matches tools with a specific hook */
-public class ToolHookIngredient extends AbstractIngredient {
+public class ToolHookIngredient implements ICustomIngredient {
   private final TagKey<Item> tag;
   private final ModuleHook<?> hook;
 
   protected ToolHookIngredient(TagKey<Item> tag, ModuleHook<?> hook) {
-    super(Stream.of(new ToolHookValue(tag, hook)));
     this.tag = tag;
     this.hook = hook;
   }
@@ -52,82 +50,43 @@ public class ToolHookIngredient extends AbstractIngredient {
   }
 
   @Override
+  public Stream<ItemStack> getItems() {
+    List<ItemStack> list = new ArrayList<>();
+    for (Holder<Item> holder : BuiltInRegistries.ITEM.getTagOrEmpty(tag)) {
+      if (holder.value() instanceof IModifiable modifiable && modifiable.getToolDefinition().getData().getHooks().hasHook(hook)) {
+        list.add(new ItemStack(modifiable));
+      }
+    }
+    return list.stream();
+  }
+
+  @Override
   public boolean isSimple() {
     return true;
   }
 
+  public static final ResourceLocation ID = TConstruct.getResource("tool_hook");
+  public static final net.neoforged.neoforge.common.crafting.IngredientType<ToolHookIngredient> TYPE = slimeknights.mantle.recipe.helper.LoadableIngredientSerializer.of(
+    json -> new ToolHookIngredient(
+      Loadables.ITEM_TAG.getOrDefault(json, "tag", TinkerTags.Items.MODIFIABLE),
+      ToolHooks.LOADER.getIfPresent(json, "hook")
+    ),
+    (ing, json) -> {
+      json.add("tag", Loadables.ITEM_TAG.serialize(ing.tag));
+      json.add("hook", ToolHooks.LOADER.serialize(ing.hook));
+    },
+    buffer -> new ToolHookIngredient(
+      Loadables.ITEM_TAG.decode(buffer),
+      ToolHooks.LOADER.decode(buffer)
+    ),
+    (buffer, ing) -> {
+      Loadables.ITEM_TAG.encode(buffer, ing.tag);
+      ToolHooks.LOADER.encode(buffer, ing.hook);
+    }
+  );
+
   @Override
-  public IIngredientSerializer<? extends Ingredient> getSerializer() {
-    return Serializer.INSTANCE;
-  }
-
-  @Override
-  public JsonObject toJson() {
-    JsonObject json = new JsonObject();
-    json.addProperty("type", Serializer.ID.toString());
-    json.addProperty("tag", tag.location().toString());
-    json.addProperty("hook", hook.getId().toString());
-    return json;
-  }
-
-  @RequiredArgsConstructor
-  public static class ToolHookValue implements Value {
-    private final TagKey<Item> tag;
-    private final ModuleHook<?> hook;
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public Collection<ItemStack> getItems() {
-      List<ItemStack> list = new ArrayList<>();
-
-      // filtered version of tag values
-      for(Holder<Item> holder : BuiltInRegistries.ITEM.getTagOrEmpty(tag)) {
-        if (holder.value() instanceof IModifiable modifiable && modifiable.getToolDefinition().getData().getHooks().hasHook(hook)) {
-          list.add(new ItemStack(modifiable));
-        }
-      }
-      if (list.isEmpty()) {
-        list.add(new ItemStack(Blocks.BARRIER).setHoverName(Component.literal("Empty Tag: " + tag.location())));
-      }
-      return list;
-    }
-
-    @Override
-    public JsonObject serialize() {
-      JsonObject json = new JsonObject();
-      json.addProperty("id", Serializer.ID.toString());
-      json.addProperty("tag", tag.location().toString());
-      json.addProperty("hook", hook.getId().toString());
-      return json;
-    }
-  }
-
-  /** Serializer instance */
-  public enum Serializer implements IIngredientSerializer<ToolHookIngredient> {
-    INSTANCE;
-
-    public static final ResourceLocation ID = TConstruct.getResource("tool_hook");
-
-    @Override
-    public ToolHookIngredient parse(JsonObject json) {
-      return new ToolHookIngredient(
-        Loadables.ITEM_TAG.getOrDefault(json, "tag", TinkerTags.Items.MODIFIABLE),
-        ToolHooks.LOADER.getIfPresent(json, "hook")
-      );
-    }
-
-    @Override
-    public ToolHookIngredient parse(FriendlyByteBuf buffer) {
-      return new ToolHookIngredient(
-        Loadables.ITEM_TAG.decode(buffer),
-        ToolHooks.LOADER.decode(buffer)
-      );
-    }
-
-    @Override
-    public void write(FriendlyByteBuf buffer, ToolHookIngredient ingredient) {
-      Loadables.ITEM_TAG.encode(buffer, ingredient.tag);
-      ToolHooks.LOADER.encode(buffer, ingredient.hook);
-    }
+  public net.neoforged.neoforge.common.crafting.IngredientType<?> getType() {
+    return TYPE;
   }
 }

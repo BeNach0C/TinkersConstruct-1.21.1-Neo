@@ -57,12 +57,13 @@ public class TinkerStationContainerWrapper implements IMutableTinkerStationConta
       return null;
     }
     // try last recipe
-    ISingleStackContainer inv = () -> stack;
+    slimeknights.tconstruct.library.recipe.SingleItemContainer inv = new slimeknights.tconstruct.library.recipe.SingleItemContainer();
+    inv.setStack(stack);
     if (lastMaterialRecipe != null && lastMaterialRecipe.matches(inv, world)) {
       return lastMaterialRecipe;
     }
     // try to find a new recipe
-    Optional<MaterialRecipe> newRecipe = world.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MATERIAL.get(), inv, world);
+    Optional<MaterialRecipe> newRecipe = world.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MATERIAL.get(), inv, world).map(net.minecraft.world.item.crafting.RecipeHolder::value);
     if (newRecipe.isPresent()) {
       lastMaterialRecipe = newRecipe.get();
       return lastMaterialRecipe;

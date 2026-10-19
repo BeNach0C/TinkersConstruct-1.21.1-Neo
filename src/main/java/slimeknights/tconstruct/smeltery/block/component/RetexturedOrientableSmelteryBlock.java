@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
@@ -24,7 +25,7 @@ public class RetexturedOrientableSmelteryBlock extends OrientableSmelteryBlock {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable BlockGetter pLevel, List<Component> tooltip, TooltipFlag flag) {
+  public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
     RetexturedHelper.addTooltip(stack, tooltip, flag);
   }
 
@@ -35,7 +36,7 @@ public class RetexturedOrientableSmelteryBlock extends OrientableSmelteryBlock {
   }
 
   @Override
-  public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter world, BlockPos pos, Player player) {
+  public ItemStack getCloneItemStack(net.minecraft.world.level.LevelReader world, BlockPos pos, BlockState state) {
     return RetexturedBlock.getPickBlock(world, pos, state);
   }
 }

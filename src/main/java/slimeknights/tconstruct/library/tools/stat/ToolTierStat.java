@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Tier;
-import net.minecraftforge.common.TierSortingRegistry;
+import net.minecraft.world.item.Tiers;
 import slimeknights.mantle.util.JsonHelper;
 import slimeknights.mantle.util.RegistryHelper;
 import slimeknights.tconstruct.common.TinkerTags;
@@ -62,12 +62,22 @@ public class ToolTierStat implements IToolStat<Tier> {
   }
 
   @Nullable
+  private static Tier getTierByName(ResourceLocation id) {
+    if (id == null) return null;
+    for (Tiers tier : Tiers.values()) {
+      if (tier.name().toLowerCase(java.util.Locale.ROOT).equals(id.getPath())) {
+        return tier;
+      }
+    }
+    return null;
+  }
+
   @Override
   public Tier read(Tag tag) {
     if (tag.getId() == Tag.TAG_STRING) {
       ResourceLocation tierId = ResourceLocation.tryParse(tag.getAsString());
       if (tierId != null) {
-        return TierSortingRegistry.byName(tierId);
+        return getTierByName(tierId);
       }
     }
     return null;
@@ -75,7 +85,7 @@ public class ToolTierStat implements IToolStat<Tier> {
 
   @Override
   public Tag write(Tier value) {
-    ResourceLocation id = TierSortingRegistry.getName(value);
+    ResourceLocation id = HarvestTiers.getNameLocation(value);
     if (id != null) {
       return StringTag.valueOf(id.toString());
     }
@@ -85,7 +95,7 @@ public class ToolTierStat implements IToolStat<Tier> {
   @Override
   public Tier deserialize(JsonElement json) {
     ResourceLocation id = JsonHelper.convertToResourceLocation(json, getName().toString());
-    Tier tier = TierSortingRegistry.byName(id);
+    Tier tier = getTierByName(id);
     if (tier != null) {
       return tier;
     }
@@ -94,13 +104,13 @@ public class ToolTierStat implements IToolStat<Tier> {
 
   @Override
   public JsonElement serialize(Tier value) {
-    return new JsonPrimitive(Objects.requireNonNull(TierSortingRegistry.getName(value)).toString());
+    return new JsonPrimitive(Objects.requireNonNull(HarvestTiers.getNameLocation(value)).toString());
   }
 
   @Override
   public Tier fromNetwork(FriendlyByteBuf buffer) {
     ResourceLocation id = buffer.readResourceLocation();
-    Tier tier = TierSortingRegistry.byName(id);
+    Tier tier = getTierByName(id);
     if (tier != null) {
       return tier;
     }
@@ -109,12 +119,12 @@ public class ToolTierStat implements IToolStat<Tier> {
 
   @Override
   public void toNetwork(FriendlyByteBuf buffer, Tier value) {
-    buffer.writeResourceLocation(Objects.requireNonNull(TierSortingRegistry.getName(value)));
+    buffer.writeResourceLocation(Objects.requireNonNull(HarvestTiers.getNameLocation(value)));
   }
 
   @Override
   public Component formatValue(Tier value) {
-    return Component.translatable(Util.makeTranslationKey("tool_stat", getName())).append(HarvestTiers.getName(value));
+    return Component.translatable(Util.makeTranslationKey("tool_stat", getName().getId())).append(HarvestTiers.getName(value));
   }
 
   @Override

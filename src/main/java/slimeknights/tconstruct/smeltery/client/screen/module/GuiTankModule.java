@@ -9,8 +9,8 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.fluid.tooltip.FluidTooltipHandler;
 import slimeknights.tconstruct.library.client.GuiUtil;
@@ -31,8 +31,13 @@ public class GuiTankModule implements IScreenWithFluidTank, ClickableTankModule 
   private static final int TANK_INDEX = 0;
   private final AbstractContainerScreen<?> screen;
   private final IFluidHandler tank;
-  @Getter
   private final int x, y, width, height;
+
+  public int getX() { return x; }
+  public int getY() { return y; }
+  public int getWidth() { return width; }
+  public int getHeight() { return height; }
+
   private final boolean horizontal;
   private final Rect2i fluidLoc;
   private final BiConsumer<Integer,List<Component>> formatter;
@@ -77,8 +82,8 @@ public class GuiTankModule implements IScreenWithFluidTank, ClickableTankModule 
    */
   private int scaleFluid(int max) {
     int capacity = tank.getTankCapacity(TANK_INDEX);
-    if (capacity == 0) {
-      return max;
+    if (capacity <= 0) {
+      return 0;
     }
     return max * tank.getFluidInTank(TANK_INDEX).getAmount() / capacity;
   }
@@ -179,7 +184,7 @@ public class GuiTankModule implements IScreenWithFluidTank, ClickableTankModule 
       }
 
       // TODO: renderComponentTooltip->renderTooltip
-      graphics.renderComponentTooltip(screen.font, tooltip, mouseX, mouseY);
+      graphics.renderComponentTooltip(net.minecraft.client.Minecraft.getInstance().font, tooltip, mouseX, mouseY);
     }
   }
 

@@ -73,6 +73,6 @@ public class EFLNExplosion extends CustomExplosion {
         }
       }
     }
-    this.toBlow.addAll(set);
+    this.getToBlow().addAll(set);
   }
 }

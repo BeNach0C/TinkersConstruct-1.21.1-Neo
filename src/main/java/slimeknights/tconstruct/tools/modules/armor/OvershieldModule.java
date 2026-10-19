@@ -1,10 +1,12 @@
 package slimeknights.tconstruct.tools.modules.armor;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import slimeknights.mantle.client.TooltipKey;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.predicate.damage.DamageSourcePredicate;

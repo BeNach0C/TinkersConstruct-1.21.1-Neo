@@ -10,7 +10,7 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.BreakSpeed;
 import slimeknights.mantle.data.registry.IdAwareComponentRegistry;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.materials.definition.MaterialId;
@@ -26,7 +26,7 @@ import slimeknights.tconstruct.library.modifiers.hook.behavior.EnchantmentModifi
 import slimeknights.tconstruct.library.modifiers.hook.behavior.MaterialRepairModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.behavior.ProcessLootModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.behavior.RepairFactorModifierHook;
-import slimeknights.tconstruct.library.modifiers.hook.behavior.ToolActionModifierHook;
+import slimeknights.tconstruct.library.modifiers.hook.behavior.ItemAbilityModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.behavior.ToolDamageModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.behavior.ToolDurabilityChangedHook;
 import slimeknights.tconstruct.library.modifiers.hook.build.ConditionalStatModifierHook;
@@ -105,7 +105,7 @@ public class ModifierHooks {
   public static final ModuleHook<ConditionalStatModifierHook> CONDITIONAL_STAT = register("conditional_stat", ConditionalStatModifierHook.class, ConditionalStatModifierHook.AllMerger::new, (tool, modifier, living, stat, baseValue, multiplier) -> baseValue);
 
   /** Hook for modifiers checking if they can perform a tool action */
-  public static final ModuleHook<ToolActionModifierHook> TOOL_ACTION = register("tool_action", ToolActionModifierHook.class, ToolActionModifierHook.AnyMerger::new, (tool, modifier, toolAction) -> false);
+  public static final ModuleHook<ItemAbilityModifierHook> TOOL_ACTION = register("tool_action", ItemAbilityModifierHook.class, ItemAbilityModifierHook.AnyMerger::new, (tool, modifier, toolAction) -> false);
 
   /** Hook used when any {@link EquipmentSlot} changes on an entity while using at least one tool */
   public static final ModuleHook<EquipmentChangeModifierHook> EQUIPMENT_CHANGE = register("equipment_change", EquipmentChangeModifierHook.class, EquipmentChangeModifierHook.AllMerger::new, new EquipmentChangeModifierHook() {});

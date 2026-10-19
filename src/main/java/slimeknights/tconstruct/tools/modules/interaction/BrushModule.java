@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.entity.BrushableBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.common.ForgeMod;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.loadable.record.SingletonLoader;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
@@ -66,7 +66,7 @@ public enum BrushModule implements ModifierModule, GeneralInteractionModifierHoo
 
   /** Runs an entity raytrace for brushing. See same method on {@link BrushItem} */
   private static HitResult calculateHitResult(LivingEntity living) {
-    return ProjectileUtil.getHitResultOnViewVector(living, entity -> !entity.isSpectator() && entity.isPickable(), living.getAttributeValue(ForgeMod.BLOCK_REACH.get()));
+    return ProjectileUtil.getHitResultOnViewVector(living, entity -> !entity.isSpectator() && entity.isPickable(), living.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.BLOCK_INTERACTION_RANGE));
   }
 
   @Override
@@ -96,7 +96,7 @@ public enum BrushModule implements ModifierModule, GeneralInteractionModifierHoo
     // spawn particles
     // shouldn't be needed to do the instance of, but might as well be safe
     if (Items.BRUSH instanceof BrushItem brush) {
-      brush.spawnDustParticles(level, blockHit, state, player.getViewVector(0.0F), arm);
+      // brush.spawnDustParticles(level, blockHit, state, player.getViewVector(0.0F), arm); // TODO 1.21.1 private
     }
 
     // play sound

@@ -59,9 +59,9 @@ public record ConditionalPowerModule(IJsonPredicate<LivingEntity> target, IJsonP
     ModifierEntry.VALID_LEVEL.defaultField("modifier_level", ConditionalPowerModule::modifierLevel),
     ConditionalPowerModule::new);
   /** Projectile persistent data key for the stat multiplier */
-  private static final ResourceLocation AMMO_MULTIPLIER = ToolStats.PROJECTILE_DAMAGE.getName().withSuffix("_ammo_multiplier");
+  private static final ResourceLocation AMMO_MULTIPLIER = ToolStats.PROJECTILE_DAMAGE.getName().getId().withSuffix("_ammo_multiplier");
   /** Projectile persistent data key for the stat multiplier */
-  private static final ResourceLocation BOW_MULTIPLIER = ToolStats.PROJECTILE_DAMAGE.getName().withSuffix("_bow_multiplier");
+  private static final ResourceLocation BOW_MULTIPLIER = ToolStats.PROJECTILE_DAMAGE.getName().getId().withSuffix("_bow_multiplier");
 
   /** @apiNote Internal constructor, use {@link #builder()} */
   @Internal
@@ -99,7 +99,7 @@ public record ConditionalPowerModule(IJsonPredicate<LivingEntity> target, IJsonP
   @Deprecated
   @Override
   public boolean onProjectileHitEntity(ModifierNBT modifiers, ModDataNBT persistentData, ModifierEntry modifier, Projectile projectile, EntityHitResult hit, @Nullable LivingEntity attacker, @Nullable LivingEntity target) {
-    ResourceLocation key = modifier.getId();
+    ResourceLocation key = modifier.getId().getId();
     // if we already boosted power from an entity, don't boost again
     // minimizes issues with projectile bounces and piercing
     if (modifierLevel.test(modifier.getLevel()) && !persistentData.getBoolean(key)) {
@@ -161,11 +161,13 @@ public record ConditionalPowerModule(IJsonPredicate<LivingEntity> target, IJsonP
   }
 
   /** Builder class */
-  @Setter
-  @Accessors(fluent = true)
+  
   public static class Builder extends VariableFormula.Builder<ConditionalPowerModule.Builder,ConditionalPowerModule, PowerVariable> {
     private IJsonPredicate<LivingEntity> target = LivingEntityPredicate.ANY;
     private IJsonPredicate<LivingEntity> holder = LivingEntityPredicate.ANY;
+
+    public Builder target(IJsonPredicate<LivingEntity> target) { this.target = target; return this; }
+    public Builder holder(IJsonPredicate<LivingEntity> holder) { this.holder = holder; return this; }
 
     private Builder() {
       super(PowerFormula.VARIABLES);

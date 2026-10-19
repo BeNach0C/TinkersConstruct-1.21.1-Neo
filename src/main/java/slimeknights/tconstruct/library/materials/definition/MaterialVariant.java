@@ -12,8 +12,9 @@ public class MaterialVariant extends LazyMaterial implements Comparable<Material
 
   @Getter
   private final MaterialVariantId variant;
+  public MaterialVariantId getVariant() { return this.variant; }
   protected MaterialVariant(MaterialVariantId variant) {
-    super(variant.getId());
+    super(variant.getMaterialId());
     this.variant = variant;
   }
 

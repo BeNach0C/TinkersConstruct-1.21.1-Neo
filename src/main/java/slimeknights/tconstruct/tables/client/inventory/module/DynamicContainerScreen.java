@@ -117,7 +117,6 @@ public class DynamicContainerScreen<P extends MultiModuleScreen<?>, C extends Ab
     return mouseX >= this.slider.xPos && mouseY >= this.slider.yPos && mouseX <= this.slider.xPos + this.slider.width && mouseY <= this.slider.yPos + this.slider.height;
   }
 
-  @Override
   public boolean handleMouseScrolled(double mouseX, double mouseY, double scrollData) {
     if (!this.sliderActive) {
       return false;

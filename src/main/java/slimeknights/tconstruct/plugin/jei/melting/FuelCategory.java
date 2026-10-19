@@ -2,7 +2,7 @@ package slimeknights.tconstruct.plugin.jei.melting;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
@@ -19,7 +19,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.fluids.TinkerFluids;
 import slimeknights.tconstruct.library.recipe.fuel.MeltingFuel;
@@ -51,7 +51,7 @@ public class FuelCategory extends AbstractRecipeCategory<MeltingFuel> {
     // no fluids mean this is the solid fuel info
     if (!fluids.isEmpty()) {
       builder.addInputSlot(4, 4)
-        .addIngredients(ForgeTypes.FLUID_STACK, fluids)
+        .addIngredients(NeoForgeTypes.FLUID_STACK, fluids)
         .setFluidRenderer(100, false, 12, 32)
         .setBackground(fuelBar, -1, -1)
         .setSlotName(FUEL_SLOT);
@@ -101,7 +101,7 @@ public class FuelCategory extends AbstractRecipeCategory<MeltingFuel> {
 
     @Override
     public void drawWidget(GuiGraphics graphics, double mouseX, double mouseY) {
-      FluidStack fluid = fuel.getDisplayedIngredient(ForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
+      FluidStack fluid = fuel.getDisplayedIngredient(NeoForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
       if (!fluid.isEmpty()) {
         graphics.drawString(font, LASTS, 0, 0, Color.GRAY.getRGB(), false);
         Component string = Component.translatable(KEY_DURATION, duration, fluid.getAmount());

@@ -13,9 +13,8 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.bus.api.IEventBus;
 import slimeknights.mantle.data.listener.IEarlySafeManagerReloadListener;
 import slimeknights.mantle.util.JsonHelper;
 import slimeknights.tconstruct.TConstruct;
@@ -33,8 +32,8 @@ import java.util.Map.Entry;
  * Class handling the loading of modifier UI icons
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-@Log4j2
 public class ModifierIconManager implements IEarlySafeManagerReloadListener {
+  private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(ModifierIconManager.class);
   /** Icon file to load, has merging behavior but forge prevents multiple mods from loading the same file */
   private static final String ICONS = "tinkering/modifier_icons.json";
   /** First layer of the default icon, will be tinted */
@@ -51,7 +50,7 @@ public class ModifierIconManager implements IEarlySafeManagerReloadListener {
    * Initializes this manager, registering it relevant event busses
    */
   public static void init() {
-    IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+    IEventBus bus = slimeknights.tconstruct.TConstruct.getModEventBus();
     bus.addListener(ModifierIconManager::onResourceManagerRegister);
   }
 

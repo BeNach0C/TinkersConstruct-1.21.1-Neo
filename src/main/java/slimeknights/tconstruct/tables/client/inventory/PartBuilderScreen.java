@@ -42,7 +42,7 @@ public class PartBuilderScreen extends BaseTabbedScreen<PartBuilderBlockEntity,P
   private static final MutableComponent UNCRAFTABLE_MATERIAL_TOOLTIP = TConstruct.makeTranslation("gui", "part_builder.uncraftable.tooltip");
   private static final ResourceLocation BACKGROUND = TConstruct.getResource("textures/gui/part_builder.png");
   /** Comparator to order stats in the part builder display */
-  private static final Comparator<IMaterialStats> STATS_COMPARATOR = Comparator.comparing(IMaterialStats::getIdentifier);
+  private static final Comparator<IMaterialStats> STATS_COMPARATOR = Comparator.comparing(s -> s.getIdentifier().toString());
   // locations
   // slider
   /** Texture U for the handle texture */
@@ -375,18 +375,15 @@ public class PartBuilderScreen extends BaseTabbedScreen<PartBuilderBlockEntity,P
     }
   }
 
-  @Override
-  public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-    //if (this.infoPanelScreen.handleMouseScrolled(mouseX, mouseY, delta)) {
-    //  return false;
-    //}
-    if (super.mouseScrolled(mouseX, mouseY, delta)) {
+    @Override
+  public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    if (super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
       return true;
     }
 
     if (this.canScroll()) {
       int hidden = this.getHiddenRows();
-      this.sliderProgress = Mth.clamp((float) (this.sliderProgress - delta / hidden), 0, 1);
+      this.sliderProgress = Mth.clamp((float) (this.sliderProgress - scrollY / hidden), 0, 1);
       this.recipeIndexOffset = Math.round(this.sliderProgress * hidden) * 4;
       return true;
     }

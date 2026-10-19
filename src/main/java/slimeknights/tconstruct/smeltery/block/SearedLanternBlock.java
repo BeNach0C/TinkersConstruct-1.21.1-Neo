@@ -30,6 +30,12 @@ import static slimeknights.tconstruct.smeltery.block.component.SearedTankBlock.L
 public class SearedLanternBlock extends LanternBlock implements ITankBlock, EntityBlock {
   @Getter
   private final int capacity;
+
+  @Override
+  public int getCapacity() {
+    return capacity;
+  }
+
   public SearedLanternBlock(Properties properties, int capacity) {
     super(properties);
     this.capacity = capacity;
@@ -60,8 +66,8 @@ public class SearedLanternBlock extends LanternBlock implements ITankBlock, Enti
 
   @Override
   public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
-    if (nbt != null && world.getBlockEntity(pos) instanceof TankBlockEntity tank) {
+    CompoundTag nbt = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
+    if (nbt != null && !nbt.isEmpty() && world.getBlockEntity(pos) instanceof TankBlockEntity tank) {
       tank.updateTank(nbt.getCompound(NBTTags.TANK));
     }
   }
@@ -81,7 +87,7 @@ public class SearedLanternBlock extends LanternBlock implements ITankBlock, Enti
   }
 
   @Override
-  public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter world, BlockPos pos, Player player) {
+  public ItemStack getCloneItemStack(net.minecraft.world.level.LevelReader world, BlockPos pos, BlockState state) {
     return ITankBlockEntity.getCloneItemStack(new ItemStack(this), world, pos);
   }
 }

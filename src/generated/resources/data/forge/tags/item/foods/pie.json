@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:foods/pie",
+                       "required":  false
+                   }
+               ]
+}

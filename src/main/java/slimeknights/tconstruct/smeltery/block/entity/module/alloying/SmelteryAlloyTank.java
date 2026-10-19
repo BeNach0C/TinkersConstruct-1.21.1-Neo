@@ -3,23 +3,34 @@ package slimeknights.tconstruct.smeltery.block.entity.module.alloying;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import slimeknights.tconstruct.library.recipe.alloying.IMutableAlloyTank;
 import slimeknights.tconstruct.smeltery.block.entity.tank.SmelteryTank;
 
 /**
  * Smeltery implementation of the alloy tank, basically just a wrapper around the smeltery tank
  */
-@RequiredArgsConstructor
 public class SmelteryAlloyTank implements IMutableAlloyTank {
   /**
    * Handler parent
    */
-  private final SmelteryTank handler;
+  private final SmelteryTank<?> handler;
   /** Current temperature. Provided as a getter and setter as there are a few contexts with different source for temperature */
-  @Getter @Setter
   private int temperature = 0;
+
+  public SmelteryAlloyTank(SmelteryTank<?> handler) {
+    this.handler = handler;
+  }
+
+  @Override
+  public int getTemperature() {
+    return temperature;
+  }
+
+  public void setTemperature(int temperature) {
+    this.temperature = temperature;
+  }
 
   @Override
   public int getTanks() {

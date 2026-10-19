@@ -129,7 +129,7 @@ public class MaterialRegistryImpl implements IMaterialRegistry {
   public void registerStatType(MaterialStatType<?> type, @Nullable MaterialStatsId fallback) {
     registerStatType(type);
     if (fallback != null) {
-      materialTraitsManager.registerStatTypeFallback(type.getId(), fallback);
+      materialTraitsManager.registerStatTypeFallback(type.getStatId(), fallback);
     }
   }
 

@@ -31,14 +31,16 @@ public class PatternIngredientRenderer implements IIngredientRenderer<Pattern> {
     }
   }
 
-  @SuppressWarnings("removal")
+
+
   @Override
   public List<Component> getTooltip(Pattern pattern, TooltipFlag flag) {
+    List<Component> list = new java.util.ArrayList<>();
+    list.add(pattern.getDisplayName());
     if (flag.isAdvanced()) {
-      return Arrays.asList(pattern.getDisplayName(), Component.literal(pattern.toString()).withStyle(ChatFormatting.DARK_GRAY));
-    } else {
-      return Collections.singletonList(pattern.getDisplayName());
+      list.add(Component.literal(pattern.toString()).withStyle(ChatFormatting.DARK_GRAY));
     }
+    return list;
   }
 
   @Override

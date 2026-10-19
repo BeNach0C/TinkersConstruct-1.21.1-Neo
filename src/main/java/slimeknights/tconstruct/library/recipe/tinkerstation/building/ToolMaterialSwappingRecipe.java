@@ -85,7 +85,7 @@ public class ToolMaterialSwappingRecipe extends MaterialSwappingRecipe implement
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     // copy the tool NBT to ensure the original tool is intact
     IToolStackView original = inv.getTinkerable();
     List<MaterialStatsId> materials = ToolMaterialHook.stats(original.getDefinition());
@@ -146,7 +146,7 @@ public class ToolMaterialSwappingRecipe extends MaterialSwappingRecipe implement
   private List<IDisplayToolModification> multiRecipes;
 
   @Override
-  public List<IDisplayToolModification> getRecipes(RegistryAccess access) {
+  public List<IDisplayToolModification> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       IMaterialRegistry registry = MaterialRegistry.getInstance();
       Collection<IMaterial> materials = registry.getVisibleMaterials();
@@ -227,7 +227,7 @@ public class ToolMaterialSwappingRecipe extends MaterialSwappingRecipe implement
         MaterialVariantId material = MaterialIdNBT.getMaterial(focus, index);
         // if focusing on the output, display a sacrifice that would create this tool
         if (focusOutput) {
-          if (statType.canUseMaterial(material.getId())) {
+          if (statType.canUseMaterial(material.getMaterialId())) {
             ToolStack tool = displayTool.copy();
             tool.replaceMaterial(index, material);
             return List.of(tool.createStack());

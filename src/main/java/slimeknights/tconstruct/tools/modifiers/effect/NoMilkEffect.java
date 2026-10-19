@@ -17,7 +17,7 @@ public class NoMilkEffect extends TinkerEffect {
   }
 
   @Override
-  public List<ItemStack> getCurativeItems() {
-    return new ArrayList<>();
+  public void fillEffectCures(java.util.Set<net.neoforged.neoforge.common.EffectCure> cures, net.minecraft.world.effect.MobEffectInstance effectInstance) {
+    // Cannot be cured
   }
 }

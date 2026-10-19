@@ -59,11 +59,14 @@ public class MaterialHasFallbackTextureSupplier implements ArmorTextureSupplier,
 
   @Override
   public ArmorTexture getArmorTexture(ItemStack stack, TextureType type, RegistryAccess access) {
-    CompoundTag tag = stack.getTag();
-    if (tag != null && tag.contains(ToolStack.TAG_MATERIALS, Tag.TAG_LIST)) {
-      String material = tag.getList(ToolStack.TAG_MATERIALS, Tag.TAG_STRING).getString(index);
-      if (!material.isEmpty() && cache.computeIfAbsent(material, this)) {
-        return apply.getArmorTexture(stack, type, access);
+    net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    if (customData != null) {
+      CompoundTag tag = customData.copyTag();
+      if (tag.contains(ToolStack.TAG_MATERIALS, Tag.TAG_LIST)) {
+        String material = tag.getList(ToolStack.TAG_MATERIALS, Tag.TAG_STRING).getString(index);
+        if (!material.isEmpty() && cache.computeIfAbsent(material, this)) {
+          return apply.getArmorTexture(stack, type, access);
+        }
       }
     }
     return ArmorTexture.EMPTY;

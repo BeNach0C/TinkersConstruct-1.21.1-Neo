@@ -15,7 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.crafting.CraftingHelper;
+import net.neoforged.neoforge.common.crafting.CraftingHelper;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.util.JsonHelper;
 import slimeknights.tconstruct.library.recipe.partbuilder.Pattern;
@@ -66,7 +66,12 @@ public abstract class LayoutIcon {
     switch (type) {
       case EMPTY: return EMPTY;
       case ITEM: {
-        ItemStack stack = buffer.readItem();
+        ItemStack stack;
+        if (buffer instanceof net.minecraft.network.RegistryFriendlyByteBuf rfb) {
+          stack = ItemStack.OPTIONAL_STREAM_CODEC.decode(rfb);
+        } else {
+          stack = ItemStack.parseOptional(slimeknights.mantle.client.SafeClientAccess.getRegistryAccess(), buffer.readNbt());
+        }
         return new ItemStackIcon(stack);
       }
       case PATTERN: {
@@ -100,17 +105,17 @@ public abstract class LayoutIcon {
     @Override
     public void write(FriendlyByteBuf buffer) {
       buffer.writeEnum(Type.ITEM);
-      buffer.writeItem(stack);
+      if (buffer instanceof net.minecraft.network.RegistryFriendlyByteBuf rfb) {
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(rfb, stack);
+      } else {
+        buffer.writeNbt((CompoundTag) stack.saveOptional(slimeknights.mantle.client.SafeClientAccess.getRegistryAccess()));
+      }
     }
 
     @Override
     public JsonObject toJson() {
       JsonObject json = new JsonObject();
-      json.add("item", Loadables.ITEM.serialize(stack.getItem()));
-      CompoundTag tag = stack.getTag();
-      if (tag != null) {
-        json.addProperty("nbt", tag.toString());
-      }
+      slimeknights.mantle.data.loadable.common.ItemStackLoadable.REQUIRED_ITEM_NBT.serialize(stack, json);
       return json;
     }
   }
@@ -132,7 +137,7 @@ public abstract class LayoutIcon {
     @Override
     public void write(FriendlyByteBuf buffer) {
       buffer.writeEnum(Type.PATTERN);
-      buffer.writeResourceLocation(pattern);
+      buffer.writeResourceLocation(pattern.getId());
     }
 
     @Override
@@ -160,7 +165,7 @@ public abstract class LayoutIcon {
         return new PatternIcon(pattern);
       }
       if (object.has("item")) {
-        ItemStack stack = CraftingHelper.getItemStack(object, true);
+        ItemStack stack = slimeknights.mantle.data.loadable.common.ItemStackLoadable.REQUIRED_ITEM_NBT.deserialize(object);
         return new ItemStackIcon(stack);
       }
       // not sure why this would be needed, but might as well

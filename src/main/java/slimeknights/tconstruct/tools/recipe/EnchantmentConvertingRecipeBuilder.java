@@ -3,7 +3,7 @@ package slimeknights.tconstruct.tools.recipe;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import slimeknights.mantle.data.predicate.IJsonPredicate;
 import slimeknights.tconstruct.TConstruct;
@@ -32,16 +32,16 @@ public class EnchantmentConvertingRecipeBuilder extends AbstractSizedIngredientR
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer) {
+  public void save(RecipeOutput consumer) {
     save(consumer, TConstruct.getResource(name));
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
+  public void save(RecipeOutput consumer, ResourceLocation id) {
     if (inputs.isEmpty()) {
       throw new IllegalStateException("Must have at least one input");
     }
-    ResourceLocation advancementId = buildOptionalAdvancement(id, "modifiers");
-    consumer.accept(new LoadableFinishedRecipe<>(new EnchantmentConvertingRecipe(id, name, inputs, matchBook, returnInput, modifierPredicate), EnchantmentConvertingRecipe.LOADER, advancementId));
+    ResourceLocation advancementId = buildOptionalAdvancement(id, "modifiers").id();
+    // consumer.accept(new LoadableFinishedRecipe<>(new EnchantmentConvertingRecipe(id, name, inputs, matchBook, returnInput, modifierPredicate), EnchantmentConvertingRecipe.LOADER, null));
   }
 }

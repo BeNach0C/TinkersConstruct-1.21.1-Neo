@@ -7,9 +7,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.primitive.IntLoadable;
@@ -85,7 +85,7 @@ public class MaterialMeltingRecipe implements IMeltingRecipe, IMultiRecipe<IDisp
   @Override
   public FluidStack getOutput(IMeltingContainer inv) {
     int cost = MaterialCastingLookup.getItemCost(inv.getStack().getItem());
-    return new FluidStack(result.get(), result.getAmount() * cost);
+    return result.get().copyWithAmount(result.getAmount() * cost);
   }
 
   @Override
@@ -93,7 +93,7 @@ public class MaterialMeltingRecipe implements IMeltingRecipe, IMultiRecipe<IDisp
     if (!byproducts.isEmpty()) {
       int cost = MaterialCastingLookup.getItemCost(inv.getStack().getItem());
       for (FluidOutput byproduct : byproducts) {
-        handler.fill(new FluidStack(byproduct.get(), byproduct.getAmount() * cost), FluidAction.EXECUTE);
+        handler.fill(byproduct.get().copyWithAmount(byproduct.getAmount() * cost), FluidAction.EXECUTE);
       }
     }
   }
@@ -108,7 +108,7 @@ public class MaterialMeltingRecipe implements IMeltingRecipe, IMultiRecipe<IDisp
   private List<IDisplayableMeltingRecipe> multiRecipes = null;
 
   @Override
-  public List<IDisplayableMeltingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableMeltingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       if (input.get().isHidden()) {
         multiRecipes = List.of();
@@ -117,7 +117,7 @@ public class MaterialMeltingRecipe implements IMeltingRecipe, IMultiRecipe<IDisp
         MaterialVariantId inputId = input.getVariant();
         List<Entry<IMaterialItem>> entries = MaterialCastingLookup
           .getAllItemCosts().stream()
-          .filter(entry -> entry.getKey().canUseMaterial(inputId.getId()))
+          .filter(entry -> entry.getKey().canUseMaterial(inputId.getMaterialId()))
           .sorted(Comparator.<Entry<IMaterialItem>,Integer>comparing(Entry::getIntValue).thenComparing(entry -> Loadables.ITEM.getKey(entry.getKey().asItem())))
           .toList();
         // if we found nothing, do nothing. Should never happen so error
@@ -131,11 +131,11 @@ public class MaterialMeltingRecipe implements IMeltingRecipe, IMultiRecipe<IDisp
           recipe.inputs(entries.stream().map(entry -> entry.getKey().withMaterialForDisplay(inputId)).toList());
           // fluids
           FluidStack output = this.result.get();
-          recipe.outputs(entries.stream().map(entry -> new FluidStack(output, output.getAmount() * entry.getIntValue())).toList());
+          recipe.outputs(entries.stream().map(entry -> output.copyWithAmount(output.getAmount() * entry.getIntValue())).toList());
           // if we have byproducts, scale those too
           for (FluidOutput byproduct : this.byproducts) {
             FluidStack fluid = byproduct.get();
-            recipe.byproduct(entries.stream().map(entry -> new FluidStack(fluid, fluid.getAmount() * entry.getIntValue())).toList());
+            recipe.byproduct(entries.stream().map(entry -> fluid.copyWithAmount(fluid.getAmount() * entry.getIntValue())).toList());
           }
           this.multiRecipes = List.of(recipe.build());
         }

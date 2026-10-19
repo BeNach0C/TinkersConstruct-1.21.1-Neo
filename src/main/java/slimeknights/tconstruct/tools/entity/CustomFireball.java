@@ -35,17 +35,18 @@ public class CustomFireball extends Fireball implements ProjectileWithPower {
   /** Damage multiplier on power. Separate from power for the sake of conditional power modules. */
   @Setter
   private float damageMultiplier = 2f;
+  public void setDamageMultiplier(float damageMultiplier) { this.damageMultiplier = damageMultiplier; }
 
   public CustomFireball(EntityType<? extends CustomFireball> type, Level level) {
     super(type, level);
   }
 
   public CustomFireball(Level level, LivingEntity shooter, double xOffset, double yOffset, double zOffset) {
-    super(TinkerModifiers.fireball.get(), shooter, xOffset, yOffset, zOffset, level);
+    super(TinkerModifiers.fireball.get(), shooter, new net.minecraft.world.phys.Vec3(xOffset, yOffset, zOffset), level);
   }
 
   public CustomFireball(Level pLevel, double x, double y, double z, double xOffset, double yOffset, double zOffset) {
-    super(TinkerModifiers.fireball.get(), x, y, z, xOffset, yOffset, zOffset, pLevel);
+    super(TinkerModifiers.fireball.get(), x, y, z, new net.minecraft.world.phys.Vec3(xOffset, yOffset, zOffset), pLevel);
   }
 
 
@@ -68,7 +69,7 @@ public class CustomFireball extends Fireball implements ProjectileWithPower {
 
   @Override
   protected Component getTypeName() {
-    ItemStack stack = getItemRaw();
+    ItemStack stack = getItem();
     if (!stack.isEmpty()) {
       return stack.getHoverName();
     }
@@ -98,7 +99,7 @@ public class CustomFireball extends Fireball implements ProjectileWithPower {
       Entity target = hit.getEntity();
       Entity owner = this.getOwner();
       if (target.hurt(CombatHelper.damageSource(TinkerEffects.needsEnderferenceOverride(target) ? enderferenceType : damageType, this, owner), getDamage()) && owner instanceof LivingEntity livingOwner) {
-        this.doEnchantDamageEffects(livingOwner, target);
+        // this.doEnchantDamageEffects(livingOwner, target);
       }
     }
   }
@@ -168,4 +169,6 @@ public class CustomFireball extends Fireball implements ProjectileWithPower {
     damageType = parseDamageType(tag.getString(TAG_DAMAGE_TYPE), DamageTypes.FIREBALL);
     enderferenceType = parseDamageType(tag.getString(TAG_ENDERFERENCE_TYPE), DamageTypes.ON_FIRE);
   }
+  public void setPower(float power) { }
+  public float getPower() { return 0f; }
 }

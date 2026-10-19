@@ -215,11 +215,10 @@ public interface IDisplayModifierRecipe extends IModifierRecipe, IDisplayTinkerS
   /* Gets a copy of the stack with the given modifiers */
   static ItemStack withModifiers(ItemStack stack, int maxSize, List<ModifierEntry> modifierList, Consumer<ModDataNBT> persistentDataConsumer) {
     ItemStack output = stack.copyWithCount(Math.min(stack.getMaxStackSize(), maxSize));
-    CompoundTag nbt = output.getOrCreateTag();
+    CompoundTag nbt = new CompoundTag();
 
     // build modifiers list
     // go through the builder to ensure they are merged properly
-    // TODO 1.21: this should maybe just take a modifier NBT argument?
     ModifierNBT modifiers = ModifierNBT.builder().add(modifierList).build();
     ListTag list = modifiers.serializeToNBT();
     nbt.put(ToolStack.TAG_UPGRADES, list);
@@ -237,6 +236,8 @@ public interface IDisplayModifierRecipe extends IModifierRecipe, IDisplayTinkerS
     }
     nbt.put(ToolStack.TAG_VOLATILE_MOD_DATA, volatileNBT);
     nbt.put(ToolStack.TAG_PERSISTENT_MOD_DATA, persistentNBT);
+
+    net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, output, tag -> tag.merge(nbt));
 
     return output;
   }

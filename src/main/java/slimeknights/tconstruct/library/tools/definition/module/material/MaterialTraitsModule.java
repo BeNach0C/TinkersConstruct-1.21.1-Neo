@@ -38,7 +38,7 @@ public final class MaterialTraitsModule implements ToolTraitHook, ToolModule {
   private final int materialIndex;
 
   public MaterialTraitsModule(MaterialStatType<?> statType, int materialIndex) {
-    this(statType.getId(), materialIndex);
+    this(statType.getStatId(), materialIndex);
   }
 
   public MaterialTraitsModule(int materialIndex) {

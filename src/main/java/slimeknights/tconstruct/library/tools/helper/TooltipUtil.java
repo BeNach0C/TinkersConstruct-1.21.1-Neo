@@ -12,15 +12,15 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStack.TooltipPart;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ToolActions;
+import net.neoforged.neoforge.common.ItemAbilities;
 import slimeknights.mantle.client.SafeClientAccess;
 import slimeknights.mantle.client.TooltipKey;
 import slimeknights.tconstruct.TConstruct;
@@ -68,16 +68,16 @@ public class TooltipUtil {
   private static final String KEY_NAME = "tic_name";
 
   /** Function to show all attributes in the tooltip */
-  public static final BiPredicate<Attribute, Operation> SHOW_ALL_ATTRIBUTES = (att, op) -> true;
+  public static final java.util.function.BiPredicate<net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation> SHOW_ALL_ATTRIBUTES = (att, op) -> true;
   /** Function to show all attributes in the tooltip */
-  public static final BiPredicate<Attribute, Operation> SHOW_MELEE_ATTRIBUTES = (att, op) -> op != Operation.ADDITION || (att != Attributes.ATTACK_DAMAGE && att != Attributes.ATTACK_SPEED && att != Attributes.ARMOR && att != Attributes.ARMOR_TOUGHNESS && att != Attributes.KNOCKBACK_RESISTANCE);
+  public static final java.util.function.BiPredicate<net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation> SHOW_MELEE_ATTRIBUTES = (att, op) -> op != net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE || (att != Attributes.ATTACK_DAMAGE && att != Attributes.ATTACK_SPEED && att != Attributes.ARMOR && att != Attributes.ARMOR_TOUGHNESS && att != Attributes.KNOCKBACK_RESISTANCE);
   /** Function to show all attributes in the tooltip */
-  public static final BiPredicate<Attribute, Operation> SHOW_ARMOR_ATTRIBUTES = (att, op) -> op != Operation.ADDITION || (att != Attributes.ARMOR && att != Attributes.ARMOR_TOUGHNESS && att != Attributes.KNOCKBACK_RESISTANCE);
+  public static final java.util.function.BiPredicate<net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation> SHOW_ARMOR_ATTRIBUTES = (att, op) -> op != net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE || (att != Attributes.ARMOR && att != Attributes.ARMOR_TOUGHNESS && att != Attributes.KNOCKBACK_RESISTANCE);
 
   /** Flags used when not holding control or shift */
-  private static final int DEFAULT_HIDE_FLAGS = TooltipPart.ENCHANTMENTS.getMask();
+  private static final int DEFAULT_HIDE_FLAGS = 0;
   /** Flags used when holding control or shift */
-  private static final int MODIFIER_HIDE_FLAGS = TooltipPart.ENCHANTMENTS.getMask() | TooltipPart.MODIFIERS.getMask();
+  private static final int MODIFIER_HIDE_FLAGS = 0;
 
   private TooltipUtil() {}
 
@@ -98,28 +98,25 @@ public class TooltipUtil {
    * @return  True if marked display
    */
   public static boolean isDisplay(ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
-    return nbt != null && nbt.getBoolean(KEY_DISPLAY);
+    net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    return customData != null && customData.copyTag().getBoolean(KEY_DISPLAY);
   }
 
   /** Sets the tool name in a way that will not be italic */
   public static void setDisplayName(ItemStack tool, String name) {
     if (name.isEmpty()) {
-      CompoundTag tag = tool.getTag();
-      if (tag != null) {
-        tag.remove(KEY_NAME);
-      }
+      net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, tool, tag -> tag.remove(KEY_NAME));
     } else {
-      tool.getOrCreateTag().putString(KEY_NAME, name);
-      tool.resetHoverName();
+      net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, tool, tag -> tag.putString(KEY_NAME, name));
+      tool.remove(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
     }
   }
 
   /** Gets the display name from the given tool */
   public static String getDisplayName(ItemStack tool) {
-    CompoundTag tag = tool.getTag();
-    if (tag != null) {
-      return tag.getString(KEY_NAME);
+    net.minecraft.world.item.component.CustomData customData = tool.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    if (customData != null) {
+      return customData.copyTag().getString(KEY_NAME);
     }
     return "";
   }
@@ -171,7 +168,8 @@ public class TooltipUtil {
     } else if (!ToolStack.isInitialized(stack)) {
       tooltip.add(UNINITIALIZED);
       if (definition.hasMaterials()) {
-        CompoundTag nbt = stack.getTag();
+        net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        CompoundTag nbt = customData != null ? customData.copyTag() : null;
         if (nbt == null || !nbt.contains(ToolStack.TAG_MATERIALS, Tag.TAG_LIST)) {
           tooltip.add(RANDOM_MATERIALS);
         }
@@ -216,18 +214,6 @@ public class TooltipUtil {
         }
       }
     }
-    if (!stack.isEmpty()) {
-      CompoundTag tag = stack.getTag();
-      if (tag != null && tag.contains("Enchantments", Tag.TAG_LIST)) {
-        ListTag enchantments = tag.getList("Enchantments", Tag.TAG_COMPOUND);
-        for (int i = 0; i < enchantments.size(); ++i) {
-          CompoundTag enchantmentTag = enchantments.getCompound(i);
-          // TODO: is this the best place for this, or should we let vanilla run?
-          BuiltInRegistries.ENCHANTMENT.getOptional(ResourceLocation.tryParse(enchantmentTag.getString("id")))
-                                       .ifPresent(enchantment -> tooltips.add(enchantment.getFullname(enchantmentTag.getInt("lvl"))));
-        }
-      }
-    }
   }
 
   /**
@@ -239,7 +225,7 @@ public class TooltipUtil {
    */
   public static void getDefaultInfo(ItemStack stack, IToolStackView tool, @Nullable Player player, List<Component> tooltips, TooltipFlag flag) {
     // shows as broken when broken, hold shift for proper durability
-    if (tool.getItem().canBeDepleted() && !tool.isUnbreakable() && tool.hasTag(TinkerTags.Items.DURABILITY)) {
+    if (!tool.isUnbreakable() && tool.hasTag(TinkerTags.Items.DURABILITY)) {
       tooltips.add(TooltipBuilder.formatDurability(tool.getCurrentDurability(), tool.getStats().getInt(ToolStats.DURABILITY), true));
     }
     // modifier tooltip
@@ -294,7 +280,7 @@ public class TooltipUtil {
       builder.addOptional(ToolStats.ARMOR_TOUGHNESS);
       builder.addOptional(ToolStats.KNOCKBACK_RESISTANCE, 10f);
     }
-    if (ModifierUtil.canPerformAction(tool, ToolActions.SHIELD_BLOCK)) {
+    if (ModifierUtil.canPerformAction(tool, net.neoforged.neoforge.common.ItemAbilities.SHIELD_BLOCK)) {
       builder.add(ToolStats.BLOCK_AMOUNT);
       builder.add(ToolStats.BLOCK_ANGLE);
     }
@@ -387,13 +373,13 @@ public class TooltipUtil {
     List<IToolPart> parts = ToolPartsHook.parts(item.getToolDefinition());
     int partCount = parts.size();
     for (int i = 0; i <= max; i++) {
-      MaterialVariantId material = materials.get(i).getVariant();
+      MaterialVariantId material = materials.get(i).getId();
       // display tool parts as the tool part name, nicer to work with
       Component componentName;
       if (i < partCount) {
         componentName = parts.get(i).withMaterialForDisplay(material).getHoverName();
       } else {
-        componentName = Component.translatable(KEY_FORMAT, MaterialTooltipCache.getDisplayName(material), Component.translatable(Util.makeTranslationKey("stat", components.get(i))));
+        componentName = Component.translatable(KEY_FORMAT, MaterialTooltipCache.getDisplayName(material.getMaterialId()), Component.translatable(Util.makeTranslationKey("stat", components.get(i).getId())));
       }
       // underline it and color it with the material name
       tooltips.add(componentName.copy().withStyle(ChatFormatting.UNDERLINE).withStyle(style -> style.withColor(MaterialTooltipCache.getColor(material))));
@@ -403,7 +389,7 @@ public class TooltipUtil {
       }
       // material stats
       float scale = hook.scaleStats(definition, i);
-      MaterialRegistry.getInstance().getMaterialStats(material.getId(), components.get(i)).ifPresent(stat -> tooltips.addAll(stat.getLocalizedInfo(scale)));
+      MaterialRegistry.getInstance().getMaterialStats(material.getMaterialId(), components.get(i)).ifPresent(stat -> tooltips.addAll(stat.getLocalizedInfo(scale)));
       if (i != max) {
         tooltips.add(Component.empty());
       }
@@ -419,7 +405,7 @@ public class TooltipUtil {
    * @param showAttribute  Predicate to determine whether an attribute should show
    * @param slots          List of slots to display
    */
-  public static void addAttributes(ITinkerStationDisplay item, IToolStackView tool, @Nullable Player player, List<Component> tooltip, BiPredicate<Attribute, Operation> showAttribute, EquipmentSlot... slots) {
+  public static void addAttributes(ITinkerStationDisplay item, IToolStackView tool, @Nullable Player player, List<Component> tooltip, java.util.function.BiPredicate<net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation> showAttribute, EquipmentSlot... slots) {
     for (EquipmentSlot slot : slots) {
       Multimap<Attribute,AttributeModifier> modifiers = item.getAttributeModifiers(tool, slot);
       if (!modifiers.isEmpty()) {
@@ -431,12 +417,12 @@ public class TooltipUtil {
         for (Entry<Attribute, AttributeModifier> entry : modifiers.entries()) {
           Attribute attribute = entry.getKey();
           AttributeModifier modifier = entry.getValue();
-          Operation operation = modifier.getOperation();
+          Operation operation = modifier.operation();
           // allow suppressing specific attributes
-          if (!showAttribute.test(attribute, operation)) {
+          if (!showAttribute.test(slimeknights.tconstruct.shared.TinkerAttributes.getHolder(attribute), operation)) {
             continue;
           }
-          addAttribute(attribute, operation, modifier.getAmount(), modifier.getId(), player, tooltip);
+          addAttribute(attribute, operation, modifier.amount(), modifier.id(), player, tooltip);
         }
       }
     }
@@ -447,27 +433,27 @@ public class TooltipUtil {
    * @param attribute  Attribute type
    * @param operation  Attribute operationm
    * @param amount     Attribute amount
-   * @param uuid       Attribute UUID
+   * @param id         Attribute ID
    * @param player     Player instance
    * @param tooltip    Tooltip list
    */
-  public static void addAttribute(Attribute attribute, Operation operation, double amount, @Nullable UUID uuid, @Nullable Player player, List<Component> tooltip) {
+  public static void addAttribute(Attribute attribute, Operation operation, double amount, @Nullable ResourceLocation id, @Nullable Player player, List<Component> tooltip) {
     // find value
     boolean showEquals = false;
     if (player != null) {
-      if (uuid == Item.BASE_ATTACK_DAMAGE_UUID) {
+      if (Item.BASE_ATTACK_DAMAGE_ID.equals(id)) {
         amount += player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);
         showEquals = true;
-      } else if (uuid == Item.BASE_ATTACK_SPEED_UUID) {
+      } else if (Item.BASE_ATTACK_SPEED_ID.equals(id)) {
         amount += player.getAttributeBaseValue(Attributes.ATTACK_SPEED);
         showEquals = true;
       }
     }
     // some numbers display a bit different
     double displayValue = amount;
-    if (operation == Operation.ADDITION) {
+    if (operation == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE) {
       // vanilla multiplies knockback resist by 10 for some odd reason
-      if (attribute.equals(Attributes.KNOCKBACK_RESISTANCE)) {
+      if (attribute.equals(Attributes.KNOCKBACK_RESISTANCE.value())) {
         displayValue *= 10;
       }
     } else {
@@ -476,16 +462,17 @@ public class TooltipUtil {
     }
     // final tooltip addition
     Component name = Component.translatable(attribute.getDescriptionId());
+    java.text.DecimalFormat format = net.minecraft.world.item.component.ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT;
     if (showEquals) {
       tooltip.add(Component.literal(" ")
-                           .append(Component.translatable("attribute.modifier.equals." + operation.toValue(), ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(displayValue), name))
+                           .append(Component.translatable("attribute.modifier.equals." + operation.id(), format.format(displayValue), name))
                            .withStyle(ChatFormatting.DARK_GREEN));
     } else if (amount > 0.0D) {
-      tooltip.add((Component.translatable("attribute.modifier.plus." + operation.toValue(), ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(displayValue), name))
+      tooltip.add((Component.translatable("attribute.modifier.plus." + operation.id(), format.format(displayValue), name))
                     .withStyle(ChatFormatting.BLUE));
     } else if (amount < 0.0D) {
       displayValue *= -1;
-      tooltip.add((Component.translatable("attribute.modifier.take." + operation.toValue(), ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(displayValue), name))
+      tooltip.add((Component.translatable("attribute.modifier.take." + operation.id(), format.format(displayValue), name))
                     .withStyle(ChatFormatting.RED));
     }
   }

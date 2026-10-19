@@ -22,6 +22,9 @@ public class MaterialStatType<T extends IMaterialStats> implements IdAwareObject
   public static final ContextKey<MaterialStatType<?>> CONTEXT_KEY = new ContextKey<>("material_stat_type");
 
   private final MaterialStatsId id;
+  @Override
+  public net.minecraft.resources.ResourceLocation getId() { return id.getId(); }
+  public MaterialStatsId getStatId() { return id; }
   private final T defaultStats;
   private final RecordLoadable<T> loadable;
   @Accessors(fluent = true)

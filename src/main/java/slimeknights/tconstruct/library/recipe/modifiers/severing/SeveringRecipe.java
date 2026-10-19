@@ -23,8 +23,7 @@ import slimeknights.tconstruct.tools.TinkerModifiers;
 /**
  * Recipe to convert an entity into a head or other item for the severing modifier
  */
-@RequiredArgsConstructor
-public class SeveringRecipe implements ICustomOutputRecipe<IEmptyContainer> {
+public class SeveringRecipe implements ICustomOutputRecipe<net.minecraft.world.item.crafting.RecipeInput> {
   protected static LoadableField<EntityIngredient,SeveringRecipe> ENTITY_FIELD = EntityIngredient.LOADABLE.requiredField("entity", r -> r.ingredient);
   protected static LoadableField<Float,SeveringRecipe> BASE_CHANCE_FIELD = FloatLoadable.PERCENT.defaultField("per_level_chance", 0.05f, true, r -> r.baseChance);
   protected static LoadableField<Float,SeveringRecipe> LOOTING_BONUS_FIELD = FloatLoadable.PERCENT.defaultField("looting_bonus", 0.01f, true, r -> r.lootingBonus);
@@ -42,6 +41,7 @@ public class SeveringRecipe implements ICustomOutputRecipe<IEmptyContainer> {
   protected final ItemOutput output;
   protected final float baseChance;
   protected final float lootingBonus;
+  public SeveringRecipe(ResourceLocation id, EntityIngredient ingredient, ItemOutput output, float baseChance, float lootingBonus) { this.id = id; this.ingredient = ingredient != null ? ingredient : EntityIngredient.EMPTY; this.output = output; this.baseChance = baseChance; this.lootingBonus = lootingBonus; }
 
   /** @deprecated use {@link #SeveringRecipe(ResourceLocation, EntityIngredient, ItemOutput, float, float)} */
   @Deprecated(forRemoval = true)
@@ -55,7 +55,7 @@ public class SeveringRecipe implements ICustomOutputRecipe<IEmptyContainer> {
    * @return  True if it matches
    */
   public boolean matches(EntityType<?> type) {
-    return ingredient.test(type);
+    return ingredient != null && ingredient.test(type);
   }
 
   /** Gets the chance of this recipe. */
@@ -93,7 +93,7 @@ public class SeveringRecipe implements ICustomOutputRecipe<IEmptyContainer> {
   /** @deprecated use {@link #matches(EntityType)}*/
   @Deprecated
   @Override
-  public boolean matches(IEmptyContainer inv, Level worldIn) {
+  public boolean matches(net.minecraft.world.item.crafting.RecipeInput inv, Level worldIn) {
     return false;
   }
 }

@@ -9,8 +9,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.common.util.Lazy;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import slimeknights.mantle.data.loadable.common.IngredientLoadable;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.field.LoadableField;
@@ -74,7 +74,7 @@ public class IncrementalModifierRecipe extends AbstractModifierRecipe {
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ToolStack tool = inv.getTinkerable();
 
     // fetch the amount from the modifier, will be 0 if we have a full level
@@ -185,7 +185,7 @@ public class IncrementalModifierRecipe extends AbstractModifierRecipe {
       if (neededPerLevel % amountPerInput > 0) {
         needed++;
       }
-      Lazy<List<ItemStack>> fullSize = Lazy.of(() -> items.stream().map(stack -> ItemHandlerHelper.copyStackWithSize(stack, maxStackSize)).collect(Collectors.toList()));
+      Lazy<List<ItemStack>> fullSize = Lazy.of(() -> items.stream().map(stack -> slimeknights.tconstruct.library.utils.Util.copyStackWithSize(stack, maxStackSize)).collect(Collectors.toList()));
       while (needed > maxStackSize) {
         builder.add(fullSize.get());
         needed -= maxStackSize;
@@ -193,7 +193,7 @@ public class IncrementalModifierRecipe extends AbstractModifierRecipe {
       // set proper stack size on remaining
       if (needed > 0) {
         int remaining = needed;
-        builder.add(items.stream().map(stack -> ItemHandlerHelper.copyStackWithSize(stack, remaining)).collect(Collectors.toList()));
+        builder.add(items.stream().map(stack -> slimeknights.tconstruct.library.utils.Util.copyStackWithSize(stack, remaining)).collect(Collectors.toList()));
       }
       slotCache = builder.build();
     }
@@ -274,7 +274,7 @@ public class IncrementalModifierRecipe extends AbstractModifierRecipe {
       if (!leftover.isEmpty()) {
         // leftoverAmount refers to how many we need to that is does not fit cleanly into amountPerInput
         // but we want to return the amount we did not use, hence the subtraction
-        inv.giveItem(ItemHandlerHelper.copyStackWithSize(leftover, (amountPerInput - leftoverAmount) * leftover.getCount()));
+        inv.giveItem(slimeknights.tconstruct.library.utils.Util.copyStackWithSize(leftover, (amountPerInput - leftoverAmount) * leftover.getCount()));
       }
     }
     for (int i = 0; i < inv.getInputCount(); i++) {

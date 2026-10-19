@@ -3,11 +3,11 @@ package slimeknights.tconstruct.library.recipe.casting.material;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.recipe.data.AbstractRecipeBuilder;
 import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
@@ -62,19 +62,19 @@ public class MaterialFluidRecipeBuilder extends AbstractRecipeBuilder<MaterialFl
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer) {
-    save(consumer, outputId.getId());
+  public void save(RecipeOutput consumer) {
+    save(consumer, outputId.getMaterialId().getId());
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
+  public void save(RecipeOutput consumer, ResourceLocation id) {
     if (this.fluid == FluidIngredient.EMPTY) {
       throw new IllegalStateException("Material fluid recipes require a fluid input");
     }
     if (this.temperature < 0) {
       throw new IllegalStateException("Temperature is too low, must be at least 0");
     }
-    ResourceLocation advancementId = this.buildOptionalAdvancement(id, "materials");
-    consumer.accept(new LoadableFinishedRecipe<>(new MaterialFluidRecipe(id, fluid, temperature, inputId, outputId, hideInBook), MaterialFluidRecipe.LOADER, advancementId));
+    net.minecraft.advancements.AdvancementHolder advancementId = this.buildOptionalAdvancement(id, "materials");
+    consumer.accept(id, new MaterialFluidRecipe(id, fluid, temperature, inputId, outputId, hideInBook), null);
   }
 }

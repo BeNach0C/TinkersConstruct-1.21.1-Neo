@@ -42,7 +42,7 @@ public class SheepShearingRecipe extends SeveringRecipe {
   public static final RecordLoadable<SheepShearingRecipe> LOADER = RecordLoadable.create(ContextKey.ID.requiredField(), BASE_CHANCE_FIELD, LOOTING_BONUS_FIELD, SheepShearingRecipe::new);
 
   public SheepShearingRecipe(ResourceLocation id, float baseChance, float lootingBonus) {
-    super(id, EntityIngredient.of(EntityType.SHEEP), ItemOutput.fromItem(Blocks.WHITE_WOOL, 2), baseChance, lootingBonus);
+    super(id, null, ItemOutput.fromItem(Blocks.WHITE_WOOL, 2), baseChance, lootingBonus);
   }
 
   @Override

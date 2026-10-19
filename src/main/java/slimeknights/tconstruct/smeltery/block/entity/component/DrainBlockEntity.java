@@ -5,8 +5,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.util.RetexturedHelper;
 import slimeknights.tconstruct.library.client.model.ModelProperties;
 import slimeknights.tconstruct.smeltery.TinkerSmeltery;
@@ -53,10 +53,15 @@ public class DrainBlockEntity extends SmelteryFluidIO implements IDisplayFluidLi
 
   // override instead of writeSynced to avoid writing master to the main tag twice
   @Override
-  public CompoundTag getUpdateTag() {
-    CompoundTag nbt = super.getUpdateTag();
+  public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) {
+    CompoundTag nbt = super.getUpdateTag(registries);
     writeMaster(nbt);
     return nbt;
+  }
+
+  @Override
+  public CompoundTag getUpdateTag() {
+    return getUpdateTag(this.level != null ? this.level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY);
   }
 
   @Override

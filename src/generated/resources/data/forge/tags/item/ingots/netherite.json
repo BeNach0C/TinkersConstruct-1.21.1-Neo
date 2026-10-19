@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:ingots/netherite",
+                       "required":  false
+                   }
+               ]
+}

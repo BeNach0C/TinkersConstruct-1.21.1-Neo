@@ -3,7 +3,7 @@ package slimeknights.tconstruct.tables.block.entity.inventory;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import slimeknights.mantle.block.entity.MantleBlockEntity;
 
 import javax.annotation.Nonnull;
@@ -16,9 +16,12 @@ public abstract class ScalingChestItemHandler extends ItemStackHandler implement
   /** Current size for display in containers */
   @Getter
   private int visualSize = 1;
+  @Override
+  public int getVisualSize() { return visualSize; }
   /** TE owning this inventory */
   @Setter @Nullable
   private MantleBlockEntity parent;
+  public void setParent(@Nullable MantleBlockEntity parent) { this.parent = parent; }
 
   public ScalingChestItemHandler(int size) {
     super(size);

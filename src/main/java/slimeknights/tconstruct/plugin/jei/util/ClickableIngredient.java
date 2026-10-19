@@ -20,7 +20,6 @@ public record ClickableIngredient<T>(IIngredientType<T> getType, T getIngredient
     return this;
   }
 
-  @Override
   public ClickableIngredient<T> normalize(IIngredientHelper<T> ingredientHelper) {
     T normalized = ingredientHelper.normalizeIngredient(getIngredient);
     return normalized == getIngredient ? this : new ClickableIngredient<>(getType, normalized, getArea);

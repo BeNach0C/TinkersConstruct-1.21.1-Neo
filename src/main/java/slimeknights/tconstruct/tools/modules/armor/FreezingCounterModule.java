@@ -22,7 +22,7 @@ public record FreezingCounterModule(LevelingValue chance, LevelingValue constant
 
   /** Creates a new builder instance */
   public static CounterModule.Builder<FreezingCounterModule> builder() {
-    return new CounterModule.Builder<>(FreezingCounterModule::new);
+    return new CounterModule.Builder<FreezingCounterModule>(FreezingCounterModule::new);
   }
 
   @Override

@@ -21,7 +21,7 @@ public class RibcageMaterialContent extends SingleMaterialStatContent {
 
   @Override
   protected MaterialStatsId getStatType() {
-    return RepairStats.RIBCAGE.getId();
+    return RepairStats.RIBCAGE.getStatId();
   }
 
   @Override

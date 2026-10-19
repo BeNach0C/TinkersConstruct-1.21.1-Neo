@@ -32,7 +32,6 @@ import static java.awt.Color.HSBtoRGB;
 
 /** Builder for tool stats */
 @SuppressWarnings("UnusedReturnValue")
-@RequiredArgsConstructor
 public class TooltipBuilder {
   private static final TextColor MAX = valueToColor(1, 1);
   private static final UnaryOperator<Style> APPLY_MAX = style -> style.withColor(MAX);
@@ -47,6 +46,9 @@ public class TooltipBuilder {
   private final List<Component> tooltips;
 
   public TooltipBuilder(IToolStackView tool) {
+      this(tool, new ArrayList<>());
+    }
+    public TooltipBuilder(IToolStackView tool, List<Component> tooltips) {
     this.tool = tool;
     this.tooltips = new ArrayList<>();
   }
@@ -164,8 +166,8 @@ public class TooltipBuilder {
    *
    * @return the tooltip builder
    */
-  public TooltipBuilder addWithAttribute(INumericToolStat<?> stat, Attribute attribute) {
-    float damage = (float) attribute.getDefaultValue();
+  public TooltipBuilder addWithAttribute(INumericToolStat<?> stat, net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute) {
+    float damage = (float) attribute.value().getDefaultValue();
     Player player = Minecraft.getInstance().player;
     if (player != null) {
       AttributeInstance instance = player.getAttribute(attribute);

@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.smeltery.item;
+import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -17,10 +19,8 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.fluid.FluidTransferHelper;
 import slimeknights.mantle.fluid.tooltip.FluidTooltipHandler;
@@ -54,7 +54,7 @@ public class TankItem extends BlockTooltipItem {
   /** Checks if the tank item is filled */
   private static boolean isFilled(ItemStack stack) {
     // has a container if not empty
-    CompoundTag nbt = stack.getTag();
+    CompoundTag nbt = getCustomTag(stack);
     return nbt != null && nbt.contains(NBTTags.TANK, Tag.TAG_COMPOUND);
   }
 
@@ -77,8 +77,8 @@ public class TankItem extends BlockTooltipItem {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flag) {
-    if (stack.hasTag()) {
+  public void appendHoverText(ItemStack stack, Item.TooltipContext worldIn, List<Component> tooltip, TooltipFlag flag) {
+    if (getCustomTag(stack) != null) {
       FluidTank tank = getTank(stack, 1);
       if (tank.getFluidAmount() > 0) {
         FluidStack fluid = tank.getFluid();
@@ -94,15 +94,9 @@ public class TankItem extends BlockTooltipItem {
     }
   }
 
-  @Nullable
-  @Override
-  public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
-    return new TankItemFluidHandler(this, stack);
-  }
-
   /** Checks if the given stack has fluid transfer */
   public static boolean mayHaveFluid(ItemStack stack) {
-    return FluidContainerTransferManager.INSTANCE.mayHaveTransfer(stack) || stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent();
+    return FluidContainerTransferManager.INSTANCE.mayHaveTransfer(stack) || stack.getCapability(Capabilities.FluidHandler.ITEM) != null;
   }
 
   @Override
@@ -182,7 +176,7 @@ public class TankItem extends BlockTooltipItem {
         // transfer the fluid
         FluidTank tank = getTank(stack);
         // if both tanks are empty, just do standard stack operations; makes it nice and easy to move just 1 item at a time
-        if (tank.isEmpty() && ItemStack.isSameItemSameTags(stack, held)) {
+        if (tank.isEmpty() && ItemStack.isSameItemSameComponents(stack, held)) {
           return false;
         }
         TransferResult result = FluidTransferHelper.interactWithStack(tank, held, TransferDirection.AUTO);
@@ -203,55 +197,49 @@ public class TankItem extends BlockTooltipItem {
   }
 
   /** Removes the tank from the given stack */
-  private static void removeTank(ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
-    if (nbt != null) {
-      nbt.remove(NBTTags.TANK);
-      if (nbt.isEmpty()) {
-        stack.setTag(null);
-      }
-    }
+    private static CompoundTag getCustomTag(ItemStack stack) {
+    return stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA) ? stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA).copyTag() : null;
   }
 
-  /**
-   * Sets the tank to the given stack
-   * @param stack  Stack
-   * @param tank   Tank instance
-   * @return  Stack with tank
-   */
+  private static void updateCustomTag(ItemStack stack, java.util.function.Consumer<CompoundTag> consumer) {
+    net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, consumer);
+  }
+
+  private static void removeTank(ItemStack stack) {
+    updateCustomTag(stack, tag -> tag.remove(NBTTags.TANK));
+  }
+
   public static ItemStack setTank(ItemStack stack, FluidTank tank) {
     if (tank.isEmpty()) {
       removeTank(stack);
     } else {
-      stack.getOrCreateTag().put(NBTTags.TANK, tank.writeToNBT(new CompoundTag()));
+      updateCustomTag(stack, tag -> tag.put(NBTTags.TANK, tank.writeToNBT(net.minecraft.core.RegistryAccess.EMPTY, new CompoundTag())));
     }
     return stack;
   }
 
-  /**
-   * Sets the tank to the given stack
-   * @param stack  Stack
-   * @param fluid  Fluid
-   * @return  Stack with tank
-   */
   public static ItemStack setTank(ItemStack stack, FluidStack fluid) {
     if (fluid.isEmpty()) {
       removeTank(stack);
     } else {
-      stack.getOrCreateTag().put(NBTTags.TANK, fluid.writeToNBT(new CompoundTag()));
+      updateCustomTag(stack, tag -> {
+        CompoundTag tankTag = new CompoundTag();
+        tankTag.put("Fluid", fluid.save(net.minecraft.core.RegistryAccess.EMPTY));
+        tag.put(NBTTags.TANK, tankTag);
+      });
     }
     return stack;
   }
 
-  /** Creates a stack with the given fluid and amount, not validated. */
   private static ItemStack setTank(ItemLike item, ResourceLocation fluid, int amount) {
-    CompoundTag tag = new CompoundTag();
-    tag.putString("FluidName", fluid.toString());
-    tag.putInt("Amount", amount);
-    ItemStack stack = new ItemStack(item);
-    stack.getOrCreateTag().put(NBTTags.TANK, tag);
-    return stack;
+    Fluid fluidObj = BuiltInRegistries.FLUID.get(fluid);
+    if (fluidObj != null && fluidObj != net.minecraft.world.level.material.Fluids.EMPTY) {
+      return setTank(new ItemStack(item), new FluidStack(fluidObj, amount));
+    }
+    return new ItemStack(item);
   }
+
+  
 
   /**
    * Gets the tank for the given stack, scaled by the stack size.
@@ -274,22 +262,17 @@ public class TankItem extends BlockTooltipItem {
    * @param scale  Number of tanks in a stack, being filled or drained together.
    * @return  Tank stored in the stack
    */
-  public static FluidTank getTank(ItemStack stack, int scale) {
+    public static FluidTank getTank(ItemStack stack, int scale) {
     FluidTank tank = ScaledFluidTank.create(TankBlockEntity.getCapacity(stack.getItem()), scale);
-    if (stack.hasTag()) {
-      assert stack.getTag() != null;
-      tank.readFromNBT(stack.getTag().getCompound(NBTTags.TANK));
+    CompoundTag tag = getCustomTag(stack);
+    if (tag != null && tag.contains(NBTTags.TANK, Tag.TAG_COMPOUND)) {
+      tank.readFromNBT(net.minecraft.core.RegistryAccess.EMPTY, tag.getCompound(NBTTags.TANK));
     }
     return tank;
   }
 
-  /**
-   * Gets a string variant name for the given stack
-   * @param stack  Stack instance to check
-   * @return  String variant name
-   */
   public static String getSubtype(ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
+    CompoundTag nbt = getCustomTag(stack);
     if (nbt != null && nbt.contains(NBTTags.TANK, Tag.TAG_COMPOUND)) {
       return nbt.getCompound(NBTTags.TANK).getString("FluidName");
     }
@@ -300,7 +283,7 @@ public class TankItem extends BlockTooltipItem {
   @SuppressWarnings("deprecation")
   public static void addFilledVariants(Consumer<ItemStack> output) {
     BuiltInRegistries.FLUID.holders().filter(holder -> {
-      Fluid fluid = holder.get();
+      Fluid fluid = holder.value();
       return fluid.isSource(fluid.defaultFluidState()) && !holder.is(TinkerTags.Fluids.HIDE_IN_CREATIVE_TANKS);
     }).forEachOrdered(holder -> {
       // use an ingot variety for metals

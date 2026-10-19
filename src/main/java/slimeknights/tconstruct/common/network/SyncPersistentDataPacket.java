@@ -1,30 +1,42 @@
 package slimeknights.tconstruct.common.network;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import lombok.RequiredArgsConstructor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import slimeknights.tconstruct.TConstruct;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.network.packet.IThreadsafePacket;
 import slimeknights.tconstruct.library.tools.capability.PersistentDataCapability;
 
 /** Packet to sync player persistent data to the client */
 @RequiredArgsConstructor
 public class SyncPersistentDataPacket implements IThreadsafePacket {
+  public static final Type<SyncPersistentDataPacket> ID = new Type<>(TConstruct.getResource("sync_persistent_data"));
+  public static final StreamCodec<RegistryFriendlyByteBuf, SyncPersistentDataPacket> CODEC = StreamCodec.of((buf, packet) -> packet.encode(buf), SyncPersistentDataPacket::new);
+
+  @Override
+  public Type<SyncPersistentDataPacket> type() {
+    return ID;
+  }
+
   private final CompoundTag data;
 
-  public SyncPersistentDataPacket(FriendlyByteBuf buffer) {
+  public SyncPersistentDataPacket(RegistryFriendlyByteBuf buffer) {
     data = buffer.readNbt();
   }
 
   @Override
-  public void encode(FriendlyByteBuf buffer) {
+  public void encode(RegistryFriendlyByteBuf buffer) {
     buffer.writeNbt(data);
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(IPayloadContext context) {
     HandleClient.handle(this);
   }
 
@@ -33,7 +45,7 @@ public class SyncPersistentDataPacket implements IThreadsafePacket {
     private static void handle(SyncPersistentDataPacket packet) {
       Player player = Minecraft.getInstance().player;
       if (player != null) {
-        player.getCapability(PersistentDataCapability.CAPABILITY).ifPresent(data -> data.copyFrom(packet.data));
+        PersistentDataCapability.get(player).copyFrom(packet.data);
       }
     }
   }

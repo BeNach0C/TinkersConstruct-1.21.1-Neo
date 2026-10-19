@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.tables.block.entity.chest;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -12,10 +13,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 import slimeknights.mantle.block.entity.NameableBlockEntity;
 import slimeknights.tconstruct.tables.block.entity.inventory.IChestItemHandler;
 import slimeknights.tconstruct.tables.menu.TinkerChestContainerMenu;
@@ -29,27 +27,10 @@ public abstract class AbstractChestBlockEntity extends NameableBlockEntity {
 
   @Getter
   private final IChestItemHandler itemHandler;
-  private final LazyOptional<IItemHandler> capability;
   protected AbstractChestBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, Component name, IChestItemHandler itemHandler) {
     super(type, pos, state, name);
     itemHandler.setParent(this);
     this.itemHandler = itemHandler;
-    this.capability = LazyOptional.of(() -> itemHandler);
-  }
-
-  @Nonnull
-  @Override
-  public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-    if (cap == ForgeCapabilities.ITEM_HANDLER) {
-      return capability.cast();
-    }
-    return super.getCapability(cap, side);
-  }
-
-  @Override
-  public void invalidateCaps() {
-    super.invalidateCaps();
-    capability.invalidate();
   }
 
   @Nullable
@@ -68,26 +49,31 @@ public abstract class AbstractChestBlockEntity extends NameableBlockEntity {
     return true;
   }
 
+    public IChestItemHandler getItemHandler() {
+    return itemHandler;
+  }
+
   @Override
-  public void saveAdditional(CompoundTag tags) {
-    super.saveAdditional(tags);
-    // move the items from the serialized result
-    // we don't care about the size and need it here for compat with old worlds
-    CompoundTag handlerNBT = itemHandler.serializeNBT();
+  public void saveAdditional(CompoundTag tags, net.minecraft.core.HolderLookup.Provider provider) {
+    super.saveAdditional(tags, provider);
+    CompoundTag handlerNBT = itemHandler.serializeNBT(provider);
     tags.put(KEY_ITEMS, handlerNBT.getList(KEY_ITEMS, Tag.TAG_COMPOUND));
   }
 
-  /** Reads the inventory from NBT */
-  public void readInventory(CompoundTag tags) {
-    // copy in just the items key for deserializing, don't want to change the size
+  public void readInventory(CompoundTag tags, net.minecraft.core.HolderLookup.Provider provider) {
     CompoundTag handlerNBT = new CompoundTag();
     handlerNBT.put(KEY_ITEMS, tags.getList(KEY_ITEMS, Tag.TAG_COMPOUND));
-    itemHandler.deserializeNBT(handlerNBT);
+    itemHandler.deserializeNBT(provider, handlerNBT);
+  }
+
+  public void readInventory(CompoundTag tags) {
+    net.minecraft.core.HolderLookup.Provider provider = level != null ? level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY;
+    readInventory(tags, provider);
   }
 
   @Override
-  public void load(CompoundTag tags) {
-    super.load(tags);
-    readInventory(tags);
+  public void loadAdditional(CompoundTag tags, net.minecraft.core.HolderLookup.Provider provider) {
+    super.loadAdditional(tags, provider);
+    readInventory(tags, provider);
   }
 }

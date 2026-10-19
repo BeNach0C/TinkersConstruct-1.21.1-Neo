@@ -19,9 +19,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import slimeknights.tconstruct.tables.block.entity.chest.AbstractChestBlockEntity;
 
 import javax.annotation.Nullable;
@@ -58,7 +58,7 @@ public class ChestBlock extends TabbedTableBlock {
     super.setPlacedBy(worldIn, pos, state, placer, stack);
     // check if we also have an inventory
 
-    CompoundTag tag = stack.getTag();
+    CompoundTag tag = stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA) ? stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA).copyTag() : null;
     if (tag != null && tag.contains("TinkerData", Tag.TAG_COMPOUND)) {
       CompoundTag tinkerData = tag.getCompound("TinkerData");
       BlockEntity te = worldIn.getBlockEntity(pos);
@@ -75,25 +75,25 @@ public class ChestBlock extends TabbedTableBlock {
     return SHAPE;
   }
 
-  @SuppressWarnings("deprecation")
   @Override
-  @Deprecated
-  public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+  public net.minecraft.world.ItemInteractionResult useItemOn(ItemStack heldStack, BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
     BlockEntity te = worldIn.getBlockEntity(pos);
-    Inventory playerInventory = player.getInventory();
-    ItemStack heldItem = playerInventory.getSelected();
-
-    if (!heldItem.isEmpty() && te instanceof AbstractChestBlockEntity chest && chest.canInsert(player, heldItem)) {
+    if (!heldStack.isEmpty() && te instanceof AbstractChestBlockEntity chest && chest.canInsert(player, heldStack)) {
       IItemHandlerModifiable itemHandler = chest.getItemHandler();
-      ItemStack rest = ItemHandlerHelper.insertItem(itemHandler, heldItem, false);
-      if (rest.isEmpty() || rest.getCount() < heldItem.getCount()) {
-        playerInventory.items.set(playerInventory.selected, rest);
-        return InteractionResult.SUCCESS;
+      ItemStack rest = ItemHandlerHelper.insertItem(itemHandler, heldStack, false);
+      if (rest.isEmpty() || rest.getCount() < heldStack.getCount()) {
+        player.setItemInHand(handIn, rest);
+        return net.minecraft.world.ItemInteractionResult.sidedSuccess(worldIn.isClientSide);
       }
     }
-
-    return super.use(state, worldIn, pos, player, handIn, hit);
+    return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
   }
+
+  @Override
+  public InteractionResult useWithoutItem(BlockState state, Level worldIn, BlockPos pos, Player player, BlockHitResult hit) {
+    return super.useWithoutItem(state, worldIn, pos, player, hit);
+  }
+
 
   @Override
   protected void dropInventoryItems(BlockState state, Level worldIn, BlockPos pos, IItemHandler inventory) {

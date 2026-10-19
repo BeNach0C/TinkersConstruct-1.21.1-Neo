@@ -15,7 +15,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.eventbus.api.Event.Result;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.loadable.record.SingletonLoader;
 import slimeknights.tconstruct.common.TinkerTags;
@@ -70,8 +69,8 @@ public enum HarvestModule implements ModifierModule, BlockInteractionModifierHoo
    */
   private static boolean harvestInteract(UseOnContext context, ServerLevel world, BlockState state, BlockPos pos, Player player) {
     BlockHitResult trace = new BlockHitResult(context.getClickLocation(), context.getClickedFace(), pos, false);
-    InteractionResult result = state.use(world, player, context.getHand(), trace);
-    return result.consumesAction();
+    net.minecraft.world.ItemInteractionResult result = state.useItemOn(player.getItemInHand(context.getHand()), world, player, context.getHand(), trace);
+    return result.result().consumesAction();
   }
 
   /**
@@ -126,10 +125,10 @@ public enum HarvestModule implements ModifierModule, BlockInteractionModifierHoo
         }
       }
       // must have an age property, and be at max age
-      if (age == null || state.getValue(age) < age.max) {
+      if (age == null || state.getValue(age) < java.util.Collections.max(age.getPossibleValues())) {
         return false;
       }
-      replant = state.setValue(age, age.min);
+      replant = state.setValue(age, java.util.Collections.min(age.getPossibleValues()));
     }
 
     // crop is fully grown, get block drops
@@ -187,9 +186,10 @@ public enum HarvestModule implements ModifierModule, BlockInteractionModifierHoo
     }
     // try harvest event
     boolean didHarvest = false;
-    Result result = new ToolHarvestEvent(tool, context, world, state, pos, source).fire();
-    if (result != Result.DEFAULT) {
-      didHarvest = result == Result.ALLOW;
+    ToolHarvestEvent event = new ToolHarvestEvent(tool, context, world, state, pos, source);
+    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event);
+    if (event.getResult() != null) {
+      didHarvest = event.getResult() == net.minecraft.world.InteractionResult.SUCCESS;
 
       // crops that work based on right click interact (berry bushes)
     } else if (player != null && holder.is(TinkerTags.Blocks.HARVESTABLE_INTERACT)) {
@@ -262,7 +262,7 @@ public enum HarvestModule implements ModifierModule, BlockInteractionModifierHoo
             player.sweepAttack();
           }
           if (broken) {
-            player.broadcastBreakEvent(context.getHand());
+            // player.broadcastBreakEvent(context.getHand());
           }
         }
       }

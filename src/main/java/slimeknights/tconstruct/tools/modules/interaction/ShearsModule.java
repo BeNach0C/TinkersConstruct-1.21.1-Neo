@@ -10,16 +10,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.IForgeShearable;
-import net.minecraftforge.common.ToolAction;
-import net.minecraftforge.common.ToolActions;
-import net.minecraftforge.eventbus.api.Event.Result;
+import net.neoforged.neoforge.common.ItemAbility;
+import net.neoforged.neoforge.common.ItemAbilities;
 import slimeknights.mantle.data.loadable.primitive.FloatLoadable;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.tconstruct.library.events.TinkerToolEvent.ToolShearEvent;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.modifiers.ModifierHooks;
-import slimeknights.tconstruct.library.modifiers.hook.behavior.ToolActionModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.combat.ArmorLootingModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.combat.LootingModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.EntityInteractionModifierHook;
@@ -40,7 +37,7 @@ import slimeknights.tconstruct.library.utils.Util;
 import java.util.List;
 
 /** Module implementing shearing on kamas, scythes, and swords */
-public record ShearsModule(float flatBonus, float perLevelBonus, float expandedBonus, ModifierCondition<IToolStackView> condition) implements ModifierModule, EntityInteractionModifierHook, ToolActionModifierHook, ConditionalModule<IToolStackView> {
+public record ShearsModule(float flatBonus, float perLevelBonus, float expandedBonus, ModifierCondition<IToolStackView> condition) implements ModifierModule, EntityInteractionModifierHook, slimeknights.tconstruct.library.modifiers.hook.behavior.ItemAbilityModifierHook, ConditionalModule<IToolStackView> {
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<ShearsModule>defaultHooks(ModifierHooks.ENTITY_INTERACT, ModifierHooks.TOOL_ACTION);
   public static final RecordLoadable<ShearsModule> LOADER = RecordLoadable.create(
     FloatLoadable.FROM_ZERO.defaultField("flat", 0f, ShearsModule::flatBonus),
@@ -64,12 +61,12 @@ public record ShearsModule(float flatBonus, float perLevelBonus, float expandedB
   }
 
   @Override
-  public boolean canPerformAction(IToolStackView tool, ModifierEntry modifier, ToolAction toolAction) {
+  public boolean canPerformAction(IToolStackView tool, ModifierEntry modifier, ItemAbility ItemAbility) {
     return condition.matches(tool, modifier) && (
-      toolAction == ToolActions.SHEARS_DIG ||
-      toolAction == ToolActions.SHEARS_HARVEST ||
-      toolAction == ToolActions.SHEARS_CARVE ||
-      toolAction == ToolActions.SHEARS_DISARM);
+      ItemAbility == ItemAbilities.SHEARS_DIG ||
+      ItemAbility == ItemAbilities.SHEARS_HARVEST ||
+      ItemAbility == ItemAbilities.SHEARS_CARVE ||
+      ItemAbility == ItemAbilities.SHEARS_DISARM);
   }
 
   /** Runs the hook after shearing an entity */
@@ -91,18 +88,13 @@ public record ShearsModule(float flatBonus, float perLevelBonus, float expandedB
    */
   private static boolean shearEntity(ItemStack itemStack, IToolStackView tool, Level world, Player player, Entity entity, int fortune) {
     // event to override entity shearing
-    Result result = new ToolShearEvent(itemStack, tool, world, player, entity, fortune).fire();
-    if (result != Result.DEFAULT) {
-      return result == Result.ALLOW;
-    }
+    net.minecraft.world.InteractionResult result = new ToolShearEvent(itemStack, tool, world, player, entity, fortune).fire();
+    if (result != null && result != net.minecraft.world.InteractionResult.PASS) { return result == net.minecraft.world.InteractionResult.SUCCESS || result == net.minecraft.world.InteractionResult.CONSUME; }
     // fallback to forge shearable
-    if (entity instanceof IForgeShearable target && target.isShearable(itemStack, world, entity.blockPosition())) {
+    /* if (entity instanceof IForgeShearable target && target.isShearable(itemStack, world, entity.blockPosition())) {
       if (!world.isClientSide) {
         target.onSheared(player, itemStack, world, entity.blockPosition(), fortune)
-          .forEach(stack -> ModifierUtil.dropItem(entity, stack));
-      }
-      return true;
-    }
+          .forEach(stack -> ModifierUtil.dropItem(entity, stack)); } return true; } */
     return false;
   }
 
@@ -117,7 +109,7 @@ public record ShearsModule(float flatBonus, float perLevelBonus, float expandedB
     // use looting instead of fortune, as that is our hook with entity access
     // modifier can always use tags or the nullable parameter to distinguish if needed
     LootingContext context = new LootingContext(player, target, null, Util.getSlotType(hand));
-    int looting = LootingModifierHook.getLooting(tool, context, player.getItemInHand(hand).getEnchantmentLevel(Enchantments.MOB_LOOTING));
+    int looting = LootingModifierHook.getLooting(tool, context, 0 /* TODO 1.21.1 player.getItemInHand(hand).getEnchantmentLevel(Enchantments.MOB_LOOTING) */);
     looting = ArmorLootingModifierHook.getLooting(tool, context, looting);
     Level world = player.getCommandSenderWorld();
     if (shearEntity(stack, tool, world, player, target, looting)) {

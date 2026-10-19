@@ -37,8 +37,12 @@ public class MultilayerArmorModel extends AbstractArmorModel {
   }
 
   @Override
-  public void renderToBuffer(PoseStack matrices, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+  public void renderToBuffer(PoseStack matrices, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn, int packedColor) {
     if (this.base != null && buffer != null) {
+      float alpha = (float)net.minecraft.util.FastColor.ARGB32.alpha(packedColor) / 255.0F;
+      float red = (float)net.minecraft.util.FastColor.ARGB32.red(packedColor) / 255.0F;
+      float green = (float)net.minecraft.util.FastColor.ARGB32.green(packedColor) / 255.0F;
+      float blue = (float)net.minecraft.util.FastColor.ARGB32.blue(packedColor) / 255.0F;
       boolean armorGlint = hasGlint;
       boolean wingGlint = hasGlint;
       for (ArmorTextureSupplier textureSupplier : model.layers()) {

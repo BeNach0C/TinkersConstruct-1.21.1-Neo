@@ -35,8 +35,8 @@ public enum InteractionSource {
   private static final String INTERACT_FORMAT = TConstruct.makeTranslationKey("modifier", "interact_toggled");
 
   /** Persistent data key for toggling modifiers */
-  @Getter
   private final ResourceLocation key;
+  public ResourceLocation getKey() { return key; }
 
   InteractionSource(String key) {
     this.key = TConstruct.getResource(key);
@@ -61,7 +61,7 @@ public enum InteractionSource {
    */
   public static InteractionSource fromEquipmentSlot(EquipmentSlot slot) {
     return switch (slot.getType()) {
-      case ARMOR -> ARMOR;
+      case HUMANOID_ARMOR, ANIMAL_ARMOR -> ARMOR;
       case HAND -> RIGHT_CLICK;
     };
   }

@@ -24,6 +24,15 @@ import java.util.function.Predicate;
  * Data class representing the size and contents of a multiblock
  */
 public class MultiblockStructureData {
+  public BlockPos getMinPos() { return minPos; }
+  public BlockPos getMaxPos() { return maxPos; }
+  public BlockPos getMinInside() { return minInside; }
+  public BlockPos getMaxInside() { return maxInside; }
+  public int getInnerX() { return innerX; }
+  public int getInnerY() { return innerY; }
+  public int getInnerZ() { return innerZ; }
+  public AABB getBounds() { return bounds; }
+
   public static final String TAG_EXTRA_POS = "extra";
   public static final String TAG_MIN = "min";
   public static final String TAG_MAX = "max";
@@ -74,7 +83,7 @@ public class MultiblockStructureData {
     innerX = maxInside.getX() - minInside.getX() + 1;
     innerY = maxInside.getY() - minInside.getY() + 1;
     innerZ = maxInside.getZ() - minInside.getZ() + 1;
-    bounds = new AABB(minInside, maxInside.offset(1, 1, 1));
+    bounds = AABB.encapsulatingFullBlocks(minInside, maxInside);
   }
 
   /**

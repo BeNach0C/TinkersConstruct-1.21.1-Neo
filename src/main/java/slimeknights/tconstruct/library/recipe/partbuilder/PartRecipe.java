@@ -128,7 +128,7 @@ public class PartRecipe implements IPartBuilderRecipe, IMultiRecipe<IDisplayPart
   /** @deprecated use {@link #getRecipeOutput(MaterialVariantId)} */
   @Deprecated
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return new ItemStack(output);
   }
 
@@ -151,7 +151,7 @@ public class PartRecipe implements IPartBuilderRecipe, IMultiRecipe<IDisplayPart
   }
 
   @Override
-  public ItemStack assemble(IPartBuilderContainer inv, RegistryAccess access) {
+  public ItemStack assemble(IPartBuilderContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     MaterialVariant material = MaterialVariant.UNKNOWN;
     int count = outputCount;
     IMaterialValue materialRecipe = inv.getMaterial();
@@ -171,7 +171,7 @@ public class PartRecipe implements IPartBuilderRecipe, IMultiRecipe<IDisplayPart
   private List<IDisplayPartBuilderRecipe> multiRecipes;
 
   @Override
-  public List<IDisplayPartBuilderRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayPartBuilderRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       // start building the recipe
       List<MaterialVariant> materials = new ArrayList<>();
@@ -241,7 +241,7 @@ public class PartRecipe implements IPartBuilderRecipe, IMultiRecipe<IDisplayPart
     if (id.hasVariant()) {
       MaterialRecipeCache.addItems(id, cost, stacks);
     } else {
-      for (MaterialVariantId variant : MaterialRecipeCache.getVariants(id.getId())) {
+      for (MaterialVariantId variant : MaterialRecipeCache.getVariants(id.getMaterialId())) {
         MaterialRecipeCache.addItems(variant, cost, stacks);
       }
     }
@@ -258,7 +258,6 @@ public class PartRecipe implements IPartBuilderRecipe, IMultiRecipe<IDisplayPart
     private final List<ItemStack> patternItems;
     private final List<ItemStack> hiddenInputs;
 
-    @Override
     public ResourceLocation getId() {
       return id;
     }

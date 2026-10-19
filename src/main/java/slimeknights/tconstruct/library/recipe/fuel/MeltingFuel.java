@@ -7,7 +7,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.primitive.IntLoadable;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
@@ -41,8 +41,11 @@ public class MeltingFuel implements ICustomOutputRecipe<IFluidContainer> {
   private final ResourceLocation id;
   private final FluidIngredient input;
   private final int duration;
+  public int getDuration() { return this.duration; }
   private final int temperature;
+  public int getTemperature() { return this.temperature; }
   private final int rate;
+  public int getRate() { return this.rate; }
 
   public MeltingFuel(ResourceLocation id, FluidIngredient input, int duration, int temperature, int rate) {
     this.id = id;

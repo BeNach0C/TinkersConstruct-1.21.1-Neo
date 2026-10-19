@@ -35,6 +35,7 @@ import java.util.List;
 
 /** Recipe for damaging a tool in the tinker station. */
 public class TinkerStationDamagingRecipe implements ITinkerStationRecipe, IDisplayToolModification {
+  @Override public net.minecraft.world.item.ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider p_336125_) { return net.minecraft.world.item.ItemStack.EMPTY; }
   public static final RecordLoadable<TinkerStationDamagingRecipe> LOADER = RecordLoadable.create(
     ContextKey.ID.requiredField(),
     IngredientLoadable.DISALLOW_EMPTY.requiredField("ingredient", r -> r.ingredient),
@@ -47,6 +48,7 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe, IDispl
 
   @Getter
   private final ResourceLocation id;
+  public ResourceLocation getId() { return id; }
   private final Ingredient ingredient;
   private final int damageAmount;
   private final Component amountText;
@@ -68,7 +70,7 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe, IDispl
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ToolStack tool = inv.getTinkerable();
     if (tool.isBroken()) {
       return BROKEN;
@@ -153,7 +155,7 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe, IDispl
         .map(item -> {
           if (item instanceof IModifiableDisplay modifiable) {
             ItemStack stack = modifiable.getRenderTool().copy();
-            stack.getOrCreateTag().put(ToolStack.TAG_STATS, stats);
+            /* stack.getOrCreateTag().put(ToolStack.TAG_STATS, stats); */
             return stack;
           }
           return ItemStack.EMPTY;
@@ -170,7 +172,7 @@ public class TinkerStationDamagingRecipe implements ITinkerStationRecipe, IDispl
       toolWithModifier = getToolWithoutModifier().stream()
         .map(stack -> {
           stack = stack.copy();
-          stack.getOrCreateTag().putInt(ToolStack.TAG_DAMAGE, damageAmount);
+          /* stack.getOrCreateTag().putInt(ToolStack.TAG_DAMAGE, damageAmount).getId(); */
           return stack;
         }).toList();
     }

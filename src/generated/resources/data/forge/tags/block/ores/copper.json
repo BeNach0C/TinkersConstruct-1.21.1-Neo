@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:ores/copper",
+                       "required":  false
+                   }
+               ]
+}

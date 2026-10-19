@@ -8,6 +8,8 @@ import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
 import slimeknights.tconstruct.library.recipe.TinkerRecipeTypes;
 import slimeknights.tconstruct.library.recipe.casting.material.MaterialCastingLookup;
 import slimeknights.tconstruct.library.recipe.material.IMaterialValue;
+import slimeknights.tconstruct.library.recipe.material.MaterialRecipe;
+import slimeknights.tconstruct.library.recipe.material.MaterialRecipeCache;
 import slimeknights.tconstruct.library.recipe.material.MaterialValue;
 import slimeknights.tconstruct.library.recipe.partbuilder.IPartBuilderContainer;
 import slimeknights.tconstruct.library.tools.part.IMaterialItem;
@@ -66,8 +68,8 @@ public class PartBuilderContainerWrapper implements IPartBuilderContainer {
           this.material = new MaterialValue(material, cost);
         }
       } else {
-        Level world = getWorld();
-        this.material = world.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MATERIAL.get(), this, world).orElse(null);
+        MaterialRecipe recipe = MaterialRecipeCache.findRecipe(stack);
+        this.material = recipe == MaterialRecipe.EMPTY ? null : recipe;
       }
     }
     return this.material;

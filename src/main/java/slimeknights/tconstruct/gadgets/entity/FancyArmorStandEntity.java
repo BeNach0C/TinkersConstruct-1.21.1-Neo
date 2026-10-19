@@ -34,10 +34,10 @@ public class FancyArmorStandEntity extends ArmorStand {
   /* Data */
 
   @Override
-  protected void defineSynchedData() {
-    super.defineSynchedData();
-    this.entityData.define(VARIANT, 0);
-    this.entityData.define(LEFT_HANDED, false);
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+    super.defineSynchedData(builder);
+    builder.define(VARIANT, 0);
+    builder.define(LEFT_HANDED, false);
   }
 
   @Override
@@ -139,16 +139,7 @@ public class FancyArmorStandEntity extends ArmorStand {
     return Component.translatable(getStandItem().getDescriptionId());
   }
 
-  @Override
-  protected void brokenByPlayer(DamageSource source) {
-    ItemStack stack = new ItemStack(getStandItem());
-    if (this.hasCustomName()) {
-      stack.setHoverName(this.getCustomName());
-    }
-    Block.popResource(this.level(), this.blockPosition(), stack);
 
-    this.brokenByAnything(source);
-  }
 
 
   /** List of all stand types */

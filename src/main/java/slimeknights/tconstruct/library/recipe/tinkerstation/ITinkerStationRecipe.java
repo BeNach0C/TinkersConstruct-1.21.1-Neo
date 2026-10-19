@@ -34,7 +34,7 @@ public interface ITinkerStationRecipe extends ICommonRecipe<ITinkerStationContai
    * Gets the recipe result, or an object containing an error message if the recipe matches but cannot be applied.
    * @return Validated result
    */
-  RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access);
+  RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access);
 
   /** Gets the number to shrink the tool slot by, perfectly valid for this to be higher than the contained number of tools */
   default int shrinkToolSlotBy() {
@@ -65,14 +65,14 @@ public interface ITinkerStationRecipe extends ICommonRecipe<ITinkerStationContai
   /** @deprecated use {@link #getValidatedResult(ITinkerStationContainer, RegistryAccess)}*/
   @Deprecated
   @Override
-  default ItemStack getResultItem(RegistryAccess pRegistryAccess) {
+  default ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider pRegistries) {
     return ItemStack.EMPTY;
   }
 
   /** @deprecated use {@link #getValidatedResult(ITinkerStationContainer, RegistryAccess)}*/
   @Deprecated
   @Override
-  default ItemStack assemble(ITinkerStationContainer inv, RegistryAccess access) {
+  default ItemStack assemble(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     return getResultItem(access).copy();
   }
 

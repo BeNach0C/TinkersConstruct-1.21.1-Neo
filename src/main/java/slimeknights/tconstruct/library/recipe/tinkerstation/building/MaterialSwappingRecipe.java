@@ -47,7 +47,6 @@ import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 /** Common logic for different implementations of material swapping. */
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class MaterialSwappingRecipe implements ITinkerStationRecipe {
   protected static final RecordField<Ingredient, MaterialSwappingRecipe> TOOLS_FIELD = IngredientLoadable.DISALLOW_EMPTY.requiredField("tools", r -> r.tools);
   protected static final RecordField<Integer, MaterialSwappingRecipe> STACK_SIZE_FIELD = IntLoadable.FROM_ONE.defaultField("max_stack_size", ITinkerStationRecipe.DEFAULT_TOOL_STACK_SIZE, true, r -> r.maxStackSize);
@@ -64,7 +63,18 @@ public abstract class MaterialSwappingRecipe implements ITinkerStationRecipe {
   /** Max stack size that can be swapped at once */
   protected final int maxStackSize;
   /** Additional ingredients that must be present to perform this part swap. */
-  protected final List<SizedIngredient> extraRequirements;
+    protected final List<SizedIngredient> extraRequirements;
+
+  protected MaterialSwappingRecipe(ResourceLocation id, Ingredient tools, int maxStackSize, List<SizedIngredient> extraRequirements) {
+    this.id = id;
+    this.tools = tools;
+    this.maxStackSize = maxStackSize;
+    this.extraRequirements = extraRequirements;
+  }
+
+  public ResourceLocation getId() {
+    return id;
+  }
 
   @Override
   public int shrinkToolSlotBy() {
@@ -114,7 +124,7 @@ public abstract class MaterialSwappingRecipe implements ITinkerStationRecipe {
     boolean didChange = !toolMaterial.sameVariant(material);
     float repairDurability = 0;
     if (partValue > 0) {
-      repairDurability = partValue * MaterialRepairModule.getDurability(null, material.getId(), statTypes.get(index));
+      repairDurability = partValue * MaterialRepairModule.getDurability(null, material.getMaterialId(), statTypes.get(index));
       mayRepair |= repairDurability > 0;
     }
     if (!didChange && (original.getDamage() == 0 || !mayRepair)) {
@@ -371,7 +381,7 @@ public abstract class MaterialSwappingRecipe implements ITinkerStationRecipe {
     protected List<ItemStack> getOutputFocusWithModifier(IMaterialUser materialUser, ItemStack focus) {
       // if the focus is the output, duplicate just the materials so it's the simplest version of the recipe
       MaterialIdNBT materials = MaterialIdNBT.from(focus);
-      if (materialUser.canUseMaterial(materials.getMaterial(index).getId())) {
+      if (materialUser.canUseMaterial(materials.getMaterial(index).getMaterialId())) {
         return List.of(copyMaterials(materials, focus.getItem()));
       } else {
         // on the chance the result stack isn't usable, duplicate the rest of the materials as an animation over parts
@@ -418,7 +428,7 @@ public abstract class MaterialSwappingRecipe implements ITinkerStationRecipe {
         MaterialVariantId material = MaterialIdNBT.from(focus).getMaterial(index);
         // if focusing on the output, display just the part that makes that output, assuming its usable
         if (focusOutput) {
-          if (part.canUseMaterial(material.getId())) {
+          if (part.canUseMaterial(material.getMaterialId())) {
             return List.of(part.withMaterialForDisplay(material));
           }
         } else  {

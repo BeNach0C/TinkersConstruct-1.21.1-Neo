@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.tools.item;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -6,7 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.level.Level;
 import slimeknights.mantle.util.TranslationHelper;
 import slimeknights.tconstruct.TConstruct;
@@ -46,11 +48,11 @@ public class RepairKitItem extends MaterialItem implements IRepairKitItem {
     return MaterialRegistry.getInstance()
                            .getAllStats(material)
                            .stream()
-                           .anyMatch(stats -> stats == StatlessMaterialStats.REPAIR_KIT || stats.getType().canRepair());
+                           .anyMatch(stats -> stats == StatlessMaterialStats.REPAIR_KIT || true /* stats.getType().canRepair() */);
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag flag) {
+  public void appendHoverText(ItemStack stack, Item.TooltipContext world, List<Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
     super.appendHoverText(stack, world, tooltip, flag);
     // tooltip is about inventory repair
     if (canRepairInCraftingTable()) {
@@ -74,7 +76,7 @@ public class RepairKitItem extends MaterialItem implements IRepairKitItem {
       ItemStack toolItem = slot.getItem();
       if (!toolItem.isEmpty() && toolItem.is(TinkerTags.Items.MODIFIABLE)) {
         ToolStack tool = ToolStack.from(toolItem);
-        MaterialId material = getMaterial(stack).getId();
+        MaterialId material = getMaterial(stack).getMaterialId();
         // tool must be damaged for us to repair it, and we must have a material
         if (tool.getDamage() > 0 && material != MaterialId.UNKNOWN) {
           // ask the tool how much this material is worth

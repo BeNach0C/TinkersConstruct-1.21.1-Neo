@@ -28,8 +28,8 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.common.ToolActions;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.common.ItemAbilities;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import slimeknights.mantle.client.TooltipKey;
@@ -149,17 +149,19 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
       }
 
       // if we have ammo, start charging
+      // if we have ammo, start charging
       ItemStack ammo = BowAmmoModifierHook.getAmmo(tool, bow, player, getSupportedHeldProjectiles());
       if (!ammo.isEmpty() || tool.getModifiers().has(TinkerTags.Modifiers.CHARGE_EMPTY_BOW_WITH_DRAWTIME)) {
         GeneralInteractionModifierHook.startDrawing(tool, player, 1);
         if (!ammo.isEmpty()) {
           if (storeDrawingItem) {
-            persistentData.put(KEY_DRAWBACK_AMMO, ammo.save(new CompoundTag()));
+            persistentData.put(KEY_DRAWBACK_AMMO, ammo.save(player.registryAccess(), new CompoundTag()));
           } else {
             // boolean is enough to get detected by the property override, but won't bother the model
             persistentData.putBoolean(KEY_DRAWBACK_AMMO, true);
           }
         }
+        tool.updateStack(bow);
         player.startUsingItem(hand);
         if (!level.isClientSide) {
           level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CROSSBOW_QUICK_CHARGE_1, SoundSource.PLAYERS, 0.75F, 1.0F);
@@ -183,7 +185,7 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
         return InteractionResultHolder.pass(bow);
       }
       // can block while filled with ammo
-      if (ModifierUtil.canPerformAction(tool, ToolActions.SHIELD_BLOCK)) {
+      if (ModifierUtil.canPerformAction(tool, ItemAbilities.SHIELD_BLOCK)) {
         player.startUsingItem(hand);
         return InteractionResultHolder.consume(bow);
       }
@@ -192,6 +194,11 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
     // ammo already loaded? time to fire
     fireCrossbow(tool, player, hand, heldAmmo);
     return InteractionResultHolder.consume(bow);
+  }
+
+  @Override
+  protected void shootProjectile(LivingEntity shooter, Projectile projectile, int index, float velocity, float inaccuracy, float angle, @Nullable LivingEntity target) {
+    projectile.shootFromRotation(shooter, shooter.getXRot() + angle, shooter.getYRot(), 0.0F, velocity, inaccuracy);
   }
 
   /**
@@ -226,7 +233,7 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
 
       // the ammo has a stack size that may be greater than 1 (meaning multishot)
       // when creating the ammo stacks, we use split, so its getting smaller each time
-      ItemStack ammo = ItemStack.of(heldAmmo);
+      ItemStack ammo = ItemStack.parseOptional(level.registryAccess(), heldAmmo);
       float startAngle = getAngleStart(ammo.getCount());
       int primaryIndex = ammo.getCount() / 2;
       for (int arrowIndex = 0; arrowIndex < ammo.getCount(); arrowIndex++) {
@@ -241,11 +248,10 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
           damage += 3;
         } else {
           ArrowItem arrowItem = ammo.getItem() instanceof ArrowItem a ? a : (ArrowItem)Items.ARROW;
-          arrow = arrowItem.createArrow(level, ammo, living);
+          arrow = arrowItem.createArrow(level, ammo, living, living.getItemInHand(hand));
           projectile = arrow;
           arrow.setCritArrow(true);
           arrow.setSoundEvent(SoundEvents.CROSSBOW_HIT);
-          arrow.setShotFromCrossbow(true);
           speed = 3f;
           damage += 1;
 
@@ -286,6 +292,9 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
 
       // clear the ammo, damage the bow
       tool.getPersistentData().remove(KEY_CROSSBOW_AMMO);
+      if (tool instanceof ToolStack ts) {
+        ts.updateStack(living.getItemInHand(hand));
+      }
       ToolDamageUtil.damageAnimated(tool, damage, living, hand);
 
       // stats
@@ -319,13 +328,29 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
     if (!ammo.isEmpty()) {
       level.playSound(null, living.getX(), living.getY(), living.getZ(), SoundEvents.CROSSBOW_LOADING_END, SoundSource.PLAYERS, 1.0F, 1.0F / (level.getRandom().nextFloat() * 0.5F + 1.0F) + 0.2F);
       if (!level.isClientSide) {
-        CompoundTag ammoNBT = ammo.save(new CompoundTag());
+        CompoundTag ammoNBT = (CompoundTag) ammo.save(level.registryAccess(), new CompoundTag());
         persistentData.put(KEY_CROSSBOW_AMMO, ammoNBT);
+        persistentData.remove(KEY_DRAWBACK_AMMO);
+        persistentData.remove(KEY_DRAWTIME);
+        tool.updateStack(bow);
         // if the crossbow broke during loading, fire immediately
         if (tool.isBroken()) {
           fireCrossbow(tool, living, player != null && player.getAbilities().instabuild, living.getUsedItemHand(), ammoNBT);
         }
       }
+    } else {
+      persistentData.remove(KEY_DRAWBACK_AMMO);
+      persistentData.remove(KEY_DRAWTIME);
+      tool.updateStack(bow);
+    }
+  }
+
+  @Override
+  public void onUseTick(Level level, LivingEntity living, ItemStack bow, int chargeRemaining) {
+    super.onUseTick(level, living, bow, chargeRemaining);
+    int drawtime = ModifierUtil.getPersistentInt(bow, KEY_DRAWTIME, -1);
+    if (drawtime > 0 && getUseDuration(bow) - chargeRemaining >= drawtime + 3) {
+      living.releaseUsingItem();
     }
   }
 
@@ -336,7 +361,8 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
     // if we have ammo, render that in the tooltip
     CompoundTag heldAmmo = tool.getPersistentData().getCompound(KEY_CROSSBOW_AMMO);
     if (!heldAmmo.isEmpty()) {
-      ItemStack heldStack = ItemStack.of(heldAmmo);
+      net.minecraft.core.HolderLookup.Provider registries = player != null ? player.registryAccess() : slimeknights.mantle.client.SafeClientAccess.getRegistryAccess();
+      ItemStack heldStack = registries != null ? ItemStack.parseOptional(registries, heldAmmo) : ItemStack.EMPTY;
       if (!heldStack.isEmpty()) {
         // basic info: item and count
         MutableComponent component = Component.translatable(PROJECTILE_KEY);
@@ -351,7 +377,7 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
         // copy the stack's tooltip if advanced
         if (tooltipFlag.isAdvanced() && player != null) {
           List<Component> nestedTooltip = new ArrayList<>();
-          heldStack.getItem().appendHoverText(heldStack, player.level(), nestedTooltip, tooltipFlag);
+          heldStack.getItem().appendHoverText(heldStack, net.minecraft.world.item.Item.TooltipContext.of(player.level()), nestedTooltip, tooltipFlag);
           for (Component nested : nestedTooltip) {
             tooltips.add(Component.literal("  ").append(nested).withStyle(ChatFormatting.GRAY));
           }

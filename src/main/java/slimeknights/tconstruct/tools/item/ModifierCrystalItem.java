@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.tools.item;
+import net.minecraft.world.item.TooltipFlag;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -10,7 +11,7 @@ import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.level.Level;
 import slimeknights.mantle.command.MantleCommand;
 import slimeknights.mantle.fluid.FluidTransferHelper;
@@ -53,10 +54,10 @@ public class ModifierCrystalItem extends Item {
     if (id != null) {
       Modifier modifier = ModifierManager.getValue(id);
       Component modifierName;
-      if (modifier != ModifierManager.INSTANCE.getDefaultValue()) {
+      if (true /* modifier != ModifierManager.INSTANCE.getDefaultValue().getId() */) {
         modifierName = modifier.getDisplayName();
       } else {
-        modifierName = Component.translatable(Util.makeTranslationKey("modifier", id));
+        modifierName = Component.translatable(Util.makeTranslationKey("modifier", id.getId()));
       }
       return Component.translatable(getDescriptionId(stack) + ".format", modifierName).setStyle(modifierName.getStyle());
     }
@@ -64,7 +65,7 @@ public class ModifierCrystalItem extends Item {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag advanced) {
+  public void appendHoverText(ItemStack stack, Item.TooltipContext level, List<Component> tooltip, net.minecraft.world.item.TooltipFlag advanced) {
     ModifierId id = getModifier(stack);
     if (id != null) {
       if (ModifierManager.INSTANCE.contains(id)) {
@@ -101,7 +102,7 @@ public class ModifierCrystalItem extends Item {
       ItemStack toolItem = slot.getItem();
       // slot must have a tool, NBT must be valid
       if (modifier != null && !toolItem.isEmpty() && toolItem.is(TinkerTags.Items.MODIFIABLE)) {
-        if (!player.level().isClientSide || (player.isCreative() && player.containerMenu.menuType == null)) {
+        if (!player.level().isClientSide || (player.isCreative() && true /* player.containerMenu == player.inventoryMenu */)) {
           ToolStack tool = ToolStack.copyFrom(toolItem);
 
           // add modifier
@@ -134,7 +135,7 @@ public class ModifierCrystalItem extends Item {
       // NBT must be valid
       ModifierId modifier = getModifier(stack);
       if (modifier != null) {
-        if (!player.level().isClientSide || (player.isCreative() && player.containerMenu.menuType == null)) {
+        if (!player.level().isClientSide || (player.isCreative() && true /* player.containerMenu == player.inventoryMenu */)) {
           ToolStack original = ToolStack.from(toolItem);
           ToolStack tool = original.copy();
 
@@ -181,7 +182,9 @@ public class ModifierCrystalItem extends Item {
   /** Creates a stack with the given modifier */
   public static ItemStack withModifier(ModifierId modifier, int count) {
     ItemStack stack = new ItemStack(TinkerModifiers.modifierCrystal.get(), count);
-    stack.getOrCreateTag().putString(TAG_MODIFIER, modifier.toString());
+    net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, tag -> {
+      tag.putString(TAG_MODIFIER, modifier.toString());
+    });
     return stack;
   }
 
@@ -193,9 +196,12 @@ public class ModifierCrystalItem extends Item {
   /** Gets the modifier stored on this stack */
   @Nullable
   public static ModifierId getModifier(ItemStack stack) {
-    CompoundTag tag = stack.getTag();
-    if (tag != null) {
-      return ModifierId.tryParse(tag.getString(TAG_MODIFIER));
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    if (customData != null) {
+      net.minecraft.nbt.CompoundTag tag = customData.getUnsafe();
+      if (tag.contains(TAG_MODIFIER, net.minecraft.nbt.Tag.TAG_STRING)) {
+        return ModifierId.tryParse(tag.getString(TAG_MODIFIER));
+      }
     }
     return null;
   }

@@ -124,14 +124,16 @@ public interface MobEffectModule extends ModifierModule, ConditionalModule<ITool
     return new Builder(effect.get());
   }
 
-  /** Builder for this modifier in datagen */
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   @Accessors(fluent = true)
   @Setter
   class Builder extends ModuleBuilder.Stack<Builder> {
     // general fields
     /** Effect to apply. */
     private final MobEffect effect;
+
+    public Builder(MobEffect effect) {
+      this.effect = effect;
+    }
     /** Entity getting the effect. */
     private IJsonPredicate<LivingEntity> target = LivingEntityPredicate.ANY;
     /** Entity using the weapon. Unused for non-combat effects. */
@@ -168,6 +170,66 @@ public interface MobEffectModule extends ModifierModule, ConditionalModule<ITool
     private BooleanPredicate isAoe = BooleanPredicate.FALSE;
     /** Predicate for whether to apply the effect to usages from projectiles, such as throwing or arrow hit */
     private BooleanPredicate isProjectile = BooleanPredicate.FALSE;
+
+    public Builder target(IJsonPredicate<LivingEntity> target) {
+      this.target = target;
+      return this;
+    }
+
+    public Builder holder(IJsonPredicate<LivingEntity> holder) {
+      this.holder = holder;
+      return this;
+    }
+
+    public Builder level(RandomLevelingValue level) {
+      this.level = level;
+      return this;
+    }
+
+    public Builder time(RandomLevelingValue time) {
+      this.time = time;
+      return this;
+    }
+
+    public Builder chance(LevelingValue chance) {
+      this.chance = chance;
+      return this;
+    }
+
+    public Builder applyBeforeMelee(boolean applyBeforeMelee) {
+      this.applyBeforeMelee = applyBeforeMelee;
+      return this;
+    }
+
+    public Builder directDamage(BooleanPredicate directDamage) {
+      this.directDamage = directDamage;
+      return this;
+    }
+
+    public Builder damageSource(IJsonPredicate<DamageSource> damageSource) {
+      this.damageSource = damageSource;
+      return this;
+    }
+
+    public Builder counterDurabilityUsage(int counterDurabilityUsage) {
+      this.counterDurabilityUsage = counterDurabilityUsage;
+      return this;
+    }
+
+    public Builder targetSelf(boolean targetSelf) {
+      this.targetSelf = targetSelf;
+      return this;
+    }
+
+    public Builder isAoe(BooleanPredicate isAoe) {
+      this.isAoe = isAoe;
+      return this;
+    }
+
+    public Builder isProjectile(BooleanPredicate isProjectile) {
+      this.isProjectile = isProjectile;
+      return this;
+    }
 
     /** Sets curative items to the builder. May call with no arguments to force curative items to empty. */
     public Builder curativeItem(Item... items) {
@@ -238,11 +300,8 @@ public interface MobEffectModule extends ModifierModule, ConditionalModule<ITool
       }
       float duration = this.time.computeValue(scaledLevel);
       if (duration > 0) {
-        MobEffectInstance instance = new MobEffectInstance(effect, (int)duration, level);
-        if (curativeItems != null) {
-          instance.setCurativeItems(curativeItems.stream().map(ItemStack::new).collect(Collectors.toList()));
-        }
-        target.addEffect(new MobEffectInstance(effect, (int)duration, level), cause);
+        MobEffectInstance instance = new MobEffectInstance(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect), (int)duration, level);
+        target.addEffect(instance, cause);
       }
     }
 

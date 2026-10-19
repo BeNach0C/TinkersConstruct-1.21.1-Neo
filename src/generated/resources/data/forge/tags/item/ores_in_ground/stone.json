@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:ores_in_ground/stone",
+                       "required":  false
+                   }
+               ]
+}

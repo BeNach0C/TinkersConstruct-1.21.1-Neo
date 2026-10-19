@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.gadgets.item;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
@@ -45,7 +46,7 @@ public class GlowBallItem extends SnowballItem {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+  public void appendHoverText(ItemStack stack, Item.TooltipContext level, List<Component> tooltip, TooltipFlag flag) {
     TranslationHelper.addOptionalTooltip(stack, tooltip);
     super.appendHoverText(stack, level, tooltip, flag);
   }

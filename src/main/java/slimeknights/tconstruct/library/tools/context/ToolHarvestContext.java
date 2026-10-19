@@ -20,28 +20,37 @@ import javax.annotation.Nullable;
 public class ToolHarvestContext {
   /** World containing the harvested block */
   private final ServerLevel world;
+  public ServerLevel getWorld() { return this.world; }
   /** Living entity harvesting the block */
   private final LivingEntity living;
+  public LivingEntity getLiving() { return this.living; }
   /** Player harvesting the block, null if not a player */
   @Nullable
   private final ServerPlayer player;
+  public ServerPlayer getPlayer() { return this.player; }
   @Nullable
   private final Projectile projectile;
   /** State being harvested */
   private final BlockState state;
+  public BlockState getState() { return this.state; }
   /** Position being harvested */
   private final BlockPos pos;
+  public BlockPos getPos() { return this.pos; }
   /** Side of the block being hit */
   private final Direction sideHit;
+  public Direction getSideHit() { return this.sideHit; }
   /** If true, this block can be harvested by the tool */
   @Accessors(fluent = true)
   private final boolean canHarvest;
+  public boolean canHarvest() { return this.canHarvest; }
   /** If true, the tool is effective on the block */
   private final boolean isEffective;
+  public boolean isEffective() { return this.isEffective; }
 
   /* AOE context */
   /** If true, this block is not the originally targeted block */
   private final boolean isAOE;
+  public boolean isAOE() { return this.isAOE; }
   /** Originally targeted position for AOE blocks. Will be the same as {@link #pos} for the original block */
   private final BlockPos targetedPos;
   /** Originally targeted block state. Will be the same as {@link #state} for the original block */

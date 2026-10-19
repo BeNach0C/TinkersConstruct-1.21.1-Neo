@@ -21,7 +21,7 @@ import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureType;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePiecesBuilder;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import slimeknights.tconstruct.world.TinkerStructures;
 import slimeknights.tconstruct.world.TinkerWorld;
 import slimeknights.tconstruct.world.block.FoliageType;
@@ -31,7 +31,7 @@ import java.util.Optional;
 
 /** Base logic for all island variants */
 public class IslandStructure extends Structure {
-  public static final Codec<IslandStructure> CODEC = RecordCodecBuilder.create(inst ->
+  public static final com.mojang.serialization.MapCodec<IslandStructure> CODEC = RecordCodecBuilder.mapCodec(inst ->
     inst.group(settingsCodec(inst)).and(inst.group(
           IslandPlacement.CODEC.fieldOf("placement").forGetter(s -> s.placement),
           SimpleWeightedRandomList.wrappedCodec(ResourceLocation.CODEC).fieldOf("templates").forGetter(s -> s.templates),
@@ -47,6 +47,7 @@ public class IslandStructure extends Structure {
   private final Optional<Block> vines;
   @Getter
   private final SimpleWeightedRandomList<Block> grasses;
+  public SimpleWeightedRandomList<Block> getGrasses() { return this.grasses; }
 
   public IslandStructure(StructureSettings settings, IslandPlacement placement, SimpleWeightedRandomList<ResourceLocation> templates, SimpleWeightedRandomList<Holder<ConfiguredFeature<?,?>>> trees, Optional<Block> vines, SimpleWeightedRandomList<Block> grasses) {
     super(settings);
@@ -107,8 +108,8 @@ public class IslandStructure extends Structure {
   }
 
   @SuppressWarnings("UnusedReturnValue")  // its a builder my dude
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder {
+    private Builder(IslandPlacement placement) { this.placement = placement; }
     private static final String[] SIZES = new String[] { "0x1x0", "2x2x4", "4x1x6", "8x1x11", "11x1x11" };
 
     private final IslandPlacement placement;
@@ -146,7 +147,7 @@ public class IslandStructure extends Structure {
     }
 
     /** Adds a new grass type to the builder with the given weight */
-    public Builder vines(RegistryObject<? extends Block> block) {
+    public Builder vines(DeferredHolder<Block, ? extends Block> block) {
       return vines(block.get());
     }
 
@@ -157,7 +158,7 @@ public class IslandStructure extends Structure {
     }
 
     /** Adds a new grass type to the builder with the given weight */
-    public Builder addGrass(RegistryObject<? extends Block> block, int weight) {
+    public Builder addGrass(DeferredHolder<Block, ? extends Block> block, int weight) {
       return addGrass(block.get(), weight);
     }
 

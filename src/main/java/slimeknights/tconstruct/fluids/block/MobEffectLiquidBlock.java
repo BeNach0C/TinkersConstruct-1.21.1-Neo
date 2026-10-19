@@ -16,21 +16,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /** Liquid block setting the entity on fire */
-public class MobEffectLiquidBlock extends LiquidBlock {
-  private final Supplier<MobEffectInstance> effect;
+public class MobEffectLiquidBlock extends slimeknights.mantle.block.fluid.MobEffectLiquidBlock {
   public MobEffectLiquidBlock(Supplier<? extends FlowingFluid> supplier, Properties properties, Supplier<MobEffectInstance> effect) {
-    super(supplier, properties);
-    this.effect = effect;
-  }
-
-  @Deprecated
-  @Override
-  public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-    if (entity.getFluidTypeHeight(getFluid().getFluidType()) > 0 && entity instanceof LivingEntity living) {
-      MobEffectInstance effect = this.effect.get();
-      effect.setCurativeItems(new ArrayList<>());
-      living.addEffect(effect);
-    }
+    super(supplier.get(), properties, effect);
   }
 
   /** Creates a new block supplier */

@@ -14,26 +14,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /** Liquid block setting the entity on fire */
-public class BurningLiquidBlock extends LiquidBlock {
-  /** Burn time in seconds. Lava uses 15 */
-  private final int burnTime;
-  /** Damage from being in the fluid, lava uses 4 */
-  private final float damage;
+public class BurningLiquidBlock extends slimeknights.mantle.block.fluid.BurningLiquidBlock {
   public BurningLiquidBlock(Supplier<? extends FlowingFluid> supplier, Properties properties, int burnTime, float damage) {
-    super(supplier, properties);
-    this.burnTime = burnTime;
-    this.damage = damage;
-  }
-
-  @SuppressWarnings("deprecation")  // useless annotation on block methods
-  @Override
-  public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-    if (!entity.fireImmune() && entity.getFluidTypeHeight(getFluid().getFluidType()) > 0) {
-      entity.setSecondsOnFire(burnTime);
-      if (entity.hurt(entity.damageSources().lava(), damage)) {
-        entity.playSound(SoundEvents.GENERIC_BURN, 0.4F, 2.0F + level.random.nextFloat() * 0.4F);
-      }
-    }
+    super(supplier.get(), properties, burnTime, damage);
   }
 
   /** Creates a new block supplier */

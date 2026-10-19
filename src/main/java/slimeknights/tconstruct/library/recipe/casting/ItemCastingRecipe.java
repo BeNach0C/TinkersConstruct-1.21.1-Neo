@@ -6,7 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.field.LoadableField;
 import slimeknights.mantle.data.loadable.primitive.IntLoadable;
@@ -14,6 +14,7 @@ import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.recipe.helper.ItemOutput;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 
 import java.util.Arrays;
@@ -28,7 +29,7 @@ public class ItemCastingRecipe extends AbstractCastingRecipe implements IDisplay
   protected static final LoadableField<Integer,ItemCastingRecipe> COOLING_TIME_FIELD = IntLoadable.FROM_ONE.requiredField("cooling_time", ItemCastingRecipe::getCoolingTime);
   /** Loader instance */
   public static final RecordLoadable<ItemCastingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(),
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(),
     LoadableRecipeSerializer.RECIPE_GROUP, CAST_FIELD, FLUID_FIELD, RESULT_FIELD, COOLING_TIME_FIELD, CAST_CONSUMED_FIELD, SWITCH_SLOTS_FIELD,
     ItemCastingRecipe::new);
 
@@ -52,11 +53,11 @@ public class ItemCastingRecipe extends AbstractCastingRecipe implements IDisplay
 
   @Override
   public boolean matches(ICastingContainer inv, Level worldIn) {
-    return getCast().test(inv.getStack()) && fluid.test(inv.getFluid());
+    return !this.result.get().isEmpty() && getCast().test(inv.getStack()) && fluid.test(inv.getFluid());
   }
 
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return this.result.get();
   }
 

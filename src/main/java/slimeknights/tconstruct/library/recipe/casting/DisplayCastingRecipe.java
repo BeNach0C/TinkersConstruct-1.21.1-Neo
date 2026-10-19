@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.tconstruct.library.recipe.casting.material.MaterialCastingLookup;
 import slimeknights.tconstruct.library.recipe.display.ItemVisible;
 
@@ -95,12 +95,11 @@ public final class DisplayCastingRecipe implements IDisplayableCastingRecipe {
 
   /** Creates a new builder instance with the type and ID from the given recipe */
   public static Builder from(ICastingRecipe recipe) {
-    return type(recipe.getType()).id(recipe.getId());
+    return type(recipe.getType());
   }
 
   @Setter
   @Accessors(fluent = true)
-  @RequiredArgsConstructor
   public static class Builder {
     private final RecipeType<?> type;
     @Nullable
@@ -112,6 +111,10 @@ public final class DisplayCastingRecipe implements IDisplayableCastingRecipe {
     private boolean consumed = false;
     private boolean linkCastToOutput = true;
     private boolean linkFluidsToOutput = false;
+
+    public Builder(RecipeType<?> type) {
+      this.type = type;
+    }
     /** If true, this is a material casting recipe and the casting time should animate between fluids. {@link #coolingTime} is used as a fallback for unknown fluids. */
     private boolean materialCoolingTime = false;
     // filtering

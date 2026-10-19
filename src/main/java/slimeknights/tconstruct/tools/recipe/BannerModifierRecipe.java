@@ -51,6 +51,7 @@ import java.util.List;
 
 /** Recipe to add a banner to a shield */
 public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisplayModifierRecipe> {
+  @Override public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider p) { return ItemStack.EMPTY; }
   private static final RecipeResult<LazyToolStack> NO_PATTERNS = RecipeResult.failure(TConstruct.makeTranslationKey("recipe", "banner.clear.no_patterns"));
   public static final RecordLoadable<BannerModifierRecipe> LOADER = RecordLoadable.create(
     ContextKey.ID.requiredField(),
@@ -106,7 +107,7 @@ public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<
   /** Gets the list of patterns from the banner stack */
   private static ListTag getBannerPatterns(ItemStack banner) {
     // get the banner data
-    CompoundTag bannerData = BlockItem.getBlockEntityData(banner);
+    CompoundTag bannerData = (banner.has(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA) ? banner.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA).copyTag() : null);
     ListTag patterns;
     if (bannerData != null) {
       patterns = bannerData.getList("Patterns", Tag.TAG_COMPOUND);
@@ -117,7 +118,7 @@ public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ToolStack tool = inv.getTinkerable().copy();
 
     ModifierId key = TinkerModifiers.banner.getId();
@@ -181,7 +182,7 @@ public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<
   private static CompoundTag createDisplayPatternTag(BannerPattern pattern, DyeColor color) {
     ListTag singlePattern = new ListTag();
     CompoundTag patternTag = new CompoundTag();
-    patternTag.putString("Pattern", pattern.getHashname());
+    
     patternTag.putInt("Color", color.getId());
     singlePattern.add(patternTag);
 
@@ -194,8 +195,7 @@ public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<
     return stackTag;
   }
 
-  @Override
-  public List<IDisplayModifierRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayModifierRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
       List<ItemStack> toolInputs = RegistryHelper.getTagValueStream(BuiltInRegistries.ITEM, TinkerTags.Items.BANNER)
         .map(item -> {
@@ -216,7 +216,7 @@ public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<
         TConstruct.LOG.error("Unable to create banner modifier display recipes {}: Banner tag {} has no BannerItem", id, ItemTags.BANNERS);
         displayRecipes = List.of();
       } else {
-        ResourceLocation id = getId();
+        ResourceLocation id = net.minecraft.resources.ResourceLocation.withDefaultNamespace("dummy");
         List<IDisplayModifierRecipe> recipes = new ArrayList<>(clearInput != Ingredient.EMPTY ? 2 : 1);
         // create standard recipe
         recipes.add(new DisplayRecipe(id, toolInputs, banners, List.of()));
@@ -225,18 +225,16 @@ public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<
           // we want a pattern on it to make it more clear what it does
           // but put a white pattern on the black banner for visibility
           CompoundTag stackTag, stackTagBlack;
-          BannerPattern cross = BuiltInRegistries.BANNER_PATTERN.get(BannerPatterns.CROSS);
-          if (cross != null) {
-            stackTag = createDisplayPatternTag(cross, DyeColor.BLACK);
-            stackTagBlack = createDisplayPatternTag(cross, DyeColor.WHITE);
-          } else {
+          stackTag = null; stackTagBlack = null; if (false) {
             stackTag = null;
             stackTagBlack = null;
           }
           // add the recipe to the end of the stream
           List<ItemStack> bannersWithPattern = banners.stream().map(stack -> {
             stack = stack.copy();
-            stack.setTag(stack.getItem() == Items.BLACK_BANNER ? stackTagBlack : stackTag);
+            if (stackTag != null) {
+              stack.set(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.CustomData.of(stackTag));
+            }
             return stack;
           }).toList();
           recipes.add(new DisplayRecipe(id, toolInputs, bannersWithPattern, List.of(clearInput.getItems())));
@@ -250,16 +248,16 @@ public class BannerModifierRecipe implements ITinkerStationRecipe, IMultiRecipe<
   /** Display recipe instance */
   private static class DisplayRecipe implements IDisplayModifierRecipe {
     private static final IntRange LEVELS = new IntRange(1, 1);
-    private final ModifierEntry RESULT = new ModifierEntry(TinkerModifiers.banner, 1);
+    private final ModifierEntry RESULT = new ModifierEntry(TinkerModifiers.banner.getId(), 1);
 
     @Getter
     private final ResourceLocation recipeId;
     private final List<ItemStack> banners;
     private final List<ItemStack> clearInput;
-    @Getter
     private final List<ItemStack> toolWithoutModifier;
-    @Getter
+    @Override public List<ItemStack> getToolWithoutModifier() { return this.toolWithoutModifier; }
     private final List<ItemStack> toolWithModifier;
+    @Override public List<ItemStack> getToolWithModifier() { return this.toolWithModifier; }
     @Getter
     private final Component variant;
     public DisplayRecipe(ResourceLocation recipeId, List<ItemStack> tools, List<ItemStack> banners, List<ItemStack> clearInput) {

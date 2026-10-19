@@ -10,17 +10,15 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.fml.ModLoader;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.fml.ModLoader;
 import slimeknights.mantle.data.datamap.RegistryDataMapLoader;
 import slimeknights.mantle.data.listener.IEarlySafeManagerReloadListener;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.util.JsonHelper;
 import slimeknights.mantle.util.typed.TypedMap;
 import slimeknights.mantle.util.typed.TypedMapBuilder;
-import slimeknights.tconstruct.common.config.Config;
 import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
 import slimeknights.tconstruct.library.utils.Util;
 
@@ -39,8 +37,8 @@ import java.util.Set;
  * The location inside resource packs is "tinkering/materials".
  * So if your mods name is "foobar", the location for your mods materials is "assets/foobar/tinkering/materials".
  */
-@Log4j2
 public class MaterialRenderInfoLoader implements IEarlySafeManagerReloadListener {
+  private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(MaterialRenderInfoLoader.class);
   public static final MaterialRenderInfoLoader INSTANCE = new MaterialRenderInfoLoader();
 
   /** Folder to scan for material render info JSONS */
@@ -53,8 +51,8 @@ public class MaterialRenderInfoLoader implements IEarlySafeManagerReloadListener
     // bit of a hack: instead of registering our resource listener to the list as we should, we use the additional model registration event
     // we do this as we need to guarantee we run before models are baked, which happens in the first stage of listeners in the bakery constructor
     // the other option would be to wait until the atlas stitch event, though that would make it more difficult to know which sprites we need
-    FMLJavaModLoadingContext.get().getModEventBus().addListener(EventPriority.NORMAL, false, ModelEvent.RegisterAdditional.class, event -> {
-      if(ModLoader.isLoadingStateValid()) {
+    slimeknights.tconstruct.TConstruct.getModEventBus().addListener(EventPriority.NORMAL, false, ModelEvent.RegisterAdditional.class, event -> {
+      if(!ModLoader.hasErrors()) {
         INSTANCE.onReloadSafe(Minecraft.getInstance().getResourceManager());
       }
     });
@@ -87,7 +85,7 @@ public class MaterialRenderInfoLoader implements IEarlySafeManagerReloadListener
       }
     }
     // no variant or the variant was not found? default to the material
-    return Optional.ofNullable(renderInfos.get(variantId.getId()));
+    return Optional.ofNullable(renderInfos.get(variantId.getMaterialId()));
   }
 
   /** Gets the variant for the given render info path */
@@ -133,15 +131,13 @@ public class MaterialRenderInfoLoader implements IEarlySafeManagerReloadListener
         // parse it into material render info
         map.put(id, RegistryDataMapLoader.parseData("Material Render Info", jsons, location, json, null, MaterialRenderInfo.LOADABLE, createContext(id)));
       } catch (IllegalArgumentException | JsonParseException ex) {
-        log.error("Couldn't parse data file {} from {}", id, location, ex);
+        log.error("Couldn't parse data file {} from {}", id.getMaterialId(), location, ex);
       }
     }
 
     // store the list immediately, otherwise it is not in place in time for models to load
     this.renderInfos = Map.copyOf(map);
-    if (log.isDebugEnabled() && Config.COMMON.debugLogResourceValues.get()) {
-      log.debug("Loaded material render infos: {}", Util.toIndentedStringList(map.keySet().stream().sorted(Comparator.comparing(MaterialVariantId::getId).thenComparing(MaterialVariantId::getVariant)).toList()));
-    }
+    log.debug("Loaded material render infos: {}", Util.toIndentedStringList(map.keySet().stream().sorted(Comparator.comparing(MaterialVariantId::getMaterialId).thenComparing(MaterialVariantId::getVariant)).toList()));
     log.info("{} material render infos loaded", map.size());
   }
 

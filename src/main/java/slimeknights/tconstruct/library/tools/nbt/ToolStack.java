@@ -38,6 +38,7 @@ import slimeknights.tconstruct.library.utils.RestrictedCompoundTag;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -118,6 +119,8 @@ public class ToolStack implements IToolStackView {
   /** Data object containing modifier data that is recreated when the modifier list changes */
   @Nullable
   private IModDataView volatileModData;
+  @Nullable
+  private ItemStack sourceStack;
 
   /* Creating */
   private ToolStack(Item item, ToolDefinition definition, CompoundTag nbt) {
@@ -149,7 +152,8 @@ public class ToolStack implements IToolStackView {
     ToolDefinition definition = item instanceof IModifiable mod
                                 ? mod.getToolDefinition()
                                 : ToolDefinition.EMPTY;
-    CompoundTag nbt = stack.getTag();
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    CompoundTag nbt = customData != null ? customData.copyTag() : null;
     if (nbt == null) {
       nbt = new CompoundTag();
       if (!copyNbt) {
@@ -157,7 +161,7 @@ public class ToolStack implements IToolStackView {
         if (definition != ToolDefinition.EMPTY) {
           // bypass the setter as vanilla insists on setting damage values there, along with verifying the tag
           // both are things we will do later, doing so now causes us to recursively call this method (though not infinite)
-          stack.tag = nbt;
+          net.minecraft.world.item.component.CustomData.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, nbt);
           // no need to set the damage value, if the tool wanted it set the stack would have had a tag already
         } else {
           switch (Config.COMMON.logInvalidToolStack.get()) {
@@ -171,7 +175,11 @@ public class ToolStack implements IToolStackView {
     } else if (copyNbt) {
       nbt = nbt.copy();
     }
-    return from(item, definition, nbt);
+    ToolStack tool = from(item, definition, nbt);
+    if (!copyNbt) {
+      tool.sourceStack = stack;
+    }
+    return tool;
   }
 
   /**
@@ -244,21 +252,38 @@ public class ToolStack implements IToolStackView {
   /** Updates the tool stack instance to match the given item stack */
   @Internal
   public void refreshTag(ItemStack stack) {
-    CompoundTag tag = stack.getTag();
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    CompoundTag tag = customData != null ? customData.copyTag() : null;
     if (tag == null) {
       tag = new CompoundTag();
-      stack.setTag(tag);
+      net.minecraft.world.item.component.CustomData.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, tag);
     }
     this.nbt = tag;
     clearCache();
+  }
+
+  /** Syncs in-memory NBT, damage, and max damage back to source ItemStack if present */
+  public void syncStack() {
+    if (sourceStack != null) {
+      net.minecraft.world.item.component.CustomData.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, sourceStack, nbt);
+      int durability = getStats().getInt(ToolStats.DURABILITY);
+      if (durability > 0) {
+        sourceStack.set(net.minecraft.core.component.DataComponents.MAX_DAMAGE, durability);
+      }
+      sourceStack.set(net.minecraft.core.component.DataComponents.DAMAGE, getDamage());
+    }
   }
 
   /** Creates an item stack from this tool stack */
   public ItemStack createStack(int size) {
     ItemStack stack = new ItemStack(item, size);
     // set the raw tag to avoid going through verifyTagAfterLoad and rebuilding stats again
-    stack.tag = nbt;
-    // damage value is already enforced via the stack creation above
+    net.minecraft.world.item.component.CustomData.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, nbt);
+    int durability = getStats().getInt(ToolStats.DURABILITY);
+    if (durability > 0) {
+      stack.set(net.minecraft.core.component.DataComponents.MAX_DAMAGE, durability);
+    }
+    stack.set(net.minecraft.core.component.DataComponents.DAMAGE, getDamage());
     return stack;
   }
 
@@ -287,15 +312,16 @@ public class ToolStack implements IToolStackView {
       throw new IllegalArgumentException("Wrong item in stack");
     }
     // set the raw tag to avoid going through verifyTagAfterLoad and rebuilding stats again
-    if (copyNBT) {
-      stack.tag = nbt.copy();
-    } else {
-      stack.tag = nbt;
+    CompoundTag tagToSet = copyNBT ? nbt.copy() : nbt;
+    if (!tagToSet.contains(TAG_DAMAGE, Tag.TAG_ANY_NUMERIC) && stack.getItem().isDamageable(stack)) {
+      tagToSet.putInt(TAG_DAMAGE, 0);
     }
-    // ensure the damage value is set on the stack for the sake of stacking, since bypassing the vanilla setter skips that
-    if (!stack.tag.contains(TAG_DAMAGE, Tag.TAG_ANY_NUMERIC) && stack.getItem().isDamageable(stack)) {
-      stack.tag.putInt(TAG_DAMAGE, 0);
+    net.minecraft.world.item.component.CustomData.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, stack, tagToSet);
+    int durability = getStats().getInt(ToolStats.DURABILITY);
+    if (durability > 0) {
+      stack.set(net.minecraft.core.component.DataComponents.MAX_DAMAGE, durability);
     }
+    stack.set(net.minecraft.core.component.DataComponents.DAMAGE, getDamage());
     return stack;
   }
 
@@ -324,7 +350,9 @@ public class ToolStack implements IToolStackView {
   public boolean isSameStack(ItemStack stack) {
     // tool stacks share NBT with their stack instance unless copied so changes are mirrored
     // item check allows empty as empty stacks change their item to air. This won't false positive with ItemStack#EMPTY as the NBT won't match.
-    return nbt == stack.getTag() && (stack.isEmpty() || stack.getItem() == item);
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    CompoundTag otherNbt = customData != null ? customData.copyTag() : null;
+    return Objects.equals(nbt, otherNbt) && (stack.isEmpty() || stack.getItem() == item);
   }
 
 
@@ -359,7 +387,7 @@ public class ToolStack implements IToolStackView {
   /**
    * Breaks the tool
    */
-  protected void breakTool() {
+  public void breakTool() {
     setDamage(getStats().getInt(ToolStats.DURABILITY));
   }
 
@@ -409,7 +437,7 @@ public class ToolStack implements IToolStackView {
   @Override
   public void setDamage(int damage) {
     int durability = getStats().getInt(ToolStats.DURABILITY);
-    if (damage >= durability) {
+    if (durability > 0 && damage >= durability) {
       damage = Math.max(0, durability);
       setBrokenRaw(true);
     } else {
@@ -417,6 +445,7 @@ public class ToolStack implements IToolStackView {
     }
     this.damage = damage;
     nbt.putInt(TAG_DAMAGE, damage);
+    syncStack();
   }
 
   /* Stats */
@@ -773,6 +802,7 @@ public class ToolStack implements IToolStackView {
     for (ModifierEntry entry : modifierList) {
       entry.getHook(ModifierHooks.RAW_DATA).addRawData(this, entry, getRestrictedNBT());
     }
+    syncStack();
   }
 
 
@@ -784,7 +814,8 @@ public class ToolStack implements IToolStackView {
    * @return  True if initialized
    */
   public static boolean isInitialized(ItemStack stack) {
-    CompoundTag tag = stack.getTag();
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    CompoundTag tag = customData != null ? customData.copyTag() : null;
     return tag != null && isInitialized(tag);
   }
 
@@ -817,7 +848,8 @@ public class ToolStack implements IToolStackView {
     if (!toolDefinition.isDataLoaded()) {
       return;
     }
-    CompoundTag tag = stack.getTag();
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    CompoundTag tag = customData != null ? customData.copyTag() : null;
     // already initialized? nothing to do
     if (tag != null && isInitialized(tag)) {
       return;

@@ -3,7 +3,7 @@ package slimeknights.tconstruct.library.client.materials;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import slimeknights.mantle.client.ResourceColorManager;
 import slimeknights.mantle.data.listener.ISafeManagerReloadListener;
 import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
@@ -54,7 +54,7 @@ public class MaterialTooltipCache {
         return Component.translatable(variantKey);
       }
     }
-    return Component.translatable(getKey(id.getId()));
+    return Component.translatable(getKey(id.getMaterialId()));
   };
 
   /** Gets the key name for a given material variant, prevents need to create a lot of extra strings */
@@ -71,7 +71,7 @@ public class MaterialTooltipCache {
         return color;
       }
     }
-    return ResourceColorManager.getTextColor(getKey(id.getId()));
+    return ResourceColorManager.getTextColor(getKey(id.getMaterialId()));
   };
 
   /** Gets the color for a given material ID */

@@ -80,10 +80,13 @@ public record DamageToCapacityModule(IJsonPredicate<DamageSource> source, Leveli
     return new Builder(source);
   }
 
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder extends CapacitySourceModule.Builder<Builder> implements LevelingValue.Builder<DamageToCapacityModule>  {
     private final IJsonPredicate<DamageSource> source;
     private boolean reduceDamage = false;
+
+    public Builder(IJsonPredicate<DamageSource> source) {
+      this.source = source;
+    }
 
     /** Sets the module to reduce damage based on the capacity gained */
     public Builder reduceDamage() {

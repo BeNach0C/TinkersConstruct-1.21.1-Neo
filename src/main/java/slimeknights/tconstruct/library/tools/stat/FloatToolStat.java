@@ -27,8 +27,8 @@ public class FloatToolStat implements INumericToolStat<Float> {
   @Getter
   private final ToolStatId name;
   /** Color for this stat type */
-  @Getter
   private final TextColor color;
+  public TextColor getColor() { return color; }
   /** Gets the default value for this stat */
   private final float defaultValue;
   /** Min value for this stat */

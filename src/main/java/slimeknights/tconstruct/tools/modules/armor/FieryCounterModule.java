@@ -27,7 +27,7 @@ public record FieryCounterModule(LevelingValue chance, LevelingValue constant, L
 
   /** Creates a new builder instance */
   public static CounterModule.Builder<FieryCounterModule> builder() {
-    return new CounterModule.Builder<>(FieryCounterModule::new);
+    return new CounterModule.Builder<FieryCounterModule>(FieryCounterModule::new);
   }
 
   @Override
@@ -37,6 +37,6 @@ public record FieryCounterModule(LevelingValue chance, LevelingValue constant, L
 
   @Override
   public void applyEffect(IToolStackView tool, ModifierEntry modifier, float value, EquipmentContext context, Entity attacker, DamageSource source, float damageDealt) {
-    attacker.setSecondsOnFire(Math.round(value));
+    attacker.igniteForSeconds(Math.round(value));
   }
 }

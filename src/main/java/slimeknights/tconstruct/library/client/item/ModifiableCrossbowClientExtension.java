@@ -20,9 +20,9 @@ public class ModifiableCrossbowClientExtension extends ModifiableItemClientExten
   @Override
   public ArmPose getArmPose(LivingEntity living, InteractionHand hand, ItemStack stack) {
     if (!living.swinging) {
-      CompoundTag tag = stack.getTag();
+      net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
       // must have ammo in persistent data
-      if (tag != null && tag.getCompound(ToolStack.TAG_PERSISTENT_MOD_DATA).contains(ModifiableCrossbowItem.KEY_CROSSBOW_AMMO.toString(), CompoundTag.TAG_COMPOUND)) {
+      if (customData != null && customData.copyTag().getCompound(ToolStack.TAG_PERSISTENT_MOD_DATA).contains(ModifiableCrossbowItem.KEY_CROSSBOW_AMMO.toString(), CompoundTag.TAG_COMPOUND)) {
         return ArmPose.CROSSBOW_HOLD;
       }
     }

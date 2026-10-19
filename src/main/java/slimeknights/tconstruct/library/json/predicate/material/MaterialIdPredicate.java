@@ -17,7 +17,7 @@ public record MaterialIdPredicate(Set<MaterialId> ids) implements MaterialPredic
 
   @Override
   public boolean matches(MaterialVariantId variant) {
-    return ids.contains(variant.getId());
+    return ids.contains(variant.getMaterialId());
   }
 
   @Override

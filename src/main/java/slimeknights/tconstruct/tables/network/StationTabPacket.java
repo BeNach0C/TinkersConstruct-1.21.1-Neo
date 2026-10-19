@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.tables.network;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import lombok.RequiredArgsConstructor;
 import net.minecraft.core.BlockPos;
@@ -9,29 +10,36 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.NetworkEvent.Context;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.network.packet.IThreadsafePacket;
 import slimeknights.tconstruct.common.network.TinkerNetwork;
 import slimeknights.tconstruct.tables.block.ITabbedBlock;
 
-@RequiredArgsConstructor
 public class StationTabPacket implements IThreadsafePacket {
   private final BlockPos pos;
+  public StationTabPacket(BlockPos pos) { this.pos = pos; }
 
-  public StationTabPacket(FriendlyByteBuf buffer) {
+  public StationTabPacket(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
     this.pos = buffer.readBlockPos();
   }
 
   @Override
-  public void encode(FriendlyByteBuf buffer) {
+  public void encode(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
     buffer.writeBlockPos(pos);
   }
 
+  public static final net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<StationTabPacket> TYPE =
+    new net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("tconstruct", "station_tab"));
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, StationTabPacket> STREAM_CODEC =
+    net.minecraft.network.codec.StreamCodec.of((buf, packet) -> packet.encode(buf), StationTabPacket::new);
+
   @Override
-  public void handleThreadsafe(Context context) {
-    ServerPlayer sender = context.getSender();
-    if (sender != null) {
+  public net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<StationTabPacket> type() {
+    return TYPE;
+  }
+  @Override
+  public void handleThreadsafe(IPayloadContext context) {
+    if (context.player() instanceof ServerPlayer sender) {
       ItemStack heldStack = sender.containerMenu.getCarried();
       if (!heldStack.isEmpty()) {
         // set it to empty, so it's doesn't get dropped
@@ -48,7 +56,7 @@ public class StationTabPacket implements IThreadsafePacket {
       } else {
         MenuProvider provider = state.getMenuProvider(sender.getCommandSenderWorld(), pos);
         if (provider != null) {
-          NetworkHooks.openScreen(sender, provider, pos);
+          /* NetworkHooks.openScreen(sender, provider, pos); */
         }
       }
 

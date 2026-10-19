@@ -46,7 +46,7 @@ public record MaterialPredicateField<P>(String key, Function<P, IJsonPredicate<M
           MaterialVariantId id = variantPredicate.values().iterator().next();
           // map empty variant to special default variant string
           if (id.getVariant().isEmpty()) {
-            id = MaterialVariantId.create(id.getId(), MaterialVariantId.DEFAULT_VARIANT);
+            id = MaterialVariantId.create(id.getMaterialId(), MaterialVariantId.DEFAULT_VARIANT);
           }
           json.addProperty(key, id.toString());
           return;

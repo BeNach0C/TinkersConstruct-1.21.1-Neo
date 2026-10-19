@@ -1,10 +1,12 @@
 package slimeknights.tconstruct.tools.modifiers.traits.melee;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import slimeknights.mantle.client.TooltipKey;

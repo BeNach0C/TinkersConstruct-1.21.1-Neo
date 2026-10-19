@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -22,7 +23,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.fluid.FluidTransferHelper;
 import slimeknights.tconstruct.library.recipe.FluidValues;
 import slimeknights.tconstruct.library.utils.NBTTags;
@@ -41,6 +42,7 @@ public class SearedTankBlock extends SearedBlock implements ITankBlock, EntityBl
 
   @Getter
   private final int capacity;
+    public int getCapacity() { return capacity; }
   private final PushReaction pushReaction;
   public SearedTankBlock(Properties properties, int capacity, PushReaction pushReaction) {
     super(properties, true);
@@ -76,13 +78,12 @@ public class SearedTankBlock extends SearedBlock implements ITankBlock, EntityBl
     return new TankBlockEntity(pPos, pState, this);
   }
 
-  @Deprecated
   @Override
-  public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+  protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
     if (FluidTransferHelper.interactWithTank(world, pos, player, hand, hit)) {
-      return InteractionResult.SUCCESS;
+      return ItemInteractionResult.SUCCESS;
     }
-    return super.use(state, world, pos, player, hand, hit);
+    return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
   }
 
   /** Helper for setting the light level on placement */
@@ -103,9 +104,9 @@ public class SearedTankBlock extends SearedBlock implements ITankBlock, EntityBl
 
   @Override
   public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
-    if (nbt != null && world.getBlockEntity(pos) instanceof TankBlockEntity tank) {
-      tank.updateTank(nbt.getCompound(NBTTags.TANK));
+    net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    if (customData != null && world.getBlockEntity(pos) instanceof TankBlockEntity tank) {
+      tank.updateTank(customData.copyTag().getCompound(NBTTags.TANK));
     }
     super.setPlacedBy(world, pos, state, placer, stack);
   }
@@ -123,19 +124,23 @@ public class SearedTankBlock extends SearedBlock implements ITankBlock, EntityBl
   }
 
   @Override
-  public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter world, BlockPos pos, Player player) {
-    return ITankBlockEntity.getCloneItemStack(new ItemStack(this), world, pos);
+  public ItemStack getCloneItemStack(net.minecraft.world.level.LevelReader world, BlockPos pos, BlockState state) {
+    return ITankBlockEntity.getCloneItemStack(new ItemStack(this), (BlockGetter) world, pos);
   }
 
-  @AllArgsConstructor
   public enum TankType implements StringRepresentable {
     FUEL_TANK(TankBlockEntity.DEFAULT_CAPACITY),
     FUEL_GAUGE(TankBlockEntity.DEFAULT_CAPACITY),
     INGOT_TANK(FluidValues.INGOT * 48),
     INGOT_GAUGE(FluidValues.INGOT * 48);
 
-    @Getter
     private final int capacity;
+
+    TankType(int capacity) {
+      this.capacity = capacity;
+    }
+
+    public int getCapacity() { return capacity; }
 
     @Override
     public String getSerializedName() {

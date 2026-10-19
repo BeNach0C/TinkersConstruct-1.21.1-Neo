@@ -24,8 +24,8 @@ import java.util.List;
 /**
  * Default implementation of modifier worktable recipes, taking a list of inputs
  */
-@RequiredArgsConstructor
 public abstract class AbstractWorktableRecipe implements IModifierWorktableRecipe {
+  @Override public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider p_267052_) { return ItemStack.EMPTY; }
   public static final Ingredient DEFAULT_TOOLS = Ingredient.of(TinkerTags.Items.MODIFIABLE);
   protected static final LoadableField<Ingredient,AbstractWorktableRecipe> TOOL_FIELD = IngredientLoadable.DISALLOW_EMPTY.defaultField("tools", DEFAULT_TOOLS, true, r -> r.toolRequirement);
   protected static final LoadableField<List<SizedIngredient>,AbstractWorktableRecipe> INPUTS_FIELD = SizedIngredient.LOADABLE.list(1).requiredField("inputs", r -> r.inputs);
@@ -34,6 +34,7 @@ public abstract class AbstractWorktableRecipe implements IModifierWorktableRecip
   private final ResourceLocation id;
   protected final Ingredient toolRequirement;
   protected final List<SizedIngredient> inputs;
+  public AbstractWorktableRecipe(ResourceLocation id, Ingredient toolRequirement, List<SizedIngredient> inputs) { this.id = id; this.toolRequirement = toolRequirement; this.inputs = inputs; }
 
   /* JEI */
   @Nullable

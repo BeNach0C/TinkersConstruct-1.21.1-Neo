@@ -7,10 +7,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LootingLevelEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
+import net.neoforged.neoforge.common.NeoForge;
+// import net.neoforged.neoforge.event.entity.living.LootingLevelEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
+import net.neoforged.bus.api.EventPriority;
 import slimeknights.tconstruct.common.TinkerDamageTypes;
 import slimeknights.tconstruct.common.TinkerEffect;
 import slimeknights.tconstruct.common.TinkerTags;
@@ -46,8 +46,9 @@ public class ModifierLootingHandler {
     }
     init = true;
     // we overwrite looting values from vanilla in a couple cases, but mod effects that globally boost looting should still boost us
-    MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGH, ModifierLootingHandler::onLooting);
-    MinecraftForge.EVENT_BUS.addListener(ModifierLootingHandler::onLeaveServer);
+    // TODO 1.21: Port looting bonus to 1.21 data-driven enchantments / loot modifier hooks
+    // NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, ModifierLootingHandler::onLooting);
+    NeoForge.EVENT_BUS.addListener(ModifierLootingHandler::onLeaveServer);
   }
 
   /**
@@ -68,7 +69,7 @@ public class ModifierLootingHandler {
     return entity != null ? LOOTING_OFFHAND.getOrDefault(entity.getUUID(), EquipmentSlot.MAINHAND) : EquipmentSlot.MAINHAND;
   }
 
-  /** Applies the looting bonus for modifiers */
+  /*
   private static void onLooting(LootingLevelEvent event) {
     // must be an attacker with our tool
     DamageSource damageSource = event.getDamageSource();
@@ -99,7 +100,7 @@ public class ModifierLootingHandler {
         // no modifiers means its not a projectile we fired, so just defer to dumb vanilla behavior of whatever looting
         // since we don't set the enchantment on our tools, our looting modifiers won't set anything here anyways
         if (!modifiers.isEmpty()) {
-          ModDataNBT persistentData = direct.getCapability(PersistentDataCapability.CAPABILITY).orElseGet(ModDataNBT::new);
+          ModDataNBT persistentData = PersistentDataCapability.get(direct);
           level = LootingModifierHook.getLooting(new DummyToolStack(Items.AIR, modifiers, persistentData), context, 0);
         }
       } else {
@@ -123,6 +124,7 @@ public class ModifierLootingHandler {
       event.setLootingLevel(Math.max(level, 0));
     }
   }
+  */
 
   /** Called when a player leaves the server to clear the face */
   private static void onLeaveServer(PlayerLoggedOutEvent event) {

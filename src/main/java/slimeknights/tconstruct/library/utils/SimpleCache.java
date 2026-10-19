@@ -10,10 +10,11 @@ import java.util.function.Function;
  * Simple implementation of a clearable hash map backed cache
  * @see net.minecraft.Util#memoize(Function)
  */
-@RequiredArgsConstructor
+
 public class SimpleCache<K,V> implements Function<K,V> {
   private final Map<K,V> cache = new ConcurrentHashMap<>();
   private final Function<K,V> ifAbsent;
+  public SimpleCache(Function<K,V> ifAbsent) { this.ifAbsent = ifAbsent; }
 
   @Override
   public V apply(K key) {

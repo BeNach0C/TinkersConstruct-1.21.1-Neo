@@ -23,13 +23,17 @@ public class EquipmentChangeContext extends EquipmentContext {
   @Nullable @Getter
   private final IToolStackView originalTool;
 
+  public net.minecraft.world.entity.EquipmentSlot getChangedSlot() { return changedSlot; }
+  public net.minecraft.world.item.ItemStack getOriginal() { return original; }
+  public net.minecraft.world.item.ItemStack getReplacement() { return replacement; }
+  public IToolStackView getOriginalTool() { return originalTool; }
   public EquipmentChangeContext(LivingEntity entity, EquipmentSlot changedSlot, ItemStack original, ItemStack replacement) {
     super(entity);
     this.changedSlot = changedSlot;
     this.original = original;
     this.replacement = replacement;
     this.originalTool = getToolStackIfModifiable(original);
-    int replacementIndex = changedSlot.getFilterFlag();
+    int replacementIndex = changedSlot.ordinal();
     toolsInSlots[replacementIndex] = getToolStackIfModifiable(replacement);
     fetchedTool[replacementIndex] = true;
   }

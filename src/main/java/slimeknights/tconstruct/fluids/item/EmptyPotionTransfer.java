@@ -5,11 +5,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.fluid.transfer.EmptyFluidWithNBTTransfer;
 import slimeknights.mantle.recipe.helper.FluidOutput;
 import slimeknights.mantle.recipe.helper.ItemOutput;
@@ -28,10 +28,13 @@ public class EmptyPotionTransfer extends EmptyFluidWithNBTTransfer {
 
   @Override
   protected FluidStack getFluid(ItemStack stack) {
-    if (PotionUtils.getPotion(stack) == Potions.WATER) {
+    PotionContents contents = stack.getOrDefault(net.minecraft.core.component.DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+    if (contents.is(Potions.WATER)) {
       return new FluidStack(Fluids.WATER, fluid.getAmount());
     }
-    return new FluidStack(fluid.get().getFluid(), fluid.getAmount(), stack.getTag());
+    FluidStack result = new FluidStack(fluid.get().getFluid(), fluid.getAmount());
+    result.set(net.minecraft.core.component.DataComponents.POTION_CONTENTS, contents);
+    return result;
   }
 
   @Override

@@ -1,10 +1,5 @@
 package slimeknights.tconstruct.library.recipe.ingredient;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntComparators;
-import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -15,8 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.common.crafting.AbstractIngredient;
-import net.minecraftforge.common.crafting.IIngredientSerializer;
+import net.neoforged.neoforge.common.crafting.ICustomIngredient;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.util.RegistryHelper;
 import slimeknights.tconstruct.TConstruct;
@@ -30,14 +24,13 @@ import java.util.stream.Stream;
 
 /** Item ingredient matching items with a block form in the given tag */
 @RequiredArgsConstructor
-public class BlockTagIngredient extends AbstractIngredient {
+public class BlockTagIngredient implements ICustomIngredient {
+  public static final ResourceLocation ID = TConstruct.getResource("block_tag");
   private final TagKey<Block> tag;
   @Nullable
   private Set<Item> matchingItems;
   @Nullable
   private ItemStack[] items;
-  @Nullable
-  private IntList stackingIds;
 
   @Override
   public boolean test(@Nullable ItemStack stack) {
@@ -49,18 +42,15 @@ public class BlockTagIngredient extends AbstractIngredient {
     return true;
   }
 
-  @Override
-  protected void invalidate() {
+  public void invalidate() {
     this.matchingItems = null;
     this.items = null;
-    this.stackingIds = null;
   }
 
   /** Gets the ordered matching items set */
   @SuppressWarnings("deprecation")
   private Set<Item> getMatchingItems() {
-    if (matchingItems == null || checkInvalidation()) {
-      markValid();
+    if (matchingItems == null) {
       matchingItems = RegistryHelper.getTagValueStream(BuiltInRegistries.BLOCK, tag)
                                     .map(Block::asItem)
                                     .filter(item -> item != Items.AIR)
@@ -70,63 +60,22 @@ public class BlockTagIngredient extends AbstractIngredient {
   }
 
   @Override
-  public ItemStack[] getItems() {
-    if (items == null || checkInvalidation()) {
-      markValid();
+  public Stream<ItemStack> getItems() {
+    if (items == null) {
       items = getMatchingItems().stream().map(ItemStack::new).toArray(ItemStack[]::new);
     }
-    return items;
+    return Arrays.stream(items);
   }
 
-  @SuppressWarnings("deprecation")
-  @Override
-  public IntList getStackingIds() {
-    if (stackingIds == null || checkInvalidation()) {
-      markValid();
-      Set<Item> items = getMatchingItems();
-      stackingIds = new IntArrayList(items.size());
-      for (Item item : items) {
-        stackingIds.add(BuiltInRegistries.ITEM.getId(item));
-      }
-      stackingIds.sort(IntComparators.NATURAL_COMPARATOR);
-    }
-    return stackingIds;
-  }
+  public static final net.neoforged.neoforge.common.crafting.IngredientType<BlockTagIngredient> TYPE = slimeknights.mantle.recipe.helper.LoadableIngredientSerializer.of(
+    json -> new BlockTagIngredient(Loadables.BLOCK_TAG.getIfPresent(json, "tag")),
+    (ing, json) -> json.add("tag", Loadables.BLOCK_TAG.serialize(ing.tag)),
+    buffer -> new BlockTagIngredient(Loadables.BLOCK_TAG.decode(buffer)),
+    (buffer, ing) -> Loadables.BLOCK_TAG.encode(buffer, ing.tag)
+  );
 
   @Override
-  public IIngredientSerializer<? extends Ingredient> getSerializer() {
-    return Serializer.INSTANCE;
-  }
-
-  @Override
-  public JsonElement toJson() {
-    JsonObject json = new JsonObject();
-    json.addProperty("type", Serializer.ID.toString());
-    json.add("tag", Loadables.BLOCK_TAG.serialize(tag));
-    return json;
-  }
-
-  /** Serializer instance */
-  public enum Serializer implements IIngredientSerializer<Ingredient> {
-    INSTANCE;
-
-    public static final ResourceLocation ID = TConstruct.getResource("block_tag");
-
-    @Override
-    public Ingredient parse(JsonObject json) {
-      return new BlockTagIngredient(Loadables.BLOCK_TAG.getIfPresent(json, "tag"));
-    }
-
-    @Override
-    public void write(FriendlyByteBuf buffer, Ingredient ingredient) {
-      // just write the item list, will become a vanilla ingredient client side
-      buffer.writeCollection(Arrays.asList(ingredient.getItems()), FriendlyByteBuf::writeItem);
-    }
-
-    @Override
-    public Ingredient parse(FriendlyByteBuf buffer) {
-      int size = buffer.readVarInt();
-      return Ingredient.fromValues(Stream.generate(() -> new Ingredient.ItemValue(buffer.readItem())).limit(size));
-    }
+  public net.neoforged.neoforge.common.crafting.IngredientType<?> getType() {
+    return TYPE;
   }
 }

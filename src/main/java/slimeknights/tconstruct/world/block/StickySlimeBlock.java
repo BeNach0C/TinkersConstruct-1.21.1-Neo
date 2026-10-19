@@ -15,10 +15,7 @@ public class StickySlimeBlock extends SlimeBlock {
     this.stickyPredicate = stickyPredicate;
   }
 
-  @Override
-  public boolean isSlimeBlock(BlockState state) {
-    return true;
-  }
+  
 
   @Override
   public boolean isStickyBlock(BlockState state) {

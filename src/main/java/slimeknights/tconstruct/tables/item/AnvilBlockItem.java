@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.tables.item;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -70,7 +71,7 @@ public class AnvilBlockItem extends MaterialBlockItem {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+  public void appendHoverText(ItemStack stack, Item.TooltipContext level, List<Component> tooltip, TooltipFlag flag) {
     // ditch the super call advanced tooltip material ID, we will handle it ourselves later
     this.getBlock().appendHoverText(stack, level, tooltip, flag);
     MaterialVariantId material = getMaterial(stack);

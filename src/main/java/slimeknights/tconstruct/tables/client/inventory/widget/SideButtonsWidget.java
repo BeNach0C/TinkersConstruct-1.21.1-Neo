@@ -39,6 +39,10 @@ public class SideButtonsWidget<T extends Button> implements Renderable, GuiEvent
     this.imageHeight = size(rows, buttonHeight);
   }
 
+    public int getLeftPos() { return leftPos; }
+  public int getTopPos() { return topPos; }
+  public int getImageWidth() { return imageWidth; }
+  public int getImageHeight() { return imageHeight; }
   public int guiRight() {
     return this.leftPos + this.imageWidth;
   }

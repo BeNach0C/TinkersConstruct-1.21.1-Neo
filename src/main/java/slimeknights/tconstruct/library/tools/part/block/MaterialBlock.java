@@ -33,7 +33,7 @@ public class MaterialBlock extends Block implements EntityBlock {
 
   @Override
   public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-    if (stack.hasTag()) {
+    if (stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA)) {
       MaterialVariantId material = IMaterialItem.getMaterialFromStack(stack);
       if (material != MaterialId.UNKNOWN && level.getBlockEntity(pos) instanceof MaterialBlockEntity be) {
         be.setMaterial(material);
@@ -41,9 +41,8 @@ public class MaterialBlock extends Block implements EntityBlock {
     }
   }
 
-  @Deprecated
   @Override
-  public ItemStack getCloneItemStack(BlockGetter level, BlockPos pos, BlockState state) {
+  public ItemStack getCloneItemStack(net.minecraft.world.level.LevelReader level, BlockPos pos, BlockState state) {
     ItemStack stack = new ItemStack(state.getBlock());
     if (level.getBlockEntity(pos) instanceof MaterialBlockEntity be) {
       stack = IMaterialItem.withMaterial(stack, be.getMaterial());

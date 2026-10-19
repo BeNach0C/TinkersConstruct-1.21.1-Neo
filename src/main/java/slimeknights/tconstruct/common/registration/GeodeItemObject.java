@@ -5,13 +5,14 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import slimeknights.mantle.registration.deferred.BlockDeferredRegister;
 import slimeknights.mantle.registration.object.ItemObject;
 import slimeknights.tconstruct.world.block.BuddingCrystalBlock;
@@ -33,7 +34,7 @@ public class GeodeItemObject extends ItemObject<Item> {
   private final Supplier<? extends Block> smallBud;
   private final Supplier<? extends Block> mediumBud;
   private final Supplier<? extends Block> largeBud;
-  public GeodeItemObject(RegistryObject<? extends Item> shard, BlockDeferredRegister register, MapColor color, SoundType blockSound, SoundEvent chimeSound, Map<BudSize,SoundType> clusterSounds, int baseLight, Properties props) {
+  public GeodeItemObject(DeferredHolder<Item, ? extends Item> shard, BlockDeferredRegister register, MapColor color, SoundType blockSound, SoundEvent chimeSound, Map<BudSize,SoundType> clusterSounds, int baseLight, Properties props) {
     super(shard);
     // allow the crystals to glow optionally
     IntFunction<ToIntFunction<BlockState>> light = extra -> {

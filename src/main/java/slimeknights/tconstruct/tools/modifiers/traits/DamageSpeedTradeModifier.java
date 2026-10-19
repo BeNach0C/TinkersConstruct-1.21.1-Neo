@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.tools.modifiers.traits;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -9,9 +11,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
+import net.minecraft.world.item.Item.TooltipContext;
+import net.neoforged.neoforge.common.util.Lazy;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.BreakSpeed;
 import slimeknights.mantle.client.TooltipKey;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.TinkerTags;
@@ -41,7 +43,7 @@ public class DamageSpeedTradeModifier extends Modifier implements AttributesModi
   private final float multiplier;
   private final Lazy<UUID> uuid = Lazy.of(() -> UUID.nameUUIDFromBytes(getId().toString().getBytes()));
   private final Lazy<String> attributeName = Lazy.of(() -> {
-    ResourceLocation id = getId();
+    ResourceLocation id = getId().getId();
     return id.getPath() + "." + id.getNamespace() + ".attack_damage";
   });
 
@@ -78,7 +80,7 @@ public class DamageSpeedTradeModifier extends Modifier implements AttributesModi
       double boost = getMultiplier(tool, modifier.getLevel());
       if (boost != 0) {
         // half boost for attack speed, its
-        consumer.accept(Attributes.ATTACK_DAMAGE, new AttributeModifier(uuid.get(), attributeName.get(), boost / 2, Operation.MULTIPLY_TOTAL));
+        consumer.accept(Attributes.ATTACK_DAMAGE.value(), new AttributeModifier(getId().getId(), boost / 2, Operation.ADD_MULTIPLIED_TOTAL));
       }
     }
   }

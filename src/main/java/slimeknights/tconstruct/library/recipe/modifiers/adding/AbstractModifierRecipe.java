@@ -107,7 +107,7 @@ public abstract class AbstractModifierRecipe implements ITinkerStationRecipe, ID
   }
 
   @Override
-  public abstract RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access);
+  public abstract RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access);
 
   @Override
   public int shrinkToolSlotBy() {
@@ -202,7 +202,7 @@ public abstract class AbstractModifierRecipe implements ITinkerStationRecipe, ID
     // add variant info for the sake of rebalanced
     ModDataNBT persistentData = new ModDataNBT();
     if (!variant.isEmpty()) {
-      persistentData.putString(result.getId(), variant);
+      persistentData.putString(result.getId().getId(), variant);
     }
     // build volatile data, will read that for slot info
     ToolDataNBT volatileData = new ToolDataNBT();

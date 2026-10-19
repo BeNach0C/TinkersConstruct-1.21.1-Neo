@@ -10,59 +10,40 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.data.DatapackBuiltinEntriesProvider;
-import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.MissingMappingsEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import slimeknights.mantle.registration.RegistrationHelper;
 import slimeknights.tconstruct.common.TinkerModule;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.common.config.Config;
-import slimeknights.tconstruct.common.data.AdvancementsProvider;
-import slimeknights.tconstruct.common.data.ConfigurationDataProvider;
-import slimeknights.tconstruct.common.data.DamageTypeProvider;
-import slimeknights.tconstruct.common.data.advancement.FunctionProvider;
-import slimeknights.tconstruct.common.data.loot.GlobalLootModifiersProvider;
-import slimeknights.tconstruct.common.data.loot.LootTableInjectionProvider;
-import slimeknights.tconstruct.common.data.loot.TConstructLootTableProvider;
-import slimeknights.tconstruct.common.data.tags.BiomeTagProvider;
-import slimeknights.tconstruct.common.data.tags.BlockEntityTypeTagProvider;
-import slimeknights.tconstruct.common.data.tags.BlockTagProvider;
-import slimeknights.tconstruct.common.data.tags.CreativeTabTagProvider;
-import slimeknights.tconstruct.common.data.tags.DamageTypeTagProvider;
-import slimeknights.tconstruct.common.data.tags.EnchantmentTagProvider;
-import slimeknights.tconstruct.common.data.tags.EntityTypeTagProvider;
-import slimeknights.tconstruct.common.data.tags.FluidTagProvider;
-import slimeknights.tconstruct.common.data.tags.InstrumentTagProvider;
-import slimeknights.tconstruct.common.data.tags.ItemTagProvider;
-import slimeknights.tconstruct.common.data.tags.MenuTypeTagProvider;
-import slimeknights.tconstruct.common.data.tags.PotionTagProvider;
 import slimeknights.tconstruct.common.network.TinkerNetwork;
 import slimeknights.tconstruct.fluids.TinkerFluids;
 import slimeknights.tconstruct.gadgets.TinkerGadgets;
 import slimeknights.tconstruct.library.TinkerItemDisplays;
 import slimeknights.tconstruct.library.materials.MaterialRegistry;
+import slimeknights.tconstruct.library.tools.capability.PersistentDataCapability;
+import slimeknights.tconstruct.library.tools.capability.TinkerDataCapability;
 import slimeknights.tconstruct.library.tools.capability.TinkerDataCapability.ComputableDataKey;
 import slimeknights.tconstruct.library.tools.capability.TinkerDataCapability.TinkerDataKey;
 import slimeknights.tconstruct.library.tools.definition.ToolDefinitionLoader;
 import slimeknights.tconstruct.library.tools.layout.StationSlotLayoutLoader;
 import slimeknights.tconstruct.library.utils.Util;
-import slimeknights.tconstruct.plugin.DietPlugin;
-import slimeknights.tconstruct.plugin.DummmmmmyPlugin;
-import slimeknights.tconstruct.plugin.ImmersiveEngineeringPlugin;
-import slimeknights.tconstruct.plugin.craftingtweaks.CraftingTweaksPlugin;
-import slimeknights.tconstruct.plugin.jsonthings.JsonThingsPlugin;
+// import slimeknights.tconstruct.plugin.DietPlugin;
+// import slimeknights.tconstruct.plugin.DummmmmmyPlugin;
+// import slimeknights.tconstruct.plugin.ImmersiveEngineeringPlugin;
+// import slimeknights.tconstruct.plugin.craftingtweaks.CraftingTweaksPlugin;
+// import slimeknights.tconstruct.plugin.jsonthings.JsonThingsPlugin;
 import slimeknights.tconstruct.shared.TinkerAttributes;
 import slimeknights.tconstruct.shared.TinkerClient;
 import slimeknights.tconstruct.shared.TinkerCommons;
@@ -73,10 +54,8 @@ import slimeknights.tconstruct.tables.TinkerTables;
 import slimeknights.tconstruct.tools.TinkerModifiers;
 import slimeknights.tconstruct.tools.TinkerToolParts;
 import slimeknights.tconstruct.tools.TinkerTools;
-import slimeknights.tconstruct.tools.data.material.TrimMaterialProvider;
 import slimeknights.tconstruct.world.TinkerStructures;
 import slimeknights.tconstruct.world.TinkerWorld;
-import slimeknights.tconstruct.world.data.WorldgenProvider;
 
 import java.util.Locale;
 import java.util.Random;
@@ -91,7 +70,7 @@ import java.util.function.Supplier;
  */
 
 @Mod(TConstruct.MOD_ID)
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class TConstruct {
 
   public static final String MOD_ID = "tconstruct";
@@ -100,43 +79,51 @@ public class TConstruct {
 
   /* Instance of this mod, used for grabbing prototype fields */
   public static TConstruct instance;
+  private static IEventBus modEventBus;
 
-  public TConstruct() {
+  public static IEventBus getModEventBus() {
+    return modEventBus;
+  }
+
+  public TConstruct(IEventBus bus, net.neoforged.fml.ModContainer modContainer) {
     instance = this;
+    modEventBus = bus;
 
-    Config.init();
+    Config.init(modContainer);
     TinkerItemDisplays.init();
     MaterialRegistry.init();
 
     // initialize modules, done this way rather than with annotations to give us control over the order
-    MinecraftForge.EVENT_BUS.addListener(TConstruct::missingMappings);
-    IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
     // base
-    bus.register(new TinkerCommons());
+    bus.register(new TinkerCommons(bus));
     bus.register(new TinkerMaterials());
-    bus.register(new TinkerEffects());
+    new TinkerEffects(bus);
     bus.register(new TinkerGadgets());
-    bus.register(new TinkerAttributes());
+    bus.register(new TinkerAttributes(bus));
     // world
     bus.register(new TinkerWorld());
-    bus.register(new TinkerStructures());
+    bus.register(new TinkerStructures(bus));
     // tools
     bus.register(new TinkerTables());
-    bus.register(new TinkerModifiers());
-    bus.register(new TinkerToolParts());
+    bus.register(new TinkerModifiers(bus));
+    new TinkerToolParts();
     bus.register(new TinkerTools());
     // smeltery
     bus.register(new TinkerSmeltery());
     bus.register(new TinkerFluids());
 
     // init deferred registers
-    TinkerModule.initRegisters();
+    TinkerModule.initRegisters(bus);
+    PersistentDataCapability.init(bus);
     TinkerNetwork.setup();
+    bus.addListener(net.neoforged.bus.api.EventPriority.NORMAL, false, net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent.class, TinkerNetwork.getInstance()::register);
+    bus.addListener(TinkerDataCapability::register);
     TinkerTags.init();
     // init client logic
-    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> TinkerClient::onConstruct);
+    if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) { slimeknights.tconstruct.shared.TinkerClient.onConstruct(); }
 
     // compat
+    /*
     ModList modList = ModList.get();
     if (modList.isLoaded("immersiveengineering")) {
       bus.register(new ImmersiveEngineeringPlugin());
@@ -153,6 +140,7 @@ public class TConstruct {
     if (modList.isLoaded("dummmmmmy")) {
       bus.register(new DummmmmmyPlugin());
     }
+    */
   }
 
   @SubscribeEvent
@@ -163,72 +151,10 @@ public class TConstruct {
 
   @SubscribeEvent
   static void gatherData(final GatherDataEvent event) {
-    DataGenerator generator = event.getGenerator();
-    PackOutput packOutput = generator.getPackOutput();
-    ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
-    CompletableFuture<Provider> lookupProvider = event.getLookupProvider();
-    boolean server = event.includeServer();
-
-    // its sometimes cleaner to splitup different registry sets to their own classes, combine them here into a single provider
-    RegistrySetBuilder registrySetBuilder = new RegistrySetBuilder();
-    DamageTypeProvider.register(registrySetBuilder);
-    WorldgenProvider.register(registrySetBuilder);
-    TrimMaterialProvider.register(registrySetBuilder);
-    DatapackBuiltinEntriesProvider datapackRegistryProvider = new DatapackBuiltinEntriesProvider(packOutput, lookupProvider, registrySetBuilder, Set.of(MOD_ID));
-    generator.addProvider(server, datapackRegistryProvider);
-
-    // tags
-    BlockTagProvider blockTags = new BlockTagProvider(packOutput, lookupProvider, existingFileHelper);
-    generator.addProvider(server, blockTags);
-    generator.addProvider(server, new ItemTagProvider(packOutput, lookupProvider, blockTags.contentsGetter(), existingFileHelper));
-    generator.addProvider(server, new FluidTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new EntityTypeTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new BlockEntityTypeTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new BiomeTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new EnchantmentTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new MenuTypeTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new PotionTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new CreativeTabTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new InstrumentTagProvider(packOutput, lookupProvider, existingFileHelper));
-    generator.addProvider(server, new DamageTypeTagProvider(packOutput, datapackRegistryProvider.getRegistryProvider(), existingFileHelper));
-
-    // other datagen
-    generator.addProvider(server, new TConstructLootTableProvider(packOutput));
-    generator.addProvider(server, new AdvancementsProvider(packOutput));
-    generator.addProvider(server, new GlobalLootModifiersProvider(packOutput));
-    generator.addProvider(server, new LootTableInjectionProvider(packOutput));
-    generator.addProvider(server, new ConfigurationDataProvider(packOutput));
-    generator.addProvider(server, new FunctionProvider(packOutput));
+    // Datagen providers are located in src/main/java_datagen
   }
 
-  /** Handles missing mappings of all types */
-  private static void missingMappings(MissingMappingsEvent event) {
-    RegistrationHelper.handleMissingMappings(event, MOD_ID, Registries.BLOCK, name -> switch (name) {
-      // silky jewel removal
-      case "silky_jewel_block" -> Blocks.EMERALD_BLOCK;
-      // piglin heads are vanilla
-      case "piglin_head" -> Blocks.PIGLIN_HEAD;
-      case "piglin_wall_head" -> Blocks.PIGLIN_WALL_HEAD;
-      default -> null;
-    });
-    RegistrationHelper.handleMissingMappings(event, MOD_ID, Registries.ITEM, name -> switch (name) {
-      // silky jewel removal
-      case "silky_jewel" -> Items.EMERALD;
-      case "silky_jewel_block" -> Items.EMERALD_BLOCK;
-      // piglin heads are vanilla
-      case "piglin_head" -> Items.PIGLIN_HEAD;
-      // round plate rename
-      case "round_plate" -> TinkerToolParts.adzeHead.get();
-      case "round_plate_cast" -> TinkerSmeltery.adzeHeadCast.get();
-      case "round_plate_sand_cast" -> TinkerSmeltery.adzeHeadCast.getSand();
-      case "round_plate_red_sand_cast" -> TinkerSmeltery.adzeHeadCast.getRedSand();
-      // slimesuit rework
-      case "slime_chestplate" -> TinkerTools.slimeWings.get();
-      default -> null;
-    });
-  }
-
-  /* Utils */
+    /* Utils */
 
   /**
    * Gets a resource location for Tinkers
@@ -237,7 +163,7 @@ public class TConstruct {
    */
   @SuppressWarnings("removal")
   public static ResourceLocation getResource(String name) {
-    return new ResourceLocation(MOD_ID, name);
+    return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
   }
 
   /**

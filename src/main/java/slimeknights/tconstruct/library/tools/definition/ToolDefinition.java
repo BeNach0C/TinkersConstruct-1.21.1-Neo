@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ItemLike;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import slimeknights.mantle.registration.object.IdAwareObject;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.module.ModuleHook;
@@ -15,16 +15,23 @@ import slimeknights.tconstruct.library.tools.definition.module.ToolHooks;
  * This class serves primarily as a container where the datapack tool data will be injected on datapack load
  * @see #create(ResourceLocation)
  */
-@RequiredArgsConstructor
 public class ToolDefinition implements IdAwareObject {
   /** Empty tool definition instance to prevent the need for null for a fallback */
   public static final ToolDefinition EMPTY = new ToolDefinition(TConstruct.getResource("empty"));
 
-  @Getter
   private final ResourceLocation id;
   /** Base data loaded from JSON, contains stats, traits, and starting slots */
   @Getter
   protected ToolDefinitionData data = ToolDefinitionData.EMPTY;
+
+  public ToolDefinition(ResourceLocation id) {
+    this.id = id;
+  }
+
+  @Override
+  public ResourceLocation getId() {
+    return this.id;
+  }
 
   /** Creates and registers a new tool definition */
   public static ToolDefinition create(ResourceLocation id) {
@@ -34,7 +41,7 @@ public class ToolDefinition implements IdAwareObject {
   }
 
   /** Creates and registers a new tool definition */
-  public static ToolDefinition create(RegistryObject<? extends ItemLike> item) {
+  public static ToolDefinition create(DeferredHolder<?, ? extends ItemLike> item) {
     return create(item.getId());
   }
 

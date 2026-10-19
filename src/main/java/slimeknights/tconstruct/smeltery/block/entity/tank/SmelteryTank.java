@@ -7,8 +7,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import slimeknights.mantle.block.entity.MantleBlockEntity;
 import slimeknights.tconstruct.common.network.TinkerNetwork;
 import slimeknights.tconstruct.library.fluid.IMultitankListChange;
@@ -291,12 +291,29 @@ public class SmelteryTank<T extends MantleBlockEntity & ISmelteryTankHandler> im
   }
 
   /** Writes the tank to NBT */
+  public List<FluidStack> getFluids() {
+    return fluids;
+  }
+
+  public int getContained() {
+    return contained;
+  }
+
+  private net.minecraft.core.HolderLookup.Provider getRegistries() {
+    return (parent != null && parent.getLevel() != null) ? parent.getLevel().registryAccess() : net.minecraft.core.RegistryAccess.EMPTY;
+  }
+
+  /** Writes the tank to NBT */
   public CompoundTag write(CompoundTag nbt) {
+    return write(getRegistries(), nbt);
+  }
+
+  public CompoundTag write(net.minecraft.core.HolderLookup.Provider provider, CompoundTag nbt) {
     ListTag list = new ListTag();
     for (FluidStack liquid : fluids) {
-      CompoundTag fluidTag = new CompoundTag();
-      liquid.writeToNBT(fluidTag);
-      list.add(fluidTag);
+      if (!liquid.isEmpty()) {
+        list.add(liquid.save(provider));
+      }
     }
     nbt.put(TAG_FLUIDS, list);
     nbt.putInt(TAG_CAPACITY, capacity);
@@ -305,12 +322,16 @@ public class SmelteryTank<T extends MantleBlockEntity & ISmelteryTankHandler> im
 
   /** Reads the tank from NBT */
   public void read(CompoundTag tag) {
+    read(getRegistries(), tag);
+  }
+
+  public void read(net.minecraft.core.HolderLookup.Provider provider, CompoundTag tag) {
     ListTag list = tag.getList(TAG_FLUIDS, Tag.TAG_COMPOUND);
     fluids.clear();
     contained = 0;
     for (int i = 0; i < list.size(); i++) {
       CompoundTag fluidTag = list.getCompound(i);
-      FluidStack fluid = FluidStack.loadFluidStackFromNBT(fluidTag);
+      FluidStack fluid = FluidStack.parseOptional(provider, fluidTag);
       if (!fluid.isEmpty()) {
         fluids.add(fluid);
         contained += fluid.getAmount();
@@ -318,7 +339,6 @@ public class SmelteryTank<T extends MantleBlockEntity & ISmelteryTankHandler> im
     }
     capacity = tag.getInt(TAG_CAPACITY);
   }
-
 
   /* Listeners */
 

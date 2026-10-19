@@ -21,7 +21,7 @@ import slimeknights.tconstruct.tools.TinkerModifiers;
 public class PlayerBeheadingRecipe extends SeveringRecipe {
   public static final RecordLoadable<PlayerBeheadingRecipe> LOADER = RecordLoadable.create(ContextKey.ID.requiredField(), BASE_CHANCE_FIELD, LOOTING_BONUS_FIELD, PlayerBeheadingRecipe::new);
   public PlayerBeheadingRecipe(ResourceLocation id, float baseChance, float lootingBonus) {
-    super(id, EntityIngredient.of(EntityType.PLAYER), ItemOutput.fromItem(Items.PLAYER_HEAD), baseChance, lootingBonus);
+    super(id, null, ItemOutput.fromItem(Items.PLAYER_HEAD), baseChance, lootingBonus);
   }
 
   @Override
@@ -34,7 +34,7 @@ public class PlayerBeheadingRecipe extends SeveringRecipe {
     ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
     if (entity instanceof Player) {
       GameProfile gameprofile = ((Player)entity).getGameProfile();
-      stack.getOrCreateTag().put("SkullOwner", NbtUtils.writeGameProfile(new CompoundTag(), gameprofile));
+      stack.set(net.minecraft.core.component.DataComponents.PROFILE, new net.minecraft.world.item.component.ResolvableProfile(gameprofile));
     }
     return stack;
   }

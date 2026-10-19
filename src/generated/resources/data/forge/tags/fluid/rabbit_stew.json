@@ -1,0 +1,9 @@
+﻿{
+    "values":  [
+                   "#tconstruct:rabbit_stew",
+                   {
+                       "id":  "#c:rabbit_stew",
+                       "required":  false
+                   }
+               ]
+}

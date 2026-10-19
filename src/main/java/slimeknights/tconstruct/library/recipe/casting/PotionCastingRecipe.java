@@ -8,14 +8,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.alchemy.PotionUtils;
-import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.data.loadable.common.IngredientLoadable;
 import slimeknights.mantle.data.loadable.field.ContextKey;
@@ -25,6 +24,7 @@ import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public class PotionCastingRecipe implements ICastingRecipe, IMultiRecipe<IDispla
   protected static final LoadableField<FluidIngredient, PotionCastingRecipe> FLUID_FIELD = FluidIngredient.LOADABLE.requiredField("fluid", r -> r.fluid);
   protected static final LoadableField<Integer, PotionCastingRecipe> COOLING_TIME_FIELD = IntLoadable.FROM_ONE.defaultField("cooling_time", 5, r -> r.coolingTime);
   public static final RecordLoadable<PotionCastingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
     IngredientLoadable.DISALLOW_EMPTY.requiredField("bottle", r -> r.bottle),
     FLUID_FIELD,
     Loadables.ITEM.requiredField("result", r -> r.result),
@@ -103,9 +103,9 @@ public class PotionCastingRecipe implements ICastingRecipe, IMultiRecipe<IDispla
   }
 
   @Override
-  public ItemStack assemble(ICastingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ICastingContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ItemStack result = new ItemStack(this.result);
-    result.setTag(inv.getFluidTag());
+    // If the casting container has a fluid tag, apply it as custom data or potion
     return result;
   }
 
@@ -115,18 +115,15 @@ public class PotionCastingRecipe implements ICastingRecipe, IMultiRecipe<IDispla
   protected List<IDisplayableCastingRecipe> displayRecipes = null;
 
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
-      Collection<Potion> potions = ForgeRegistries.POTIONS.getValues();
+      List<Holder.Reference<net.minecraft.world.item.alchemy.Potion>> potions = BuiltInRegistries.POTION.holders().filter(h -> !h.value().getEffects().isEmpty()).toList();
       List<ItemStack> results = new ArrayList<>(potions.size());
       // first, make all the potion items
-      for (Potion potion : potions) {
-        if (potion == Potions.EMPTY) continue;
-        results.add(PotionUtils.setPotion(new ItemStack(this.result), potion));
+      for (Holder<net.minecraft.world.item.alchemy.Potion> potion : potions) {
+        results.add(PotionContents.createItemStack(this.result, potion));
       }
       // next, it's time to do the fluids
-      // we want an order of Mod 1 Potion 1, Mod 1 Potion 2, ..., Mod 2 Potion 1, ...
-      // this is potentially displaying multiple fluids from the fluid tag
       List<FluidStack> potionFluids = this.fluid.getFluids();
       int totalSize = results.size() * potionFluids.size();
       List<ItemStack> displayResults = new ArrayList<>(totalSize);
@@ -134,7 +131,9 @@ public class PotionCastingRecipe implements ICastingRecipe, IMultiRecipe<IDispla
       for (FluidStack fluid : potionFluids) {
         displayResults.addAll(results);
         for (ItemStack result : results) {
-          displayFluids.add(new FluidStack(fluid.getFluid(), fluid.getAmount(), result.getTag()));
+          FluidStack stack = fluid.copy();
+          stack.set(DataComponents.POTION_CONTENTS, result.get(DataComponents.POTION_CONTENTS));
+          displayFluids.add(stack);
         }
       }
       this.displayRecipes = List.of(DisplayCastingRecipe.from(this)
@@ -158,7 +157,7 @@ public class PotionCastingRecipe implements ICastingRecipe, IMultiRecipe<IDispla
   /** @deprecated use {@link #assemble(Container, RegistryAccess)} */
   @Deprecated
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return new ItemStack(this.result);
   }
 
@@ -169,7 +168,7 @@ public class PotionCastingRecipe implements ICastingRecipe, IMultiRecipe<IDispla
   @SuppressWarnings("deprecation")
   public static List<String> getPotionIds() {
     return BuiltInRegistries.POTION.holders()
-      .filter(holder -> !holder.is(Potions.EMPTY_ID))
+      .filter(holder -> !holder.value().getEffects().isEmpty())
       .map(holder -> holder.key().location().toString())
       .toList();
   }

@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.tools.modules.interaction;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -9,10 +10,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.fluid.FluidTransferHelper;
 import slimeknights.mantle.util.LogicHelper;
@@ -62,7 +62,7 @@ public record TankInteractionModule(@Nullable InteractionSource source) implemen
       return InteractionResult.PASS;
     }
     Direction face = context.getClickedFace();
-    IFluidHandler cap = LogicHelper.orElseNull(te.getCapability(ForgeCapabilities.FLUID_HANDLER, face));
+    IFluidHandler cap = context.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, context.getClickedPos(), context.getClickedFace());
     if (cap == null) {
       return InteractionResult.PASS;
     }
@@ -93,8 +93,8 @@ public record TankInteractionModule(@Nullable InteractionSource source) implemen
         }
       } else {
         // filter drained to be the same as the current fluid
-        FluidStack drained = cap.drain(new FluidStack(fluidStack, TANK_HELPER.getCapacity(tool) - fluidStack.getAmount()), FluidAction.EXECUTE);
-        if (!drained.isEmpty() && drained.isFluidEqual(fluidStack)) {
+        FluidStack drained = cap.drain(fluidStack.copyWithAmount(TANK_HELPER.getCapacity(tool) - fluidStack.getAmount()), FluidAction.EXECUTE);
+        if (!drained.isEmpty() && net.neoforged.neoforge.fluids.FluidStack.isSameFluidSameComponents(drained, fluidStack)) {
           fluidStack.grow(drained.getAmount());
           TANK_HELPER.setFluid(tool, fluidStack);
           sound = FluidTransferHelper.getFillSound(fluidStack);

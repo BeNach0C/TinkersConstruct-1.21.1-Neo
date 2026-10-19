@@ -9,7 +9,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -77,7 +79,7 @@ public class FaucetBlock extends Block implements EntityBlock {
 
   @SuppressWarnings("deprecation")
   @Override
-  public boolean isPathfindable(BlockState state, BlockGetter worldIn, BlockPos pos, PathComputationType type) {
+  protected boolean isPathfindable(BlockState state, PathComputationType type) {
     return false;
   }
 
@@ -96,16 +98,30 @@ public class FaucetBlock extends Block implements EntityBlock {
     return BlockEntityHelper.serverTicker(pLevel, type, TinkerSmeltery.faucet.get(), FaucetBlockEntity.SERVER_TICKER);
   }
 
+  @Override
+  protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    if (player.isShiftKeyDown()) {
+      return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+    if (hand != InteractionHand.MAIN_HAND) {
+      return ItemInteractionResult.CONSUME;
+    }
+    if (world.getBlockEntity(pos) instanceof FaucetBlockEntity faucet) {
+      faucet.activate();
+    }
+    return ItemInteractionResult.sidedSuccess(world.isClientSide);
+  }
+
   @SuppressWarnings("deprecation")
   @Override
-  public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+  protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
     if (player.isShiftKeyDown()) {
       return InteractionResult.PASS;
     }
     if (world.getBlockEntity(pos) instanceof FaucetBlockEntity faucet) {
       faucet.activate();
     }
-    return InteractionResult.SUCCESS;
+    return InteractionResult.sidedSuccess(world.isClientSide);
   }
 
   @SuppressWarnings("deprecation")

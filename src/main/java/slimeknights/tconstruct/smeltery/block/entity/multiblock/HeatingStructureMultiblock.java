@@ -190,6 +190,10 @@ public abstract class HeatingStructureMultiblock<T extends MantleBlockEntity & I
     /** Next position to check for inside checks */
     private BlockPos insideCheck;
 
+    public List<BlockPos> getTanks() {
+      return tanks;
+    }
+
     protected StructureData(BlockPos minPos, BlockPos maxPos, Set<BlockPos> extraPositions, boolean hasFloor, boolean hasFrame, boolean hasCeiling, List<BlockPos> tanks) {
       super(minPos, maxPos, extraPositions, hasFloor, hasFrame, hasCeiling);
       this.tanks = tanks;

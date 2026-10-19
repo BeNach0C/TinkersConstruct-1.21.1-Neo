@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.library.materials.stats;
+import slimeknights.tconstruct.TConstruct;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
@@ -86,7 +87,7 @@ public class MaterialStatsManager extends MergingJsonDataLoader<Map<ResourceLoca
   @SuppressWarnings("unchecked")
   @Nullable
   public <T extends IMaterialStats> MaterialStatType<T> getStatType(MaterialStatsId id) {
-    return (MaterialStatType<T>) statTypes.getValue(id);
+    return (MaterialStatType<T>) statTypes.getValue(id.getId());
   }
 
   /**
@@ -190,8 +191,8 @@ public class MaterialStatsManager extends MergingJsonDataLoader<Map<ResourceLoca
                                   entry -> new MaterialId(entry.getKey()),
                                   entry -> deserializeMaterialStatsFromContent(entry.getKey(), entry.getValue())));
 
-    if (log.isDebugEnabled() && Config.COMMON.debugLogResourceValues.get()) {
-      log.debug("Loaded stats for materials:{}",
+    if (TConstruct.LOG.isDebugEnabled() && Config.COMMON.debugLogDatapackValues.get()) {
+      TConstruct.LOG.debug("Loaded stats for materials:{}",
         Util.toIndentedStringList(materialToStatsPerType.entrySet().stream()
           .sorted(Entry.comparingByKey())
           .map(entry -> String.format("%s - [%s]", entry.getKey(), entry.getValue().keySet().stream().sorted().map(Object::toString).collect(Collectors.joining(", "))))
@@ -204,7 +205,7 @@ public class MaterialStatsManager extends MergingJsonDataLoader<Map<ResourceLoca
   public void onResourceManagerReload(ResourceManager manager) {
     long time = System.nanoTime();
     super.onResourceManagerReload(manager);
-    log.info("{} stats loaded for {} materials in {} ms",
+    TConstruct.LOG.info("{} stats loaded for {} materials in {} ms",
              materialToStatsPerType.values().stream().mapToInt(Map::size).sum(),
              materialToStatsPerType.size(), (System.nanoTime() - time) / 1000000f);
   }
@@ -249,7 +250,7 @@ public class MaterialStatsManager extends MergingJsonDataLoader<Map<ResourceLoca
           .put(MaterialStatType.CONTEXT_KEY, type)
           .build()));
       } catch (JsonSyntaxException e) {
-        log.error("Failed to parse material stats {} on material '{}'", entry.getKey(), id, e);
+        TConstruct.LOG.error("Failed to parse material stats {} on material '{}'", entry.getKey(), id, e);
       }
     }
     return builder.build();

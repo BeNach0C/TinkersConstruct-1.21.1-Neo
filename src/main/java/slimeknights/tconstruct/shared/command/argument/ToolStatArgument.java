@@ -22,7 +22,6 @@ import java.util.concurrent.CompletableFuture;
 
 /** Argument for a tool stat type */
 @SuppressWarnings("rawtypes")
-@RequiredArgsConstructor(staticName = "stat")
 public class ToolStatArgument<T extends IToolStat> implements ArgumentType<T> {
   private static final Collection<String> EXAMPLES = Arrays.asList("tconstruct:mining_speed", "tconstruct:durability");
   private static final DynamicCommandExceptionType NOT_FOUND = new DynamicCommandExceptionType(name -> TConstruct.makeTranslation("command", "stat_type.not_found", name));
@@ -31,9 +30,17 @@ public class ToolStatArgument<T extends IToolStat> implements ArgumentType<T> {
   /** Filter to limit types of tool stats supported */
   private final Class<T> filter;
 
+  public ToolStatArgument(Class<T> filter) {
+    this.filter = filter;
+  }
+
+  public static <T extends IToolStat> ToolStatArgument<T> stat(Class<T> filter) {
+    return new ToolStatArgument<>(filter);
+  }
+
   /** Creates a stat type argument for any tool stat */
   public static ToolStatArgument<IToolStat> stat() {
-    return stat(IToolStat.class);
+    return new ToolStatArgument<>(IToolStat.class);
   }
 
   /** Gets the tool stat from the context */
@@ -56,7 +63,7 @@ public class ToolStatArgument<T extends IToolStat> implements ArgumentType<T> {
 
   @Override
   public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-    return TinkerSuggestionProvider.suggestResource(TConstruct.MOD_ID, ToolStats.getAllStats().stream().filter(filter::isInstance), builder, IToolStat::getName, IToolStat::getPrefix);
+    return TinkerSuggestionProvider.suggestResource(TConstruct.MOD_ID, ToolStats.getAllStats().stream().filter(filter::isInstance), builder, stat -> stat.getName().getId(), IToolStat::getPrefix);
   }
 
   @Override

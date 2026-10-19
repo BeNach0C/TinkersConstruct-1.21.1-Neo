@@ -46,13 +46,20 @@ public record BannerModifierModel(@Nullable ResourceLocation smallPrefix, @Nulla
   public void validate(Function<Material, TextureAtlasSprite> spriteGetter) {
     // since these are dynamically loaded, condition based on the config option
     if (Config.CLIENT.logMissingModifierTextures.get()) {
-      for (ResourceKey<BannerPattern> key : Sheets.SHIELD_MATERIALS.keySet()) {
-        String suffix = MaterialRenderInfo.getSuffix(key.location());
-        if (smallPrefix != null) {
-          spriteGetter.apply(ModifierModel.blockAtlas(smallPrefix.withSuffix(suffix)));
-        }
-        if (largePrefix != null) {
-          spriteGetter.apply(ModifierModel.blockAtlas(largePrefix.withSuffix(suffix)));
+      var level = net.minecraft.client.Minecraft.getInstance().level;
+      if (level != null) {
+        var reg = level.registryAccess().registry(net.minecraft.core.registries.Registries.BANNER_PATTERN);
+        if (reg.isPresent()) {
+          for (Holder.Reference<BannerPattern> holder : reg.get().holders().toList()) {
+            ResourceLocation assetId = holder.value().assetId();
+            String suffix = MaterialRenderInfo.getSuffix(assetId);
+            if (smallPrefix != null) {
+              spriteGetter.apply(ModifierModel.blockAtlas(smallPrefix.withSuffix(suffix)));
+            }
+            if (largePrefix != null) {
+              spriteGetter.apply(ModifierModel.blockAtlas(largePrefix.withSuffix(suffix)));
+            }
+          }
         }
       }
     }
@@ -74,21 +81,15 @@ public record BannerModifierModel(@Nullable ResourceLocation smallPrefix, @Nulla
         List<BakedQuad> quads = new ArrayList<>(list.size());
         // iterate all patterns
         for (int i = 0; i < list.size(); i++) {
-          // patterns are stored as short strings for some reason, for consistency we also store as hashes
-          // map that back to the pattern
           CompoundTag tag = list.getCompound(i);
-          Holder<BannerPattern> pattern = BannerPattern.byHash(tag.getString(BannerModule.KEY_PATTERN));
+          String patternStr = tag.getString(BannerModule.KEY_PATTERN);
+          ResourceLocation patternLoc = ResourceLocation.tryParse(patternStr);
           int color = tag.getInt(BannerModule.KEY_COLOR);
-          if (pattern != null) {
-            // why must holders be such a pain?
-            // TODO 1.21: will need to switch from using the ID to using the asset root for the texture
-            pattern.unwrapKey().ifPresent(id -> {
-              TextureAtlasSprite sprite = spriteGetter.apply(ModifierModel.blockAtlas(prefix.withSuffix(MaterialRenderInfo.getSuffix(id.location()))));
-              // skip if sprite is missing - deals with modded patterns that we haven't made textures for
-              if (!MissingTextureAtlasSprite.getLocation().equals(sprite.contents().name())) {
-                quads.add(MantleItemLayerModel.getQuadForGui(color, -1, sprite, transforms, 0));
-              }
-            });
+          if (patternLoc != null) {
+            TextureAtlasSprite sprite = spriteGetter.apply(ModifierModel.blockAtlas(prefix.withSuffix(MaterialRenderInfo.getSuffix(patternLoc))));
+            if (!MissingTextureAtlasSprite.getLocation().equals(sprite.contents().name())) {
+              quads.add(MantleItemLayerModel.getQuadForGui(color, -1, sprite, transforms, 0));
+            }
           }
         }
         if (!quads.isEmpty()) {

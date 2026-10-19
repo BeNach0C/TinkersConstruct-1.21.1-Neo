@@ -14,8 +14,8 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Explosion.BlockInteraction;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import slimeknights.mantle.data.loadable.primitive.BooleanLoadable;
 import slimeknights.mantle.data.loadable.primitive.EnumLoadable;
@@ -89,7 +89,6 @@ public record ExplosionFluidEffect(LevelingValue radius, LevelingValue damage, L
     return isFlat ? 1 : level.value();
   }
 
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   @Accessors(fluent = true)
   @Setter
   @CanIgnoreReturnValue
@@ -97,6 +96,10 @@ public record ExplosionFluidEffect(LevelingValue radius, LevelingValue damage, L
   public static class Builder {
     /** Explosion distance from target */
     private final LevelingValue radius;
+
+    public Builder(LevelingValue radius) {
+      this.radius = radius;
+    }
     /** Explosion damage multiplier for entities */
     private LevelingValue damage = LevelingValue.flat(0);
     /** Explosion knockback multiplier for entities */

@@ -35,47 +35,63 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 /** Object for common context for weapon attack hooks */
-@Getter
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ToolAttackContext {
   /* Attacker */
   /** Entity doing the attacking */
   @Nonnull
   private final LivingEntity attacker;
+  public LivingEntity getAttacker() { return this.attacker; }
   /** Player doing the attacking, null if not a player */
   @Nullable
   private final Player playerAttacker;
+  public Player getPlayerAttacker() { return this.playerAttacker; }
+
   /** Hand containing the tool */
   @Nonnull
   private final InteractionHand hand;
+  public InteractionHand getHand() { return this.hand; }
   @Nonnull
   private final EquipmentSlot slotType;
+  public EquipmentSlot getSlotType() { return this.slotType; }
   /** The projectile causing this damage. See {@link slimeknights.tconstruct.tools.entity.ThrownTool} */
   @Nullable
   private final Projectile projectile;
+  public Projectile getProjectile() { return this.projectile; }
 
   /* Target */
   /** Originally targeted entity, may be different from {@link #getLivingTarget()} for multipart entities */
   @Nonnull
   private final Entity target;
+  public Entity getTarget() { return this.target; }
   /** Target entity */
   @Nullable
   private final LivingEntity livingTarget;
+  public LivingEntity getLivingTarget() { return this.livingTarget; }
 
   /* Stats */
   /** Damage before any modifiers are applied */
   private final float baseDamage;
+  public float getBaseDamage() { return this.baseDamage; }
   /** Knockback before any modifiers are applied */
   private final float baseKnockback;
+  public float getBaseKnockback() { return this.baseKnockback; }
   /** Current attack cooldown */
   private final float cooldown;
+  public float getCooldown() { return this.cooldown; }
   /** Damage multiplier due to a critical hit. 1 if no critical hit */
   private final float criticalModifier;
+  public float getCriticalModifier() { return this.criticalModifier; }
 
   /** If true, this is an AOE attack, such as for scythes. */
   private final boolean isExtraAttack;
+  public boolean isExtraAttack() { return this.isExtraAttack; }
   /** Sound to play for this attack */
   private final SoundEvent sound;
+  public SoundEvent getSound() { return this.sound; }
+
+  private ToolAttackContext(LivingEntity attacker, Player playerAttacker, InteractionHand hand, EquipmentSlot slotType, Projectile projectile, Entity target, LivingEntity livingTarget, float baseDamage, float baseKnockback, float cooldown, float criticalModifier, boolean isExtraAttack, SoundEvent sound) {
+    this.attacker = attacker; this.playerAttacker = playerAttacker; this.hand = hand; this.slotType = slotType; this.projectile = projectile; this.target = target; this.livingTarget = livingTarget; this.baseDamage = baseDamage; this.baseKnockback = baseKnockback; this.cooldown = cooldown; this.criticalModifier = criticalModifier; this.isExtraAttack = isExtraAttack; this.sound = sound;
+  }
 
   /** @deprecated use {@link Builder */
   @Deprecated(forRemoval = true)
@@ -165,13 +181,17 @@ public class ToolAttackContext {
   /** Builder for creating a tool attack context */
   @Accessors(fluent = true)
   @CanIgnoreReturnValue
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+  
   public static class Builder {
+      private Builder(LivingEntity attacker, Player playerAttacker) { this.attacker = attacker; this.playerAttacker = playerAttacker; }
     /** Entity doing the attacking */
     private final LivingEntity attacker;
+  public LivingEntity getAttacker() { return this.attacker; }
     /** Player doing the attacking, null if not a player */
     @Nullable
     private final Player playerAttacker;
+  public Player getPlayerAttacker() { return this.playerAttacker; }
+
 
     /** Hand containing the tool */
     private InteractionHand hand = InteractionHand.MAIN_HAND;
@@ -263,7 +283,8 @@ public class ToolAttackContext {
     }
 
     /** Change the base damage for some special reason. */
-    public Builder addBaseDamage(float damage) {
+    public Builder baseDamage(float damage) { this.baseDamage = damage; return this; }
+      public Builder addBaseDamage(float damage) {
       baseDamage += damage;
       return this;
     }
@@ -297,7 +318,8 @@ public class ToolAttackContext {
     /* Misc */
 
     /** Sets this to an extra attack, which skips the tool AOE hooks */
-    public Builder extraAttack() {
+    public Builder projectile(Projectile projectile) { this.projectile = projectile; return this; }
+      public Builder extraAttack() {
       this.extraAttack = true;
       return this;
     }

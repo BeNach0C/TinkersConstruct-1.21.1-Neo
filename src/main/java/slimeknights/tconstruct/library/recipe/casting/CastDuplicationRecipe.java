@@ -11,6 +11,7 @@ import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.mantle.recipe.helper.ItemOutput;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
 /** Recipe which duplicates the input cast using a fluid */
 public class CastDuplicationRecipe extends ItemCastingRecipe implements IMultiRecipe<IDisplayableCastingRecipe> {
   public static final RecordLoadable<CastDuplicationRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(),
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(),
     LoadableRecipeSerializer.RECIPE_GROUP,
     IngredientLoadable.DISALLOW_EMPTY.requiredField("cast", CastDuplicationRecipe::getCast),
     FLUID_FIELD, COOLING_TIME_FIELD,
@@ -29,12 +30,12 @@ public class CastDuplicationRecipe extends ItemCastingRecipe implements IMultiRe
   }
 
   @Override
-  public ItemStack assemble(ICastingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ICastingContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     return inv.getStack().copy();
   }
 
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     ItemStack[] items = getCast().getItems();
     return items.length == 0 ? ItemStack.EMPTY : items[0];
   }
@@ -43,7 +44,7 @@ public class CastDuplicationRecipe extends ItemCastingRecipe implements IMultiRe
   private List<IDisplayableCastingRecipe> displayRecipes = null;
 
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
       List<ItemStack> casts = List.of(getCast().getItems());
       displayRecipes = List.of(DisplayCastingRecipe.from(this)

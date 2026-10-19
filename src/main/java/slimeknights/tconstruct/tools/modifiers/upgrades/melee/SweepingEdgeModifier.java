@@ -1,8 +1,10 @@
 package slimeknights.tconstruct.tools.modifiers.upgrades.melee;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import slimeknights.mantle.client.TooltipKey;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.modifiers.Modifier;
@@ -42,7 +44,7 @@ public class SweepingEdgeModifier extends Modifier implements TooltipModifierHoo
   }
 
   @Override
-  public void addTooltip(IToolStackView tool, ModifierEntry modifier, @Nullable Player player, List<Component> tooltip, TooltipKey tooltipKey, TooltipFlag tooltipFlag) {
+  public void addTooltip(IToolStackView tool, ModifierEntry modifier, @Nullable Player player, List<Component> tooltip, TooltipKey tooltipKey, net.minecraft.world.item.TooltipFlag tooltipFlag) {
     float amount = modifier.getEffectiveLevel() * 0.25f;
     tooltip.add(applyStyle(Component.literal(Util.PERCENT_FORMAT.format(amount)).append(" ").append(SWEEPING_BONUS)));
   }

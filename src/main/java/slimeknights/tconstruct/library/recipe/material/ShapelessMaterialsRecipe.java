@@ -21,6 +21,7 @@ import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
 import slimeknights.tconstruct.tables.TinkerTables;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,14 +36,14 @@ public class ShapelessMaterialsRecipe extends ShapelessRecipe implements Materia
   @Getter
   private final List<MaterialVariantId> extraMaterials;
 
-  public ShapelessMaterialsRecipe(ResourceLocation id, String group, CraftingBookCategory category, ItemStack result, NonNullList<Ingredient> ingredients, int partCount, List<MaterialVariantId> extraMaterials) {
-    super(id, group, category, result, ingredients);
+  public ShapelessMaterialsRecipe(String group, CraftingBookCategory category, ItemStack result, NonNullList<Ingredient> ingredients, int partCount, List<MaterialVariantId> extraMaterials) {
+    super(group, category, result, ingredients);
     this.partCount = partCount;
     this.extraMaterials = extraMaterials;
   }
 
   public ShapelessMaterialsRecipe(ShapelessRecipe recipe, int partCount, List<MaterialVariantId> extraMaterials) {
-    this(recipe.getId(), recipe.getGroup(), recipe.category(), recipe.result, recipe.getIngredients(), partCount, extraMaterials);
+    this(recipe.getGroup(), recipe.category(), recipe.getResultItem(null), recipe.getIngredients(), partCount, extraMaterials);
   }
 
   @Override
@@ -57,7 +58,7 @@ public class ShapelessMaterialsRecipe extends ShapelessRecipe implements Materia
   }
 
   @Override
-  public ItemStack assemble(CraftingContainer inventory, RegistryAccess registryAccess) {
+  public ItemStack assemble(net.minecraft.world.item.crafting.CraftingInput inventory, net.minecraft.core.HolderLookup.Provider registryAccess) {
     return ShapedMaterialsRecipe.assemble(super.assemble(inventory, registryAccess), inventory, getIngredients(), partCount, false, extraMaterials);
   }
 
@@ -67,31 +68,82 @@ public class ShapelessMaterialsRecipe extends ShapelessRecipe implements Materia
   }
 
   public static class Serializer implements LoggingRecipeSerializer<ShapelessMaterialsRecipe> {
-    static final Loadable<List<MaterialVariantId>> EXTRA_MATERIALS = ShapedMaterialsRecipe.Serializer.EXTRA_MATERIALS;
-    static final LoadableField<List<MaterialVariantId>,ShapelessMaterialsRecipe> MATERIAL_FIELD = EXTRA_MATERIALS.defaultField("extra_materials", List.of(), r -> r.extraMaterials);
-
-    @Override
-    public ShapelessMaterialsRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-      ShapelessRecipe vanilla = SHAPELESS_RECIPE.fromJson(recipeId, json);
-      int parts = GsonHelper.getAsInt(json, "parts");
-      if (parts < 1 || parts > vanilla.getIngredients().size()) {
-        throw new JsonSyntaxException("Parts must be between 1 and the number of ingredients " + vanilla.getIngredients().size());
+    private static final slimeknights.mantle.data.loadable.Loadable<List<MaterialVariantId>> EXTRA_MATERIALS = MaterialVariantId.LOADABLE.list(0);
+    public static final com.mojang.serialization.MapCodec<ShapelessMaterialsRecipe> CODEC = new com.mojang.serialization.MapCodec<>() {
+      @Override
+      public <T> java.util.stream.Stream<T> keys(com.mojang.serialization.DynamicOps<T> ops) {
+        return java.util.stream.Stream.empty();
       }
-      return new ShapelessMaterialsRecipe(vanilla, parts, MATERIAL_FIELD.get(json));
+
+      @Override
+      public <T> com.mojang.serialization.DataResult<ShapelessMaterialsRecipe> decode(com.mojang.serialization.DynamicOps<T> ops, com.mojang.serialization.MapLike<T> input) {
+        try {
+          JsonObject json = ops.convertTo(com.mojang.serialization.JsonOps.INSTANCE, ops.createMap(input.entries())).getAsJsonObject();
+          com.google.gson.JsonElement nbtElement = null;
+          if (json.has("result") && json.get("result").isJsonObject()) {
+            JsonObject resultObj = json.getAsJsonObject("result");
+            if (resultObj.has("item") && !resultObj.has("id")) {
+              resultObj.add("id", resultObj.get("item"));
+              resultObj.remove("item");
+            }
+            if (resultObj.has("nbt")) {
+              nbtElement = resultObj.remove("nbt");
+            }
+          }
+          ShapelessRecipe orig = net.minecraft.world.item.crafting.RecipeSerializer.SHAPELESS_RECIPE.codec().codec()
+            .parse(com.mojang.serialization.JsonOps.INSTANCE, json)
+            .getOrThrow(JsonSyntaxException::new);
+          ItemStack result = orig.getResultItem(null);
+          if (nbtElement != null) {
+            net.minecraft.nbt.CompoundTag tag = slimeknights.mantle.data.loadable.common.NBTLoadable.ALLOW_STRING.convert(nbtElement, "nbt");
+            result = result.copy();
+            result.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(tag));
+          }
+          int partCount = GsonHelper.getAsInt(json, "parts", 1);
+          List<MaterialVariantId> extraMaterials = EXTRA_MATERIALS.getOrDefault(json, "extra_materials", List.of());
+          return com.mojang.serialization.DataResult.success(
+            new ShapelessMaterialsRecipe(orig.getGroup(), orig.category(), result, orig.getIngredients(), partCount, extraMaterials));
+        } catch (Exception e) {
+          return com.mojang.serialization.DataResult.error(() -> e.getMessage() == null ? e.toString() : e.getMessage());
+        }
+      }
+
+      @Override
+      public <T> com.mojang.serialization.RecordBuilder<T> encode(ShapelessMaterialsRecipe input, com.mojang.serialization.DynamicOps<T> ops, com.mojang.serialization.RecordBuilder<T> prefix) {
+        return net.minecraft.world.item.crafting.RecipeSerializer.SHAPELESS_RECIPE.codec().encode(input, ops, prefix);
+      }
+    };
+
+    @Override
+    public com.mojang.serialization.MapCodec<ShapelessMaterialsRecipe> codec() {
+      return CODEC;
     }
 
     @Override
-    @Nullable
-    public ShapelessMaterialsRecipe fromNetworkSafe(ResourceLocation recipeId, FriendlyByteBuf buffer) {
-      ShapelessRecipe recipe = SHAPELESS_RECIPE.fromNetwork(recipeId, buffer);
-      return recipe == null ? null : new ShapelessMaterialsRecipe(recipe, buffer.readByte(), MATERIAL_FIELD.decode(buffer));
-    }
+    public net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, ShapelessMaterialsRecipe> streamCodecSafe() {
+      return new net.minecraft.network.codec.StreamCodec<>() {
+        @Override
+        public ShapelessMaterialsRecipe decode(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
+          ShapelessRecipe recipe = net.minecraft.world.item.crafting.RecipeSerializer.SHAPELESS_RECIPE.streamCodec().decode(buffer);
+          int partCount = buffer.readVarInt();
+          int extraSize = buffer.readVarInt();
+          List<MaterialVariantId> extraMaterials = new ArrayList<>(extraSize);
+          for (int i = 0; i < extraSize; i++) {
+            extraMaterials.add(MaterialVariantId.fromNetwork(buffer));
+          }
+          return new ShapelessMaterialsRecipe(recipe, partCount, extraMaterials);
+        }
 
-    @Override
-    public void toNetworkSafe(FriendlyByteBuf buffer, ShapelessMaterialsRecipe recipe) {
-      SHAPELESS_RECIPE.toNetwork(buffer, recipe);
-      buffer.writeByte(recipe.partCount);
-      MATERIAL_FIELD.encode(buffer, recipe);
+        @Override
+        public void encode(net.minecraft.network.RegistryFriendlyByteBuf buffer, ShapelessMaterialsRecipe recipe) {
+          net.minecraft.world.item.crafting.RecipeSerializer.SHAPELESS_RECIPE.streamCodec().encode(buffer, recipe);
+          buffer.writeVarInt(recipe.partCount);
+          buffer.writeVarInt(recipe.extraMaterials.size());
+          for (MaterialVariantId extra : recipe.extraMaterials) {
+            extra.toNetwork(buffer);
+          }
+        }
+      };
     }
   }
 }

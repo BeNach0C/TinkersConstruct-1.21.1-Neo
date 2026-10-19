@@ -35,8 +35,8 @@ public enum StatlessMaterialStats implements IMaterialStats {
 
   private static final List<Component> LOCALIZED = List.of(IMaterialStats.makeTooltip(TConstruct.getResource("extra.no_stats")));
   private static final List<Component> DESCRIPTION = List.of(Component.empty());
-  @Getter
   private final MaterialStatType<StatlessMaterialStats> type;
+  public MaterialStatType<StatlessMaterialStats> getType() { return type; }
 
   // no stats
 

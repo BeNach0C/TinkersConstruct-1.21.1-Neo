@@ -23,13 +23,13 @@ import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraftforge.common.ToolAction;
+import net.neoforged.neoforge.common.ItemAbility;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.loadable.record.SingletonLoader;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.modifiers.ModifierHooks;
-import slimeknights.tconstruct.library.modifiers.hook.behavior.ToolActionModifierHook;
+import slimeknights.tconstruct.library.modifiers.hook.behavior.ItemAbilityModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.BlockInteractionModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.EntityInteractionModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.InteractionSource;
@@ -51,15 +51,15 @@ import java.util.Collections;
 import java.util.List;
 
 /** Module starting a fire at the targeted position on interact. */
-public enum PlaceFireModule implements ModifierModule, EntityInteractionModifierHook, BlockInteractionModifierHook, ToolActionModifierHook, RemoveBlockModifierHook {
+public enum PlaceFireModule implements ModifierModule, EntityInteractionModifierHook, BlockInteractionModifierHook, ItemAbilityModifierHook, RemoveBlockModifierHook {
   INSTANCE;
 
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<PlaceFireModule>defaultHooks(ModifierHooks.ENTITY_INTERACT, ModifierHooks.BLOCK_INTERACT, ModifierHooks.TOOL_ACTION, ModifierHooks.REMOVE_BLOCK);
   public static final RecordLoadable<PlaceFireModule> LOADER = new SingletonLoader<>(INSTANCE);
   /** Generic action for the sake of people who want compat but do not want to request a specific action */
-  private static final ToolAction LIGHT_FIRE = ToolAction.get("light_fire");
+  private static final ItemAbility LIGHT_FIRE = ItemAbility.get("light_fire");
   /** Compat with mods adding custom campfires */
-  private static final ToolAction LIGHT_CAMPFIRE = ToolAction.get("light_campfire");
+  private static final ItemAbility LIGHT_CAMPFIRE = ItemAbility.get("light_campfire");
 
   @Override
   public RecordLoadable<PlaceFireModule> getLoader() {
@@ -72,8 +72,8 @@ public enum PlaceFireModule implements ModifierModule, EntityInteractionModifier
   }
 
   @Override
-  public boolean canPerformAction(IToolStackView tool, ModifierEntry modifier, ToolAction toolAction) {
-    return toolAction == LIGHT_CAMPFIRE || toolAction == LIGHT_FIRE;
+  public boolean canPerformAction(IToolStackView tool, ModifierEntry modifier, ItemAbility ItemAbility) {
+    return ItemAbility == LIGHT_CAMPFIRE || ItemAbility == LIGHT_FIRE;
   }
 
   @Override
@@ -165,7 +165,7 @@ public enum PlaceFireModule implements ModifierModule, EntityInteractionModifier
       didIgnite = ignite(world, pos, state, sideHit, horizontalFacing, player);
       if (didIgnite && ToolDamageUtil.damage(tool, 1, player, stack, modifier.getId())) {
         if (player != null) {
-          player.broadcastBreakEvent(slotType);
+          // player.broadcastBreakEvent(slotType);
         }
         return InteractionResult.sidedSuccess(world.isClientSide);
       }
@@ -176,7 +176,7 @@ public enum PlaceFireModule implements ModifierModule, EntityInteractionModifier
         didIgnite = true;
         if (ToolDamageUtil.damage(tool, 1, player, stack, modifier.getId())) {
           if (player != null) {
-            player.broadcastBreakEvent(slotType);
+            // player.broadcastBreakEvent(slotType);
           }
           break;
         }

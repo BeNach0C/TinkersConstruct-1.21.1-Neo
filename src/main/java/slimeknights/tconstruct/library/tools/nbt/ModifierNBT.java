@@ -30,15 +30,15 @@ import java.util.stream.Collectors;
  * NBT object containing all current modifiers
  */
 @EqualsAndHashCode
-@RequiredArgsConstructor
 public class ModifierNBT implements Iterable<ModifierEntry> {
 
   /** Instance containing no modifiers */
   public static final ModifierNBT EMPTY = new ModifierNBT(Collections.emptyList());
 
   /** Sorted list of modifiers */
-  @Getter
   private final List<ModifierEntry> modifiers;
+  public List<ModifierEntry> getModifiers() { return modifiers; }
+  public ModifierNBT(List<ModifierEntry> modifiers) { this.modifiers = modifiers; }
 
   /**
    * Checks if the NBT has no modifiers

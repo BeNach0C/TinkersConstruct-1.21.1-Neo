@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:tools/igniter",
+                       "required":  false
+                   }
+               ]
+}

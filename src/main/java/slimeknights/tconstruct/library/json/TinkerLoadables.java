@@ -15,8 +15,7 @@ import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
-import net.minecraftforge.common.TierSortingRegistry;
-import net.minecraftforge.common.loot.LootModifierManager;
+import net.neoforged.neoforge.common.loot.LootModifierManager;
 import slimeknights.mantle.client.TooltipKey;
 import slimeknights.mantle.data.loadable.Loadable;
 import slimeknights.mantle.data.loadable.Loadables;
@@ -39,7 +38,12 @@ import java.util.Set;
 @SuppressWarnings("deprecation")
 public class TinkerLoadables {
   /* Enums */
-  public static final StringLoadable<Operation> OPERATION = new EnumLoadable<>(Operation.class);
+  public static final StringLoadable<Operation> OPERATION = StringLoadable.DEFAULT.xmap((name, error) -> switch (name.toLowerCase(java.util.Locale.ROOT)) {
+    case "addition", "add_value" -> Operation.ADD_VALUE;
+    case "multiply_base", "add_multiplied_base" -> Operation.ADD_MULTIPLIED_BASE;
+    case "multiply_total", "add_multiplied_total" -> Operation.ADD_MULTIPLIED_TOTAL;
+    default -> throw error.create("Invalid Operation " + name);
+  }, (op, error) -> op.getSerializedName());
   public static final StringLoadable<EquipmentSlot> EQUIPMENT_SLOT = new EnumLoadable<>(EquipmentSlot.class);
   public static final Loadable<Set<EquipmentSlot>> EQUIPMENT_SLOT_SET = EQUIPMENT_SLOT.set();
   public static final StringLoadable<ArmorItem.Type> ARMOR_SLOT = new EnumLoadable<>(ArmorItem.Type.class);
@@ -67,22 +71,24 @@ public class TinkerLoadables {
 
   /** Tier loadable from the forge tier sorting registry */
   public static final StringLoadable<Tier> TIER = Loadables.RESOURCE_LOCATION.xmap((id, error) -> {
-    Tier tier = TierSortingRegistry.byName(id);
-    if (tier != null) {
-      return tier;
+    for (net.minecraft.world.item.Tiers tier : net.minecraft.world.item.Tiers.values()) {
+      if (tier.name().toLowerCase(java.util.Locale.ROOT).equals(id.getPath())) {
+        return (Tier)tier;
+      }
     }
     throw error.create("Unknown harvest tier " + id);
   }, (tier, error) -> {
-    ResourceLocation id = TierSortingRegistry.getName(tier);
-    if (id != null) {
-      return id;
+    if (tier instanceof net.minecraft.world.item.Tiers vanilla) {
+      return ResourceLocation.withDefaultNamespace(vanilla.name().toLowerCase(java.util.Locale.ROOT));
     }
     throw error.create("Attempt to serialize unregistered tier " + tier);
   });
 
+  public static final StringLoadable<net.neoforged.neoforge.common.ItemAbility> ITEM_ABILITY = Loadables.ITEM_ABILITY;
+
   /* Loot tables */
   /** Loadable for a loot entry instance */
-  public static final Loadable<LootPoolEntryContainer> LOOT_ENTRY = new GsonLoadable<>(LootModifierManager.GSON_INSTANCE, LootPoolEntryContainer.class);
+  public static final Loadable<LootPoolEntryContainer> LOOT_ENTRY = new GsonLoadable<>(slimeknights.mantle.util.JsonHelper.DEFAULT_GSON, LootPoolEntryContainer.class);
 
   /** Loadble requiring the argument to be an instance of the passed class */
   @SuppressWarnings("unchecked")  // The type works when deserializing, so it works when serializing

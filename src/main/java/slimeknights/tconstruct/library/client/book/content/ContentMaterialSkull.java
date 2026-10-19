@@ -74,7 +74,7 @@ public class ContentMaterialSkull extends SingleMaterialStatContent {
   @Override
   protected String getTextKey(MaterialId material) {
     // TOOD 1.21: drop legacy key
-    String legacyKey = "material." + material.toLanguageKey() + (detailed ? ".skull_encyclopedia" : ".skull_flavor");
+    String legacyKey = net.minecraft.Util.makeDescriptionId("material", material.getId()) + (detailed ? ".skull_encyclopedia" : ".skull_flavor");
     if (Util.canTranslate(legacyKey)) {
       return legacyKey;
     }
@@ -89,7 +89,7 @@ public class ContentMaterialSkull extends SingleMaterialStatContent {
       skullRecipe = RecipeHelper.getJEIRecipes(world.registryAccess(), world.getRecipeManager(), TinkerRecipeTypes.CASTING_BASIN.get(), IDisplayableCastingRecipe.class).stream()
         .filter(recipe -> {
           ItemStack output = recipe.getOutput();
-          return output.getItem() == TinkerTools.slimesuit.get(ArmorItem.Type.HELMET) && MaterialIdNBT.getMaterial(output, 0).getId().toString().equals(materialName);
+          return output.getItem() == TinkerTools.slimesuit.get(ArmorItem.Type.HELMET) && MaterialIdNBT.getMaterial(output, 0).getMaterialId().toString().equals(materialName);
         })
         .findFirst().orElse(null);
       searchedSkullRecipe = true;

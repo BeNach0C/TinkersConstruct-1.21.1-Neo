@@ -18,10 +18,10 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.ForgeI18n;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
+
+import net.neoforged.neoforge.common.conditions.ICondition;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.ModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -74,7 +74,7 @@ public class Util {
    * @return  True if it can be translated
    */
   public static boolean canTranslate(String key) {
-    return !ForgeI18n.getPattern(key).equals(key);
+    return net.minecraft.locale.Language.getInstance().has(key);
   }
 
   /**
@@ -176,8 +176,7 @@ public class Util {
 
   /** Calculates the given color */
   private static int calcColor(DyeColor color) {
-    float[] diffuse = color.getTextureDiffuseColors();
-    return FastColor.ARGB32.color(255, Math.round(255 * diffuse[0]), Math.round(255 * diffuse[1]), Math.round(255 * diffuse[2]));
+    return color.getTextureDiffuseColor() | 0xFF000000;
   }
 
   /** Array of tints for each dye color */
@@ -242,7 +241,7 @@ public class Util {
   /** Tests the given list of conditions using {@link DataLoadedConditionContext#INSTANCE} to see if all pass. */
   public static boolean testConditions(ICondition[] conditions) {
     for (ICondition condition : conditions) {
-      if (!condition.test(DataLoadedConditionContext.INSTANCE)) {
+      if (!condition.test(ICondition.IContext.EMPTY)) {
         return false;
       }
     }
@@ -268,5 +267,13 @@ public class Util {
   /** Checks if we are currently running on Forge as opposed to NeoForge. Allows branching solutions for each loader if needed */
   public static boolean isForge() {
     return !isNeo();
+  }
+
+  /** Copies an ItemStack with a new stack size */
+  public static net.minecraft.world.item.ItemStack copyStackWithSize(net.minecraft.world.item.ItemStack stack, int size) {
+    if (size <= 0) return net.minecraft.world.item.ItemStack.EMPTY;
+    net.minecraft.world.item.ItemStack copy = stack.copy();
+    copy.setCount(size);
+    return copy;
   }
 }

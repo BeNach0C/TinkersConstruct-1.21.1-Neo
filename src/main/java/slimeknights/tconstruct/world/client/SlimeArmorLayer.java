@@ -28,19 +28,18 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.DyeableLeatherItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.AbstractSkullBlock;
 import net.minecraft.world.level.block.SkullBlock;
 import net.minecraft.world.level.block.SkullBlock.Type;
-import net.minecraftforge.client.ForgeHooksClient;
 
 import java.util.Map;
 
 /** Generics do not match to use the vanilla armor layer, so this is a reimplementation of some of {@link HumanoidArmorLayer} */
 public class SlimeArmorLayer<T extends Slime, M extends HierarchicalModel<T>, A extends HumanoidModel<T>> extends RenderLayer<T,M> {
+  private static final java.util.Map<String, ResourceLocation> ARMOR_LOCATION_CACHE = new java.util.HashMap<>();
   private final A armorModel;
   public final Map<Type,SkullModelBase> skullModels;
   private final boolean lavaSlime;
@@ -75,10 +74,11 @@ public class SlimeArmorLayer<T extends Slime, M extends HierarchicalModel<T>, A 
         armorModel.head.visible = true;
         armorModel.hat.visible = true;
         //noinspection UnstableApiUsage  I am reimplementing vanilla stuff, I will call vanilla hooks
-        Model model = ForgeHooksClient.getArmorModel(entity, helmet, EquipmentSlot.HEAD, armorModel);
+        Model model = net.neoforged.neoforge.client.ClientHooks.getArmorModel(entity, helmet, EquipmentSlot.HEAD, armorModel);
         boolean enchanted = helmet.hasFoil();
-        if (armor instanceof DyeableLeatherItem dyeable) {
-          int color = dyeable.getColor(helmet);
+        net.minecraft.world.item.component.DyedItemColor dyedColor = helmet.get(net.minecraft.core.component.DataComponents.DYED_COLOR);
+        if (dyedColor != null) {
+          int color = dyedColor.rgb();
           float red = (color >> 16 & 255) / 255.0F;
           float green = (color >> 8 & 255) / 255.0F;
           float blue = (color & 255) / 255.0F;
@@ -93,11 +93,7 @@ public class SlimeArmorLayer<T extends Slime, M extends HierarchicalModel<T>, A 
         // skull block rendering
         if (item instanceof BlockItem block && block.getBlock() instanceof AbstractSkullBlock skullBlock) {
           matrices.scale(1.1875F, -1.1875F, -1.1875F);
-          GameProfile gameprofile = null;
-          CompoundTag tag = helmet.getTag();
-          if (tag != null && tag.contains("SkullOwner", Tag.TAG_COMPOUND)) {
-            gameprofile = NbtUtils.readGameProfile(tag.getCompound("SkullOwner"));
-          }
+          net.minecraft.world.item.component.ResolvableProfile gameprofile = helmet.get(net.minecraft.core.component.DataComponents.PROFILE);
           matrices.translate(-0.5, 0.0, -0.5);
           SkullBlock.Type type = skullBlock.getType();
           SkullModelBase skullModel = this.skullModels.get(type);
@@ -114,8 +110,8 @@ public class SlimeArmorLayer<T extends Slime, M extends HierarchicalModel<T>, A 
   }
 
   private static void renderModel(PoseStack matrices, MultiBufferSource buffer, int packedLight, boolean enchanted, Model model, float red, float green, float blue, ResourceLocation texture) {
-    VertexConsumer vertexconsumer = ItemRenderer.getArmorFoilBuffer(buffer, RenderType.armorCutoutNoCull(texture), false, enchanted);
-    model.renderToBuffer(matrices, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, red, green, blue, 1.0F);
+    VertexConsumer vertexconsumer = ItemRenderer.getArmorFoilBuffer(buffer, RenderType.armorCutoutNoCull(texture), enchanted);
+    model.renderToBuffer(matrices, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, net.minecraft.util.FastColor.ARGB32.color((int)(1.0F * 255), (int)(red * 255), (int)(green * 255), (int)(blue * 255)));
   }
 
   /**
@@ -129,19 +125,15 @@ public class SlimeArmorLayer<T extends Slime, M extends HierarchicalModel<T>, A 
    */
   @SuppressWarnings("removal")
   public static ResourceLocation getArmorResource(Entity entity, ItemStack stack, ArmorItem armor, String type) {
-    String texture = armor.getMaterial().getName();
-    String domain = "minecraft";
-    int idx = texture.indexOf(':');
-    if (idx != -1) {
-      domain = texture.substring(0, idx);
-      texture = texture.substring(idx + 1);
-    }
+    net.minecraft.resources.ResourceLocation matLoc = armor.getMaterial().unwrapKey().map(net.minecraft.resources.ResourceKey::location).orElse(net.minecraft.resources.ResourceLocation.withDefaultNamespace("unknown"));
+    String domain = matLoc.getNamespace();
+    String texture = matLoc.getPath();
     String path = String.format(java.util.Locale.ROOT, "%s:textures/models/armor/%s_layer_1%s.png", domain, texture, type);
-    path = ForgeHooksClient.getArmorTexture(entity, stack, path, EquipmentSlot.HEAD, type);
-    ResourceLocation location = HumanoidArmorLayer.ARMOR_LOCATION_CACHE.get(path);
+    // path = net.neoforged.neoforge.client.ClientHooks.getArmorTexture(entity, stack, path, EquipmentSlot.HEAD, type);
+    ResourceLocation location = ARMOR_LOCATION_CACHE.get(path);
     if (location == null) {
-      location = new ResourceLocation(path);
-      HumanoidArmorLayer.ARMOR_LOCATION_CACHE.put(path, location);
+      location = ResourceLocation.parse(path);
+      ARMOR_LOCATION_CACHE.put(path, location);
     }
 
     return location;

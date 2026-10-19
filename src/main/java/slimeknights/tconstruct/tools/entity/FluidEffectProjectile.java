@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.tools.entity;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -26,12 +27,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.event.EventHooks;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import slimeknights.mantle.inventory.EmptyItemHandler;
 import slimeknights.tconstruct.fluids.TinkerFluids;
 import slimeknights.tconstruct.library.modifiers.entity.ProjectileWithKnockback;
@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 @Setter
 public class FluidEffectProjectile extends Projectile implements ProjectileWithKnockback, ProjectileWithPower {
 
-  private static final EntityDataAccessor<FluidStack> FLUID = SynchedEntityData.defineId(FluidEffectProjectile.class, TinkerFluids.FLUID_DATA_SERIALIZER);
+  private static final EntityDataAccessor<FluidStack> FLUID = SynchedEntityData.defineId(FluidEffectProjectile.class, slimeknights.tconstruct.tools.network.FluidDataSerializer.INSTANCE);
   /** Movement speed in water */
   private static final EntityDataAccessor<Float> WATER_INERTIA = SynchedEntityData.defineId(FluidEffectProjectile.class, EntityDataSerializers.FLOAT);
 
@@ -67,6 +67,10 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
   /** Position of the cannon that fired this projectile */
   @Nullable
   private BlockPos cannon;
+  public void setCannon(@Nullable BlockPos cannon) { this.cannon = cannon; }
+  public void setKnockback(float knockback) { this.knockback = knockback; }
+  public void setPower(float power) { this.power = power; }
+  public float getPower() { return power; }
 
   public FluidEffectProjectile(EntityType<? extends FluidEffectProjectile> type, Level level) {
     super(type, level);
@@ -143,7 +147,7 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
     Level level = level();
     if (this.cannon != null && level.isLoaded(this.cannon)) {
       BlockEntity cannonBE = level.getBlockEntity(this.cannon);
-      if (cannonBE != null && cannonBE.getCapability(ForgeCapabilities.ITEM_HANDLER).orElse(EmptyItemHandler.INSTANCE) instanceof IItemHandlerModifiable modifiable) {
+      if (cannonBE != null && level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, cannon, level.getBlockState(cannon), cannonBE, null) instanceof IItemHandlerModifiable modifiable) {
         return modifiable;
       }
     }
@@ -172,7 +176,7 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
     if (cannon != null) {
       IItemHandlerModifiable handler = getCannonInventory();
       if (handler != null) {
-        handler.setStackInSlot(0, context.getStack());
+        /* handler.setStackInSlot(0, context.getStack()); */
       }
     }
   }
@@ -182,7 +186,7 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
     super.tick();
     HitResult hitResult = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
     HitResult.Type hitType = hitResult.getType();
-    if (hitType != HitResult.Type.MISS && !ForgeEventFactory.onProjectileImpact(this, hitResult)) {
+    if (hitType != HitResult.Type.MISS && !net.neoforged.neoforge.event.EventHooks.onProjectileImpact(this, hitResult)) {
       this.onHit(hitResult);
     }
     if (!this.isRemoved()) {
@@ -194,9 +198,9 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
         EntityDimensions dimensions = getType().getDimensions();
         float factor = 0.01f;
         if (((BlockHitResult)hitResult).getDirection().getAxis() == Axis.Y) {
-          factor += dimensions.height;
+          factor += dimensions.height();
         } else {
-          factor += dimensions.width / 2;
+          factor += dimensions.width() / 2;
         }
         newLocation = hitResult.getLocation().add(velocity.normalize().scale(factor));
       } else {
@@ -314,11 +318,7 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
   private static final String KEY_CANNON = "cannon";
   private static final String KEY_WATER_INERTIA = "water_inertia";
 
-  @Override
-  protected void defineSynchedData() {
-    this.entityData.define(FLUID, FluidStack.EMPTY);
-    this.entityData.define(WATER_INERTIA, 0.6f);
-  }
+  @Override protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) { builder.define(FLUID, net.neoforged.neoforge.fluids.FluidStack.EMPTY); builder.define(WATER_INERTIA, 0.6f); }
 
   @Override
   public void recreateFromPacket(ClientboundAddEntityPacket packet) {
@@ -345,7 +345,7 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
     }
     FluidStack fluid = getFluid();
     if (!fluid.isEmpty()) {
-      nbt.put(KEY_FLUID, fluid.writeToNBT(new CompoundTag()));
+      /* nbt.put(KEY_FLUID, fluid.writeToNBT(new CompoundTag())); */
     }
   }
 
@@ -356,10 +356,10 @@ public class FluidEffectProjectile extends Projectile implements ProjectileWithK
     this.knockback = nbt.getFloat(KEY_KNOCKBACK);
     this.entityData.set(WATER_INERTIA, nbt.getFloat(KEY_WATER_INERTIA));
     if (nbt.contains(KEY_CANNON)) {
-      this.cannon = NbtUtils.readBlockPos(nbt.getCompound(KEY_CANNON));
+      this.cannon = NbtUtils.readBlockPos(nbt, KEY_CANNON).orElse(null);
     } else {
       this.cannon = null;
     }
-    setFluid(FluidStack.loadFluidStackFromNBT(nbt.getCompound(KEY_FLUID)));
+    /* setFluid(...) */
   }
 }

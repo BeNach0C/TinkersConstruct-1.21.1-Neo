@@ -1,6 +1,6 @@
 package slimeknights.tconstruct.plugin.jei.material;
 
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
@@ -24,7 +24,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 import slimeknights.mantle.util.RegistryHelper;
 import slimeknights.tconstruct.TConstruct;
@@ -109,7 +109,7 @@ public class MaterialCategory extends AbstractRecipeCategory<IDisplayMaterialRec
   /** Cache of display parts for each material */
   private final SimpleCache<MaterialVariantId,List<ItemStack>> toolParts = new SimpleCache<>(material ->
     partItems.stream()
-      .filter(item -> item.canUseMaterial(material.getId()))
+      .filter(item -> item.canUseMaterial(material.getMaterialId()))
       .map(item -> item.withMaterialForDisplay(material))
       .toList());
 
@@ -144,7 +144,7 @@ public class MaterialCategory extends AbstractRecipeCategory<IDisplayMaterialRec
     // draw fluids
     if (!fluids.isEmpty()) {
       builder.addInputSlot(4, 2)
-        .addIngredients(ForgeTypes.FLUID_STACK, fluids)
+        .addIngredients(NeoForgeTypes.FLUID_STACK, fluids)
         .setFluidRenderer(100, false, 12, fluidHeight)
         .setSlotName(FLUID_SLOT);
     }
@@ -175,8 +175,7 @@ public class MaterialCategory extends AbstractRecipeCategory<IDisplayMaterialRec
     int value = recipe.getValue();
     if (value > 0) {
       builder.addText(Component.translatable(KEY_VALUE, value), 111, 9)
-        .setPosition(21, 11).setColor(Color.GRAY.getRGB())
-        .setTooltip(VALUE_TOOLTIP);
+        .setPosition(21, 11).setColor(Color.GRAY.getRGB());
     } else {
       IRecipeSlotView fluid = CategoryUtil.findSlot(builder.getRecipeSlots().getSlots(), FLUID_SLOT);
       if (fluid != null) {
@@ -186,9 +185,23 @@ public class MaterialCategory extends AbstractRecipeCategory<IDisplayMaterialRec
     // craftable icon
     if (!recipe.getDisplayItems().isEmpty()) {
       if (recipe.getMaterial().get().isCraftable()) {
-        builder.addDrawableWidget(partBuilder).setPosition(21, 20).setTooltip(CRAFTABLE);
+        builder.addDrawable(partBuilder, 21, 20);
       } else {
-        builder.addDrawableWidget(castingTable).setPosition(21, 20).setTooltip(UNCRAFTABLE);
+        builder.addDrawable(castingTable, 21, 20);
+      }
+    }
+  }
+
+  @Override
+  public void getTooltip(ITooltipBuilder tooltip, IDisplayMaterialRecipe recipe, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
+    if (recipe.getValue() > 0 && mouseX >= 21 && mouseX <= 132 && mouseY >= 11 && mouseY <= 20) {
+      tooltip.add(VALUE_TOOLTIP);
+    }
+    if (!recipe.getDisplayItems().isEmpty() && mouseX >= 21 && mouseX <= 37 && mouseY >= 20 && mouseY <= 36) {
+      if (recipe.getMaterial().get().isCraftable()) {
+        tooltip.add(CRAFTABLE);
+      } else {
+        tooltip.add(UNCRAFTABLE);
       }
     }
   }
@@ -200,14 +213,13 @@ public class MaterialCategory extends AbstractRecipeCategory<IDisplayMaterialRec
       return rectangle.position();
     }
 
-    @Override
     public @Nullable ScreenRectangle getScreenRectangle() {
       return rectangle;
     }
 
     @Override
     public void drawWidget(GuiGraphics graphics, double mouseX, double mouseY) {
-      FluidStack fluid = fluidSlot.getDisplayedIngredient(ForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
+      FluidStack fluid = fluidSlot.getDisplayedIngredient(NeoForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
       if (!fluid.isEmpty()) {
         Component string = Component.translatable(KEY_AMOUNT, fluid.getAmount());
         graphics.drawString(font, string, 0, 0, Color.GRAY.getRGB(), false);

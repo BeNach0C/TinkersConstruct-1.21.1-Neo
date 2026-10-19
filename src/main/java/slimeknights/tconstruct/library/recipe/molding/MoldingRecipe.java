@@ -17,11 +17,12 @@ import slimeknights.mantle.recipe.ICommonRecipe;
 import slimeknights.mantle.recipe.helper.ItemOutput;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 
 /** Recipe to combine two items on the top of a casting table, changing the first */
 public class MoldingRecipe implements ICommonRecipe<IMoldingContainer> {
   public static final RecordLoadable<MoldingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(),
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(),
     ContextKey.ID.requiredField(),
     IngredientLoadable.DISALLOW_EMPTY.requiredField("material", MoldingRecipe::getMaterial),
     IngredientLoadable.ALLOW_EMPTY.defaultField("pattern", Ingredient.EMPTY, MoldingRecipe::getPattern),
@@ -55,7 +56,7 @@ public class MoldingRecipe implements ICommonRecipe<IMoldingContainer> {
 
   @Override
   public boolean matches(IMoldingContainer inv, Level worldIn) {
-    return material.test(inv.getMaterial()) && pattern.test(inv.getPattern());
+    return !recipeOutput.get().isEmpty() && material.test(inv.getMaterial()) && pattern.test(inv.getPattern());
   }
 
   @Override
@@ -64,7 +65,7 @@ public class MoldingRecipe implements ICommonRecipe<IMoldingContainer> {
   }
 
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return recipeOutput.get();
   }
 }

@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.plugin.jei.melting;
 
 import lombok.RequiredArgsConstructor;
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
@@ -9,9 +9,7 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.gui.placement.HorizontalAlignment;
-import mezz.jei.api.gui.widgets.IDrawableWidget;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
-import mezz.jei.api.gui.widgets.IRecipeWidgetTooltipCallback;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeType;
@@ -20,7 +18,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.fluid.tooltip.FluidTooltipHandler;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.recipe.fuel.MeltingFuel;
@@ -68,27 +66,36 @@ public abstract class AbstractMeltingCategory extends AbstractRecipeCategory<IDi
   public void createRecipeExtras(IRecipeExtrasBuilder builder, IDisplayableMeltingRecipe recipe, IFocusGroup focuses) {
     // includes both the static arrow background and animated foreground
     int time = recipe.getTime();
-    IDrawableWidget arrow = builder.addAnimatedRecipeArrowWidget(time * 5).setPosition(56, 18);
-    arrowTooltip:
-    {
-      if (recipe.isTimeDynamic()) {
-        IRecipeSlotDrawable fluid = CategoryUtil.findSlot(builder.getRecipeSlots().getSlots(), FLUID_SLOT);
-        if (fluid != null) {
-          arrow.setTooltip(new MeltingArrowTooltip(recipe, fluid));
-          break arrowTooltip;
-        }
-      }
-      // not dynamic or fail to find the slot? static tooltip is fine
-      arrow.setTooltip(Component.translatable(KEY_COOLING_TIME, time / 4));
-    }
+    builder.addAnimatedRecipeArrow(time * 5, 56, 18);
 
     if (recipe.getOreType() != null) {
-      builder.addDrawableWidget(plus).setPosition(83, 26).setTooltip(TOOLTIP_ORE);
+      builder.addDrawable(plus, 83, 26);
     }
     builder.addText(Component.translatable(KEY_TEMPERATURE, recipe.getTemperature()), 113, 9)
       .setPosition(0, 3)
       .setColor(Color.GRAY.getRGB())
       .setTextAlignment(HorizontalAlignment.CENTER);
+  }
+
+  @Override
+  public void getTooltip(ITooltipBuilder tooltip, IDisplayableMeltingRecipe recipe, IRecipeSlotsView slots, double mouseX, double mouseY) {
+    int time = recipe.getTime();
+    // Arrow coordinates: (56, 18) to (56+24, 18+17)
+    if (mouseX >= 56 && mouseX <= 80 && mouseY >= 18 && mouseY <= 35) {
+      if (recipe.isTimeDynamic()) {
+        slots.findSlotByName(FLUID_SLOT).ifPresent(fluidSlot -> {
+          FluidStack fluid = fluidSlot.getDisplayedIngredient(NeoForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
+          tooltip.add(Component.translatable(KEY_COOLING_TIME, recipe.getTime(fluid) / 4));
+        });
+        return;
+      }
+      tooltip.add(Component.translatable(KEY_COOLING_TIME, time / 4));
+      return;
+    }
+    // Plus icon coordinates: (83, 26) to (83+12, 26+12)
+    if (recipe.getOreType() != null && mouseX >= 83 && mouseX <= 95 && mouseY >= 26 && mouseY <= 38) {
+      tooltip.add(TOOLTIP_ORE);
+    }
   }
 
   @Override
@@ -123,14 +130,5 @@ public abstract class AbstractMeltingCategory extends AbstractRecipeCategory<IDi
   @Override
   public ResourceLocation getRegistryName(IDisplayableMeltingRecipe recipe) {
     return recipe.getRecipeId();
-  }
-
-  /** Handles the tooltip for the arrow */
-  private record MeltingArrowTooltip(IDisplayableMeltingRecipe recipe, IRecipeSlotDrawable fluidSlot) implements IRecipeWidgetTooltipCallback {
-    @Override
-    public void onTooltip(ITooltipBuilder tooltip) {
-      FluidStack fluid = fluidSlot.getDisplayedIngredient(ForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
-      tooltip.add(Component.translatable(KEY_COOLING_TIME, recipe.getTime(fluid) / 4));
-    }
   }
 }

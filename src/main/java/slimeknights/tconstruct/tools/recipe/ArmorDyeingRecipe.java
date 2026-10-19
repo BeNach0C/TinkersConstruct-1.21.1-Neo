@@ -10,9 +10,10 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.Tags.Items;
+import net.neoforged.neoforge.common.Tags.Items;
 import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.mantle.util.RegistryHelper;
+import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.json.IntRange;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
@@ -37,12 +38,18 @@ import java.util.stream.Collectors;
 
 /** Recipe to dye travelers gear */
 public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDisplayModifierRecipe> {
+  @Override public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider p) { return ItemStack.EMPTY; }
+  @Override public java.util.List<IDisplayModifierRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider p) { return java.util.List.of(); }
   @Getter
   private final ResourceLocation id;
 
   public ArmorDyeingRecipe(ResourceLocation id) {
     this.id = id;
     ModifierRecipeLookup.addRecipeModifier(null, TinkerModifiers.dyed);
+  }
+
+  public ArmorDyeingRecipe() {
+    this(TConstruct.getResource("armor_dyeing"));
   }
 
   @Override
@@ -66,7 +73,7 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ToolStack tool = inv.getTinkerable().copy();
 
     ModDataNBT persistentData = tool.getPersistentData();
@@ -76,8 +83,8 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
     int count = 0;
 
     // copy existing color
-    if (persistentData.contains(key, Tag.TAG_INT)) {
-      int color = persistentData.getInt(key);
+    if (persistentData.contains(net.minecraft.resources.ResourceLocation.parse(key.toString()), Tag.TAG_INT)) {
+      int color = persistentData.getInt(net.minecraft.resources.ResourceLocation.parse(key.toString()));
       int r = color >> 16 & 255;
       int g = color >>  8 & 255;
       int b = color       & 255;
@@ -94,7 +101,7 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
       if (!stack.isEmpty()) {
         DyeColor dye = DyeColor.getColor(stack);
         if (dye != null) {
-          float[] color = dye.getTextureDiffuseColors();
+          int diffuse = dye.getTextureDiffuseColor(); float[] color = new float[] { ((diffuse >> 16) & 0xFF) / 255f, ((diffuse >> 8) & 0xFF) / 255f, (diffuse & 0xFF) / 255f };
           int r = (int)(color[0] * 255);
           int g = (int)(color[1] * 255);
           int b = (int)(color[2] * 255);
@@ -120,7 +127,7 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
     nr = (int)(nr * scaledBrightness);
     ng = (int)(ng * scaledBrightness);
     nb = (int)(nb * scaledBrightness);
-    persistentData.putInt(key, (nr << 16) | (ng << 8) | nb);
+    persistentData.putInt(net.minecraft.resources.ResourceLocation.parse(key.toString()), (nr << 16) | (ng << 8) | nb);
 
     // add the modifier if missing
     if (tool.getModifierLevel(key) == 0) {
@@ -140,7 +147,6 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
   @Nullable
   private List<IDisplayModifierRecipe> displayRecipes;
 
-  @Override
   public List<IDisplayModifierRecipe> getRecipes(RegistryAccess access) {
     if (displayRecipes == null) {
       List<ItemStack> toolInputs = RegistryHelper.getTagValueStream(BuiltInRegistries.ITEM, TinkerTags.Items.DYEABLE)
@@ -152,7 +158,7 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
           return stack;
         }).toList();
       if (!toolInputs.isEmpty()) {
-        ResourceLocation id = getId();
+        ResourceLocation id = net.minecraft.resources.ResourceLocation.withDefaultNamespace("dummy");
         displayRecipes = Arrays.stream(DyeColor.values()).map(dye -> new DisplayRecipe(id, toolInputs, dye)).collect(Collectors.toList());
       } else {
         displayRecipes = List.of();
@@ -163,15 +169,15 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
 
   private static class DisplayRecipe implements IDisplayModifierRecipe {
     private static final IntRange LEVELS = new IntRange(1, 1);
-    private final ModifierEntry RESULT = new ModifierEntry(TinkerModifiers.dyed, 1);
+    private final ModifierEntry RESULT = new ModifierEntry(TinkerModifiers.dyed.getId(), 1);
 
     @Getter
     private final ResourceLocation recipeId;
     private final List<ItemStack> dyes;
-    @Getter
     private final List<ItemStack> toolWithoutModifier;
-    @Getter
+    @Override public List<ItemStack> getToolWithoutModifier() { return this.toolWithoutModifier; }
     private final List<ItemStack> toolWithModifier;
+    @Override public List<ItemStack> getToolWithModifier() { return this.toolWithModifier; }
     @Getter
     private final Component variant;
     private final int tintColor;
@@ -185,7 +191,7 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
       this.dyes = RegistryHelper.getTagValueStream(BuiltInRegistries.ITEM, color.getTag()).map(ItemStack::new).toList();
       this.variant = Component.translatable("color.minecraft." + color.getSerializedName());
 
-      ResourceLocation modID = RESULT.getId();
+      ResourceLocation modID = net.minecraft.resources.ResourceLocation.parse(RESULT.getId().toString());
       this.tintColor = Util.getColor(color);
       List<ModifierEntry> results = List.of(RESULT);
       toolWithModifier = tools.stream().map(stack -> IDisplayModifierRecipe.withModifiers(stack, DEFAULT_TOOL_STACK_SIZE, results, data -> data.putInt(modID, tintColor))).toList();
@@ -236,8 +242,8 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
       // store into tool NBT
       ModifierId modifier = TinkerModifiers.dyed.getId();
       ModDataNBT persistentData = tool.getPersistentData();
-      if (persistentData.contains(modifier, Tag.TAG_INT)) {
-        int color = persistentData.getInt(modifier);
+      if (persistentData.contains(net.minecraft.resources.ResourceLocation.parse(modifier.toString()), Tag.TAG_INT)) {
+        int color = persistentData.getInt(net.minecraft.resources.ResourceLocation.parse(modifier.toString()));
         int r = color >> 16 & 255;
         int g = color >>  8 & 255;
         int b = color       & 255;
@@ -250,9 +256,9 @@ public class ArmorDyeingRecipe implements ITinkerStationRecipe, IMultiRecipe<IDi
         nr = (int)(nr * brightness);
         ng = (int)(ng * brightness);
         nb = (int)(nb * brightness);
-        persistentData.putInt(modifier, (nr << 16) | (ng << 8) | nb);
+        persistentData.putInt(net.minecraft.resources.ResourceLocation.parse(modifier.toString()), (nr << 16) | (ng << 8) | nb);
       } else {
-        persistentData.putInt(modifier, tintColor);
+        persistentData.putInt(net.minecraft.resources.ResourceLocation.parse(modifier.toString()), tintColor);
       }
       // add the modifier if missing
       if (tool.getModifierLevel(modifier) == 0) {

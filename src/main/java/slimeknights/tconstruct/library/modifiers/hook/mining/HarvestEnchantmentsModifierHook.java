@@ -54,16 +54,16 @@ public interface HarvestEnchantmentsModifierHook {
    * @param tool     Tool in the main hand
    * @param stack    Base stack instance
    * @param context  Tool harvest context
-   * @return  Old tag if enchants were applied
+   * @return  Old enchants if enchants were applied
    */
   @Nullable
-  static ListTag updateHarvestEnchantments(IToolStackView tool, ItemStack stack, ToolHarvestContext context) {
+  static net.minecraft.world.item.enchantment.ItemEnchantments updateHarvestEnchantments(IToolStackView tool, ItemStack stack, ToolHarvestContext context) {
     Player player = context.getPlayer();
     if (player == null || !player.isCreative()) {
       // assuming we have a modifiable tool, we iterate all tools other than the main hand (since the main hand is in charge of harvesting the blocks)
       EquipmentContext equipmentContext = EquipmentContext.withTool(context.getLiving(), tool, EquipmentSlot.MAINHAND);
       // lazily parse the enchantment map, wait until someone has a hook
-      ListTag originalEnchants = null;
+      net.minecraft.world.item.enchantment.ItemEnchantments originalEnchants = null;
       Map<Enchantment,Integer> enchantments = null;
       // run on all slots except main hand, to prevent double applying luck
       // TODO 1.21: take advantage of the enchantment slot filter to avoid that instead; not like armor can be in the main hand when this runs
@@ -78,8 +78,11 @@ public interface HarvestEnchantmentsModifierHook {
             if (hook != null) {
               // if we have not yet parsed the enchantments, time to do so
               if (enchantments == null) {
-                originalEnchants = stack.getEnchantmentTags();
-                enchantments = EnchantmentHelper.deserializeEnchantments(originalEnchants);
+                originalEnchants = stack.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY);
+                enchantments = new java.util.HashMap<>();
+                for (var e : originalEnchants.entrySet()) {
+                  enchantments.put(e.getKey().value(), e.getIntValue());
+                }
               }
               hook.updateHarvestEnchantments(armor, entry, context, equipmentContext, slot, enchantments);
             }
@@ -90,7 +93,11 @@ public interface HarvestEnchantmentsModifierHook {
       if (enchantments != null) {
         // we allow 0 values for enchantments in the hook
         enchantments.values().removeIf(EnchantmentModifierHook.VALUE_REMOVER);
-        EnchantmentHelper.setEnchantments(enchantments, stack);
+        net.minecraft.world.item.enchantment.ItemEnchantments.Mutable mutable = new net.minecraft.world.item.enchantment.ItemEnchantments.Mutable(net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY);
+        for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
+          mutable.set(net.minecraft.core.Holder.direct(entry.getKey()), entry.getValue());
+        }
+        EnchantmentHelper.setEnchantments(stack, mutable.toImmutable());
         return originalEnchants;
       }
     }
@@ -99,16 +106,15 @@ public interface HarvestEnchantmentsModifierHook {
 
   /**
    * Restores the original enchants to the given stack
-   * @param stack        Stack to clear enchants
-   * @param originalTag  Original list of enchantments. If empty, will remove the tag
+   * @param stack             Stack to clear enchants
+   * @param originalEnchants  Original ItemEnchantments. If empty, will remove the component
    */
-  static void restoreEnchantments(ItemStack stack, ListTag originalTag) {
-    CompoundTag nbt = stack.getTag();
-    if (nbt != null) {
-      if (originalTag.isEmpty()) {
-        nbt.remove(TAG_ENCHANTMENTS);
+  static void restoreEnchantments(ItemStack stack, @Nullable net.minecraft.world.item.enchantment.ItemEnchantments originalEnchants) {
+    if (originalEnchants != null) {
+      if (originalEnchants.isEmpty()) {
+        stack.remove(net.minecraft.core.component.DataComponents.ENCHANTMENTS);
       } else {
-        nbt.put(TAG_ENCHANTMENTS, originalTag);
+        stack.set(net.minecraft.core.component.DataComponents.ENCHANTMENTS, originalEnchants);
       }
     }
   }

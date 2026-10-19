@@ -16,8 +16,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagLoader;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.Rarity;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.common.crafting.conditions.ICondition.IContext;
+import net.neoforged.neoforge.common.conditions.ICondition;
+import net.neoforged.neoforge.common.conditions.ICondition.IContext;
 import slimeknights.mantle.data.gson.ConditionSerializer;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.config.Config;
@@ -51,8 +51,8 @@ import static java.util.Objects.requireNonNullElse;
  * The location inside datapacks is "materials".
  * So if your mods name is "foobar", the location for your mods materials is "data/foobar/materials".
  */
-@Log4j2
 public class MaterialManager extends SimpleJsonResourceReloadListener {
+  private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(MaterialManager.class);
   /** Location of materials */
   public static final String FOLDER = "tinkering/materials/definition";
   /** Location of material tags */
@@ -220,7 +220,7 @@ public class MaterialManager extends SimpleJsonResourceReloadListener {
     this.redirects = redirects;
     onMaterialUpdate();
 
-    if (log.isDebugEnabled() && Config.COMMON.debugLogResourceValues.get()) {
+    if (log.isDebugEnabled() && Config.COMMON.debugLogDatapackValues.get()) {
       log.debug("Loaded materials: {}", Util.toIndentedStringList(materials.keySet().stream().sorted().toList()));
       log.debug("Loaded redirects: {}", Util.toIndentedStringList(redirects.entrySet().stream().sorted(Entry.comparingByKey()).toList()));
     }

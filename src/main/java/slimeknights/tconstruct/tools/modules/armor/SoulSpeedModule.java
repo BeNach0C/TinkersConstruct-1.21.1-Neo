@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.tools.modules.armor;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -6,7 +8,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
@@ -48,17 +50,13 @@ public record SoulSpeedModule(LevelingInt level, ModifierCondition<IToolStackVie
 
   @Override
   public int updateEnchantmentLevel(IToolStackView tool, ModifierEntry modifier, Enchantment enchantment, int level) {
-    if (enchantment == Enchantments.SOUL_SPEED && condition.matches(tool, modifier)) {
-      level += this.level.compute(modifier);
-    }
+    // TODO 1.21.1 if (enchantment == Enchantments.SOUL_SPEED && condition.matches(tool, modifier)) { level += this.level.compute(modifier); }
     return level;
   }
 
   @Override
   public void updateEnchantments(IToolStackView tool, ModifierEntry modifier, Map<Enchantment, Integer> map) {
-    if (condition.matches(tool, modifier)) {
-      EnchantmentModifierHook.addEnchantment(map, Enchantments.SOUL_SPEED, this.level.compute(modifier));
-    }
+    // TODO 1.21.1 if (condition.matches(tool, modifier)) { EnchantmentModifierHook.addEnchantment(map, Enchantments.SOUL_SPEED, this.level.compute(modifier)); }
   }
 
   /** Gets the position this entity is standing on, cloned from protected living entity method */

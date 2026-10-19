@@ -99,18 +99,19 @@ public record AttributeModule(String unique, Attribute attribute, Operation oper
   @Internal
   public AttributeModule {}
 
-  /** Gets the UUID for this slot */
+  /** Gets the id for this slot */
   @Nullable
-  private UUID getUUID(EquipmentSlot slot) {
-    return slotUUIDs[slot.getFilterFlag()];
+  private ResourceLocation getSlotId(EquipmentSlot slot) {
+    UUID uuid = slotUUIDs[slot.getFilterFlag()];
+    return uuid != null ? ResourceLocation.fromNamespaceAndPath("tconstruct", "attr_" + unique.replace(':', '_').replace('.', '_') + "_" + slot.getName()) : null;
   }
 
   /** Creates an attribute for the given slot */
   @Nullable
   private AttributeModifier createModifier(IToolStackView tool, ModifierEntry modifier, EquipmentSlot slot) {
-    UUID uuid = getUUID(slot);
-    if (uuid != null) {
-      return new AttributeModifier(uuid, unique + "." + slot.getName(), formula.apply(tool, modifier), operation);
+    ResourceLocation id = getSlotId(slot);
+    if (id != null) {
+      return new AttributeModifier(id, formula.apply(tool, modifier), operation);
     }
     return null;
   }
@@ -130,12 +131,12 @@ public record AttributeModule(String unique, Attribute attribute, Operation oper
   @Override
   public void onEquip(IToolStackView tool, ModifierEntry modifier, EquipmentChangeContext context) {
     if (condition.matches(tool, modifier)) {
-      AttributeInstance instance = context.getEntity().getAttribute(attribute);
+      AttributeInstance instance = context.getEntity().getAttribute(slimeknights.tconstruct.shared.TinkerAttributes.getHolder(attribute));
       if (instance != null) {
         AttributeModifier attributeModifier = createModifier(tool, modifier, context.getChangedSlot());
         if (attributeModifier != null) {
           // for safety, remove it already there
-          instance.removeModifier(attributeModifier.getId());
+          instance.removeModifier(attributeModifier.id());
           instance.addTransientModifier(attributeModifier);
         }
       }
@@ -145,18 +146,18 @@ public record AttributeModule(String unique, Attribute attribute, Operation oper
   @Override
   public void onUnequip(IToolStackView tool, ModifierEntry modifier, EquipmentChangeContext context) {
     if (condition.matches(tool, modifier)) {
-      UUID uuid = getUUID(context.getChangedSlot());
-      if (uuid != null) {
-        AttributeInstance instance = context.getEntity().getAttribute(attribute);
+      ResourceLocation id = getSlotId(context.getChangedSlot());
+      if (id != null) {
+        AttributeInstance instance = context.getEntity().getAttribute(slimeknights.tconstruct.shared.TinkerAttributes.getHolder(attribute));
         if (instance != null) {
-          instance.removeModifier(uuid);
+          instance.removeModifier(id);
         }
       }
     }
   }
 
   /** Adds the tooltip for the given attribute */
-  public static void addTooltip(Modifier modifier, Attribute attribute, Operation operation, TooltipStyle tooltipStyle, float amount, @Nullable UUID uuid, @Nullable Player player, List<Component> tooltip) {
+  public static void addTooltip(Modifier modifier, Attribute attribute, Operation operation, TooltipStyle tooltipStyle, float amount, @Nullable net.minecraft.resources.ResourceLocation uuid, @Nullable Player player, List<Component> tooltip) {
     switch (tooltipStyle) {
       case ATTRIBUTE -> TooltipUtil.addAttribute(attribute, operation, amount, uuid, player, tooltip);
       case BOOST -> TooltipModifierHook.addFlatBoost(modifier, Component.translatable(attribute.getDescriptionId()), amount, tooltip);
@@ -217,6 +218,16 @@ public record AttributeModule(String unique, Attribute attribute, Operation oper
     /** Tooltip style override. If set, switches from item stack attributes to equipment change attributes and shows modifier style tooltips. */
     @Setter
     private TooltipStyle tooltipStyle = TooltipStyle.ATTRIBUTE;
+
+    public Builder unique(String unique) {
+      this.unique = unique;
+      return this;
+    }
+
+    public Builder tooltipStyle(TooltipStyle tooltipStyle) {
+      this.tooltipStyle = tooltipStyle;
+      return this;
+    }
 
     protected Builder(Attribute attribute, Operation operation) {
       super(VARIABLES);

@@ -44,12 +44,17 @@ public class ToolPartItem extends MaterialItem implements IToolPart {
   }
 
   /** Helper to append the tooltip for this part. */
+  public static void appendHoverText(IToolPart self, ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    appendHoverText(self, stack, tooltip, flag);
+  }
+
+  /** Helper to append the tooltip for this part. */
   public static void appendHoverText(IToolPart self, ItemStack stack, List<Component> tooltip, TooltipFlag flag) {
     if (TooltipUtil.isDisplay(stack)) {
       return;
     }
     MaterialVariantId materialVariant = self.getMaterial(stack);
-    MaterialId id = materialVariant.getId();
+    MaterialId id = materialVariant.getMaterialId();
     if (!materialVariant.equals(MaterialId.UNKNOWN)) {
       // internal material ID
       if (flag.isAdvanced()) {
@@ -107,8 +112,8 @@ public class ToolPartItem extends MaterialItem implements IToolPart {
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flag) {
-    appendHoverText(this, stack, tooltip, flag);
+  public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    appendHoverText(this, stack, context, tooltip, flag);
   }
 
   /**

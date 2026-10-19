@@ -68,10 +68,13 @@ public class DisplayPartRecipe implements IDisplayPartBuilderRecipe.DisplayOnly 
 
   @Setter
   @Accessors(fluent = true)
-  @RequiredArgsConstructor
   public static class Builder {
     /** ID of recipe; should generally match a real recipe JSON */
     private final ResourceLocation id;
+
+    public Builder(ResourceLocation id) {
+      this.id = id;
+    }
     /** Material variant for name display */
     private List<MaterialVariant> materials = List.of();
     /** Title to display in JEI */

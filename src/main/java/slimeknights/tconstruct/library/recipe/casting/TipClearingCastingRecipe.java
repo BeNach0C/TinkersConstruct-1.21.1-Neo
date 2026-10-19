@@ -6,11 +6,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.mantle.recipe.ingredient.FluidIngredient;
 import slimeknights.tconstruct.library.modifiers.ModifierId;
 import slimeknights.tconstruct.library.recipe.casting.potion.ModifierPotionCastingRecipe;
@@ -26,7 +27,7 @@ import java.util.List;
  */
 public class TipClearingCastingRecipe extends ModifierPotionCastingRecipe {
   public static final RecordLoadable<TipClearingCastingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(), LoadableRecipeSerializer.RECIPE_GROUP,
     TOOL_FIELD, FLUID_FIELD, COOLING_TIME_FIELD, MODIFIER_FIELD, TipClearingCastingRecipe::new);
 
   public TipClearingCastingRecipe(TypeAwareRecipeSerializer<?> serializer, ResourceLocation id, String group, Ingredient tool, FluidIngredient fluid, int coolingTime, ModifierId modifier) {
@@ -36,22 +37,23 @@ public class TipClearingCastingRecipe extends ModifierPotionCastingRecipe {
   @Override
   public boolean matches(ICastingContainer inv, Level level) {
     // must have the modifier, and the potion set
-    return super.matches(inv, level) && !ModifierUtil.getPersistentString(inv.getStack(), modifier).isEmpty();
+    return super.matches(inv, level) && !ModifierUtil.getPersistentString(inv.getStack(), modifier.getId()).isEmpty();
   }
 
   @Override
-  public ItemStack assemble(ICastingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ICastingContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ItemStack result = inv.getStack().copy();
-    ToolStack.from(result).getPersistentData().remove(modifier);
+    ToolStack.from(result).getPersistentData().remove(modifier.getId());
     return result;
   }
 
 
   /* JEI */
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
-      List<FluidStack> fluids = fluid.getFluids();
+      List<FluidStack> rawFluids = fluid.getFluids();
+      List<FluidStack> fluids = rawFluids.isEmpty() ? List.of(new FluidStack(net.minecraft.world.level.material.Fluids.WATER, 50)) : rawFluids;
       List<String> potions = getPotionIds();
 
       // create a recipe per tool

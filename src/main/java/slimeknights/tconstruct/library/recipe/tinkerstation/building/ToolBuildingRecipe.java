@@ -55,7 +55,6 @@ import java.util.Objects;
  * TODO 1.21: extend {@link MaterialSwappingRecipe} to automatically provide part swapping here.
  * TODO 1.21: support specifying material items instead of tool parts for crafting, for the sake of JSON addons.
  */
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class ToolBuildingRecipe implements ITinkerStationRecipe {
   // placement of recipes in JEI
   public static final int X_OFFSET = -6;
@@ -96,6 +95,7 @@ public class ToolBuildingRecipe implements ITinkerStationRecipe {
   protected final List<IToolPart> parts;
   /** List of materials to apply after the parts */
   protected final List<MaterialVariantId> materials;
+  protected ToolBuildingRecipe(ResourceLocation id, String group, IModifiable output, int outputCount, ResourceLocation layoutSlot, List<Ingredient> ingredients, List<IToolPart> parts, List<MaterialVariantId> materials) { this.id = id; this.group = group; this.output = output; this.outputCount = outputCount; this.layoutSlot = layoutSlot; this.ingredients = ingredients; this.parts = parts; this.materials = materials; }
   // JEI cache
   protected List<LayoutSlot> layoutSlots;
   protected List<List<ItemStack>> allToolParts;
@@ -180,7 +180,7 @@ public class ToolBuildingRecipe implements ITinkerStationRecipe {
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     int materialCount = ToolMaterialHook.stats(output.getToolDefinition()).size();
     // fill in materials
     List<MaterialVariant> materials = new ArrayList<>(materialCount);
@@ -204,7 +204,7 @@ public class ToolBuildingRecipe implements ITinkerStationRecipe {
     // if we have any parts set, run the count hook
     // no point running it if all materials are set through override/no materials, just set the recipe count in that case
     // note there is an edge case when you have a fixed material that adjusts count plus parts, not really a good solution for that case
-    int itemMax = item.getMaxStackSize();
+    int itemMax = item.getDefaultInstance().getMaxStackSize();
     if (parts > 0 && itemMax > 1) {
       count = CraftCountModifierHook.maxStackSize(tool, outputCount);
       if (count <= 0) {
@@ -256,7 +256,7 @@ public class ToolBuildingRecipe implements ITinkerStationRecipe {
     if (hiddenInputs == null) {
       hiddenInputs = getToolParts().stream()
         .flatMap(part -> MaterialRecipeCache.getHiddenVariants().stream()
-          .filter(mat -> part.canUseMaterial(mat.getId()))
+          .filter(mat -> part.canUseMaterial(mat.getMaterialId()))
           .map(part::withMaterial))
         .toList();
     }
@@ -312,7 +312,7 @@ public class ToolBuildingRecipe implements ITinkerStationRecipe {
           } else {
             // not a full list? mark it for display with just the materials on the end
             result = new MaterialIdNBT(list).updateStack(new ItemStack(output, outputCount));
-            result.getOrCreateTag().putBoolean(TooltipUtil.KEY_DISPLAY, true);
+            net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, result, tag -> tag.putBoolean(TooltipUtil.KEY_DISPLAY, true));
           }
         }
       }
@@ -334,13 +334,13 @@ public class ToolBuildingRecipe implements ITinkerStationRecipe {
 
   @Deprecated
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return new ItemStack(this.output);
   }
 
   @Deprecated
   @Override
-  public ItemStack assemble(ITinkerStationContainer inv, RegistryAccess access) {
+  public ItemStack assemble(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     return getValidatedResult(inv, access).getResult().getStack();
   }
 }

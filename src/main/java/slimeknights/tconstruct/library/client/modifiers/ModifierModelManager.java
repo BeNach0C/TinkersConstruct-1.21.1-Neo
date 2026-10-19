@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.library.client.modifiers;
+import slimeknights.tconstruct.TConstruct;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
@@ -12,10 +13,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.fml.ModLoader;
-import net.minecraftforge.fml.event.IModBusEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.bus.api.Event;
+import net.neoforged.fml.ModLoader;
+import net.neoforged.fml.event.IModBusEvent;
 import slimeknights.mantle.data.listener.IEarlySafeManagerReloadListener;
 import slimeknights.mantle.util.JsonHelper;
 import slimeknights.tconstruct.common.config.Config;
@@ -38,9 +39,9 @@ import java.util.function.Predicate;
  * @deprecated use {@link ModifierModelMapManager}
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-@Log4j2
 @Deprecated
 public class ModifierModelManager implements IEarlySafeManagerReloadListener {
+  private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(ModifierModelManager.class);
   /** Modifier file to load, has merging behavior but forge prevents multiple mods from loading the same file */
   private static final String VISIBLE_MODIFIERS = "tinkering/modifiers.json";
   /** Instance of this manager */
@@ -74,12 +75,12 @@ public class ModifierModelManager implements IEarlySafeManagerReloadListener {
     // find a model name
     ResourceLocation loader = ResourceLocation.tryParse(name);
     if (loader == null) {
-      log.error("Skipping modifier " + key + " as " + name + " is an invalid loader name");
+      TConstruct.LOG.error("Skipping modifier " + key + " as " + name + " is an invalid loader name");
     } else {
       // find a model
       IUnbakedModifierModel model = MODIFIER_MODEL_OPTIONS.get(loader);
       if (model == null) {
-        log.error("Skipping modifier " + key + " as the loader " + loader + " is unknown");
+        TConstruct.LOG.error("Skipping modifier " + key + " as the loader " + loader + " is unknown");
       } else {
         return model;
       }
@@ -91,7 +92,7 @@ public class ModifierModelManager implements IEarlySafeManagerReloadListener {
   public void onReloadSafe(ResourceManager manager) {
     // fire an event so people can register loaders, was the easiest way to do so after modifiers are registered but before models load
     if (!eventFired) {
-      ModLoader.get().postEvent(new ModifierModelRegistrationEvent());
+      ModLoader.postEvent(new ModifierModelRegistrationEvent());
       eventFired = true;
     }
 
@@ -109,7 +110,7 @@ public class ModifierModelManager implements IEarlySafeManagerReloadListener {
         String key = entry.getKey();
         ModifierId name = ModifierId.tryParse(key);
         if (name == null) {
-          log.error("Skipping invalid modifier key " + key + " as it is not a valid resource location");
+          TConstruct.LOG.error("Skipping invalid modifier key " + key + " as it is not a valid resource location");
         } else {
           // ensure it's not already parsed
           if (!models.containsKey(name)) {
@@ -132,7 +133,7 @@ public class ModifierModelManager implements IEarlySafeManagerReloadListener {
                 models.put(name, model);
               }
             } else {
-              log.error("Skipping key " + key + " as the value is not a string or object");
+              TConstruct.LOG.error("Skipping key " + key + " as the value is not a string or object");
             }
           }
         }
@@ -150,7 +151,7 @@ public class ModifierModelManager implements IEarlySafeManagerReloadListener {
    */
   @SuppressWarnings("removal")
   private static Material getModifierTexture(ResourceLocation modifierRoot, ResourceLocation modifierId, String suffix) {
-    return new Material(InventoryMenu.BLOCK_ATLAS, new ResourceLocation(modifierRoot.getNamespace(), modifierRoot.getPath() + modifierId.getNamespace() + "_" + modifierId.getPath() + suffix));
+    return new Material(InventoryMenu.BLOCK_ATLAS, ResourceLocation.fromNamespaceAndPath(modifierRoot.getNamespace(), modifierRoot.getPath() + modifierId.getNamespace() + "_" + modifierId.getPath() + suffix));
   }
 
   /**
@@ -216,8 +217,8 @@ public class ModifierModelManager implements IEarlySafeManagerReloadListener {
       IUnbakedModifierModel model = entry.getValue();
       if (!skip.contains(id) && !blacklist.contains(model)) {
         IBakedModifierModel toolModel = model.forTool(
-          name -> getTexture(smallModifierRoots, validator, id, name),
-          name -> getTexture(largeModifierRoots, validator, id, name));
+          name -> getTexture(smallModifierRoots, validator, id.getId(), name),
+          name -> getTexture(largeModifierRoots, validator, id.getId(), name));
         if (toolModel != null) {
           modelMap.put(id, toolModel);
         }

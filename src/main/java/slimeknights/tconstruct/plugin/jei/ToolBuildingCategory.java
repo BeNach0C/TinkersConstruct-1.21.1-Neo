@@ -63,9 +63,9 @@ public class ToolBuildingCategory extends AbstractRecipeCategory<ToolBuildingRec
 
   @Override
   public void createRecipeExtras(IRecipeExtrasBuilder builder, ToolBuildingRecipe recipe, IFocusGroup focuses) {
-    builder.addRecipeArrowWidget().setPosition(74, 22);
+    builder.addRecipeArrow().setPosition(74, 22);
     if (recipe.requiresAnvil()) {
-      builder.addDrawableWidget(anvil).setPosition(76, 44).setTooltip(ANVIL);
+      builder.addDrawable(anvil).setPosition(76, 44);
     }
   }
 
@@ -88,7 +88,7 @@ public class ToolBuildingCategory extends AbstractRecipeCategory<ToolBuildingRec
         for (int i = 0; i < partCount; i++) {
           IMaterialItem part = parts.get(i);
           MaterialVariantId material = materials.getMaterial(i);
-          if (part.canUseMaterial(material.getId())) {
+          if (part.canUseMaterial(material.getMaterialId())) {
             partsAndExtras.set(i, List.of(part.withMaterialForDisplay(material)));
           }
         }

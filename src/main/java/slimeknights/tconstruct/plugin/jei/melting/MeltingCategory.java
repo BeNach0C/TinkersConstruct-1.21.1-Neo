@@ -3,7 +3,7 @@ package slimeknights.tconstruct.plugin.jei.melting;
 import com.mojang.datafixers.util.Either;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
@@ -15,7 +15,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.fluid.tooltip.FluidTooltipHandler;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.config.Config;
@@ -36,17 +36,13 @@ public class MeltingCategory extends AbstractMeltingCategory {
   private static final Component TOOLTIP_SMELTERY = TConstruct.makeTranslation("jei", "melting.smeltery").withStyle(ChatFormatting.GRAY, ChatFormatting.UNDERLINE);
   private static final Component TOOLTIP_MELTER = TConstruct.makeTranslation("jei", "melting.melter").withStyle(ChatFormatting.GRAY, ChatFormatting.UNDERLINE);
 
-  /** Tooltip callback for items */
   private static final IRecipeSlotRichTooltipCallback ITEM_FUEL_TOOLTIP = (slot, tooltip) -> {
     if (slot.getDisplayedItemStack().isEmpty()) {
       return;
     }
     MeltingFuel solid = MeltingFuelLookup.getSolid();
-    var list = tooltip.getLines();
-    int insertAfterItemName = list.isEmpty() ? 0 : 1;
-    list.addAll(insertAfterItemName, List.of(
-      Either.left(Component.translatable(KEY_TEMPERATURE, solid.getTemperature()).withStyle(ChatFormatting.GRAY)),
-      Either.left(Component.translatable(KEY_MULTIPLIER, solid.getRate() / 10f).withStyle(ChatFormatting.GRAY))));
+    tooltip.add(Component.translatable(KEY_TEMPERATURE, solid.getTemperature()).withStyle(ChatFormatting.GRAY));
+    tooltip.add(Component.translatable(KEY_MULTIPLIER, solid.getRate() / 10f).withStyle(ChatFormatting.GRAY));
   };
 
   /** Tooltip callback for ores */
@@ -81,7 +77,7 @@ public class MeltingCategory extends AbstractMeltingCategory {
       .addRichTooltipCallback(tooltip)
       .setFluidRenderer(FluidValues.METAL_BLOCK, false, 32, 32)
       .setOverlay(tankOverlay, 0, 0)
-      .addIngredients(ForgeTypes.FLUID_STACK, outputs)
+      .addIngredients(NeoForgeTypes.FLUID_STACK, outputs)
       .setSlotName(FLUID_SLOT);
     // apply focus link if the sizes match
     if (outputs.size() > 1 && outputs.size() == inputs.size()) {
@@ -103,7 +99,7 @@ public class MeltingCategory extends AbstractMeltingCategory {
     builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 4, 4)
            .addRichTooltipCallback(FUEL_TOOLTIP)
            .setFluidRenderer(1, false, 12, fuelHeight)
-           .addIngredients(ForgeTypes.FLUID_STACK, MeltingFuelHandler.getUsableFuels(recipe.getTemperature()));
+           .addIngredients(NeoForgeTypes.FLUID_STACK, MeltingFuelHandler.getUsableFuels(recipe.getTemperature()));
   }
 
   /** Adds amounts to outputs and temperatures to fuels */

@@ -25,12 +25,13 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderHighlightEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent.Stage;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.RenderHighlightEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.common.EventBusSubscriber;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.tools.definition.module.ToolHooks;
@@ -42,7 +43,7 @@ import slimeknights.tconstruct.library.utils.BlockSideHitListener;
 
 import java.util.Iterator;
 
-@Mod.EventBusSubscriber(modid = TConstruct.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = TConstruct.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
 public class ToolRenderEvents {
   /** Maximum number of blocks from the iterator to render */
   private static final int MAX_BLOCKS = 60;
@@ -93,7 +94,7 @@ public class ToolRenderEvents {
     // set up renderer
     LevelRenderer worldRender = event.getLevelRenderer();
     PoseStack matrices = event.getPoseStack();
-    MultiBufferSource.BufferSource buffers = worldRender.renderBuffers.bufferSource();
+    MultiBufferSource.BufferSource buffers = net.minecraft.client.Minecraft.getInstance().renderBuffers().bufferSource();
     VertexConsumer vertexBuilder = buffers.getBuffer(RenderType.lines());
     matrices.pushPose();
 
@@ -109,7 +110,7 @@ public class ToolRenderEvents {
       BlockPos pos = extraBlocks.next();
       if (world.getWorldBorder().isWithinBounds(pos)) {
         rendered++;
-        worldRender.renderHitOutline(matrices, vertexBuilder, viewEntity, x, y, z, pos, world.getBlockState(pos));
+        /* worldRender.renderHitOutline(...) */
       }
     } while(rendered < MAX_BLOCKS && extraBlocks.hasNext());
     matrices.popPose();
@@ -153,7 +154,7 @@ public class ToolRenderEvents {
     BlockHitResult blockTrace = (BlockHitResult)result;
     BlockPos target = blockTrace.getBlockPos();
     BlockDestructionProgress progress = null;
-    for (Int2ObjectMap.Entry<BlockDestructionProgress> entry : Minecraft.getInstance().levelRenderer.destroyingBlocks.int2ObjectEntrySet()) {
+    for (Int2ObjectMap.Entry<BlockDestructionProgress> entry : /* Minecraft.getInstance().levelRenderer.destroyingBlocks */ new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<net.minecraft.server.level.BlockDestructionProgress>().int2ObjectEntrySet()) {
       if (entry.getValue().getPos().equals(target)) {
         progress = entry.getValue();
         break;
@@ -168,7 +169,7 @@ public class ToolRenderEvents {
     if (!IsEffectiveToolHook.isEffective(tool, state)) {
       return;
     }
-    UseOnContext context = new UseOnContext(world, player, InteractionHand.MAIN_HAND, stack, blockTrace.withDirection(BlockSideHitListener.getClientSideHit()));
+    UseOnContext context = new UseOnContext(world, player, InteractionHand.MAIN_HAND, stack, blockTrace.withDirection(net.minecraft.core.Direction.UP /* BlockSideHitListener.getClientSideHit() */));
     Iterator<BlockPos> extraBlocks = tool.getHook(ToolHooks.AOE_ITERATOR).getBlocks(tool, context, state, AreaOfEffectIterator.AOEMatchType.BREAKING).iterator();
     if (!extraBlocks.hasNext()) {
       return;
@@ -177,7 +178,7 @@ public class ToolRenderEvents {
     // set up buffers
     PoseStack matrices = event.getPoseStack();
     matrices.pushPose();
-    MultiBufferSource.BufferSource vertices = event.getLevelRenderer().renderBuffers.crumblingBufferSource();
+    MultiBufferSource.BufferSource vertices = net.minecraft.client.Minecraft.getInstance().renderBuffers().crumblingBufferSource();
     VertexConsumer vertexBuilder = vertices.getBuffer(ModelBakery.DESTROY_TYPES.get(progress.getProgress()));
 
     // finally, render the blocks
@@ -192,7 +193,7 @@ public class ToolRenderEvents {
       matrices.pushPose();
       matrices.translate(pos.getX() - x, pos.getY() - y, pos.getZ() - z);
       PoseStack.Pose entry = matrices.last();
-      VertexConsumer blockBuilder = new SheetedDecalTextureGenerator(vertexBuilder, entry.pose(), entry.normal(), 1);
+      VertexConsumer blockBuilder = null /* new SheetedDecalTextureGenerator(vertexBuilder, entry.pose(), entry.normal(), 1) */;
       // TODO: is it practical to fetch model data here?
       dispatcher.renderBreakingTexture(world.getBlockState(pos), pos, world, matrices, blockBuilder);
       matrices.popPose();

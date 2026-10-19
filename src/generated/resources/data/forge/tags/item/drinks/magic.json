@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:drinks/magic",
+                       "required":  false
+                   }
+               ]
+}

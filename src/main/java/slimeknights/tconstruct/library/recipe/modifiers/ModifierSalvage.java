@@ -23,10 +23,12 @@ import slimeknights.tconstruct.library.tools.nbt.IToolStackView;
 import slimeknights.tconstruct.library.tools.nbt.ToolStack;
 import slimeknights.tconstruct.tools.TinkerModifiers;
 
+import net.minecraft.world.item.crafting.RecipeInput;
+
 /**
  * Shared logic for main types of salvage recipes
  */
-public class ModifierSalvage implements ICustomOutputRecipe<Container> {
+public class ModifierSalvage implements ICustomOutputRecipe<RecipeInput> {
   public static final RecordLoadable<ModifierSalvage> LOADER = RecordLoadable.create(
     ContextKey.ID.requiredField(),
     IngredientLoadable.DISALLOW_EMPTY.requiredField("tools", r -> r.toolIngredient),
@@ -90,7 +92,7 @@ public class ModifierSalvage implements ICustomOutputRecipe<Container> {
   /** @deprecated Use {@link #matches(ItemStack, IToolStackView, int)} */
   @Deprecated
   @Override
-  public boolean matches(Container inv, Level level) {
+  public boolean matches(RecipeInput inv, Level level) {
     return false;
   }
 

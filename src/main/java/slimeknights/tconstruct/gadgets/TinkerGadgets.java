@@ -1,24 +1,25 @@
 package slimeknights.tconstruct.gadgets;
 
 import net.minecraft.data.DataGenerator;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTab.ItemDisplayParameters;
 import net.minecraft.world.item.CreativeModeTab.Output;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Item.Properties;
+
 import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import slimeknights.mantle.registration.object.EnumObject;
 import slimeknights.mantle.registration.object.ItemObject;
 import slimeknights.tconstruct.common.TinkerModule;
@@ -27,7 +28,6 @@ import slimeknights.tconstruct.gadgets.block.FoodCakeBlock.EffectCombination;
 import slimeknights.tconstruct.gadgets.block.InvertedCakeBlock;
 import slimeknights.tconstruct.gadgets.block.PunjiBlock;
 import slimeknights.tconstruct.gadgets.capability.PiggybackCapability;
-import slimeknights.tconstruct.gadgets.data.GadgetRecipeProvider;
 import slimeknights.tconstruct.gadgets.entity.DispenseFancyArmorStand;
 import slimeknights.tconstruct.gadgets.entity.EFLNEntity;
 import slimeknights.tconstruct.gadgets.entity.FancyArmorStandEntity;
@@ -64,7 +64,7 @@ public final class TinkerGadgets extends TinkerModule {
   /*
    * Items
    */
-  public static final ItemObject<PiggyBackPackItem> piggyBackpack = ITEMS.register("piggy_backpack", () -> new PiggyBackPackItem(new Properties().stacksTo(16)));
+  public static final ItemObject<PiggyBackPackItem> piggyBackpack = ITEMS.register("piggy_backpack", () -> new PiggyBackPackItem(new Item.Properties().stacksTo(16)));
   public static final EnumObject<FrameType,FancyItemFrameItem> itemFrame = ITEMS.registerEnum(FrameType.values(), "item_frame", (type) -> new FancyItemFrameItem(ITEM_PROPS, (world, pos, dir) -> new FancyItemFrameEntity(world, pos, dir, type)));
   public static final EnumObject<StandType,FancyArmorStandItem> armorStand = ITEMS.registerEnum(StandType.values(), "armor_stand", type -> new FancyArmorStandItem(new Item.Properties().stacksTo(16), type));
 
@@ -102,65 +102,64 @@ public final class TinkerGadgets extends TinkerModule {
   /*
    * Entities
    */
-  public static final RegistryObject<EntityType<FancyItemFrameEntity>> itemFrameEntity = ENTITIES.register("fancy_item_frame", () ->
+  public static final DeferredHolder<EntityType<?>, EntityType<FancyItemFrameEntity>> itemFrameEntity = ENTITIES.register("fancy_item_frame", () ->
     EntityType.Builder.<FancyItemFrameEntity>of(
       FancyItemFrameEntity::new, MobCategory.MISC)
       .sized(0.5F, 0.5F)
       .setTrackingRange(10)
       .setUpdateInterval(Integer.MAX_VALUE)
-      .setCustomClientFactory((spawnEntity, world) -> new FancyItemFrameEntity(TinkerGadgets.itemFrameEntity.get(), world))
       .setShouldReceiveVelocityUpdates(false)
   );
-  public static final RegistryObject<EntityType<FancyArmorStandEntity>> armorStandEntity = ENTITIES.register("armor_stand", () ->
+  public static final DeferredHolder<EntityType<?>, EntityType<FancyArmorStandEntity>> armorStandEntity = ENTITIES.register("armor_stand", () ->
     EntityType.Builder.of(FancyArmorStandEntity::new, MobCategory.MISC).sized(0.5F, 1.975F).clientTrackingRange(10));
 
   @Deprecated
-  public static final RegistryObject<EntityType<GlowballEntity>> glowBallEntity = ENTITIES.register("glow_ball", () ->
+  public static final DeferredHolder<EntityType<?>, EntityType<GlowballEntity>> glowBallEntity = ENTITIES.register("glow_ball", () ->
     EntityType.Builder.<GlowballEntity>of(GlowballEntity::new, MobCategory.MISC)
       .sized(0.25F, 0.25F)
       .setTrackingRange(4)
       .setUpdateInterval(10)
-      .setCustomClientFactory((spawnEntity, world) -> new GlowballEntity(TinkerGadgets.glowBallEntity.get(), world))
       .setShouldReceiveVelocityUpdates(true)
   );
   @Deprecated
-  public static final RegistryObject<EntityType<EFLNEntity>> eflnEntity = ENTITIES.register("efln_ball", () ->
+  public static final DeferredHolder<EntityType<?>, EntityType<EFLNEntity>> eflnEntity = ENTITIES.register("efln_ball", () ->
     EntityType.Builder.<EFLNEntity>of(EFLNEntity::new, MobCategory.MISC)
       .sized(0.25F, 0.25F)
       .setTrackingRange(4)
       .setUpdateInterval(10)
-      .setCustomClientFactory((spawnEntity, world) -> new EFLNEntity(TinkerGadgets.eflnEntity.get(), world))
       .setShouldReceiveVelocityUpdates(true));
   @Deprecated
-  public static final RegistryObject<EntityType<QuartzShurikenEntity>> quartzShurikenEntity = ENTITIES.register("quartz_shuriken", () ->
+  public static final DeferredHolder<EntityType<?>, EntityType<QuartzShurikenEntity>> quartzShurikenEntity = ENTITIES.register("quartz_shuriken", () ->
     EntityType.Builder.<QuartzShurikenEntity>of(QuartzShurikenEntity::new, MobCategory.MISC)
       .sized(0.25F, 0.25F)
       .setTrackingRange(4)
       .setUpdateInterval(10)
-      .setCustomClientFactory((spawnEntity, world) -> new QuartzShurikenEntity(TinkerGadgets.quartzShurikenEntity.get(), world))
       .setShouldReceiveVelocityUpdates(true)
   );
   @Deprecated
-  public static final RegistryObject<EntityType<FlintShurikenEntity>> flintShurikenEntity = ENTITIES.register("flint_shuriken", () ->
+  public static final DeferredHolder<EntityType<?>, EntityType<FlintShurikenEntity>> flintShurikenEntity = ENTITIES.register("flint_shuriken", () ->
     EntityType.Builder.<FlintShurikenEntity>of(FlintShurikenEntity::new, MobCategory.MISC)
       .sized(0.25F, 0.25F)
       .setTrackingRange(4)
       .setUpdateInterval(10)
-      .setCustomClientFactory((spawnEntity, world) -> new FlintShurikenEntity(TinkerGadgets.flintShurikenEntity.get(), world))
       .setShouldReceiveVelocityUpdates(true)
   );
 
   /*
    * Potions
    */
-  public static final RegistryObject<CarryPotionEffect> carryEffect = MOB_EFFECTS.register("carry", CarryPotionEffect::new);
+  public static final DeferredHolder<MobEffect, CarryPotionEffect> carryEffect = MOB_EFFECTS.register("carry", CarryPotionEffect::new);
 
   /*
    * Events
    */
   @SubscribeEvent
+  void registerCapabilities(final net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {
+    PiggybackCapability.register(event);
+  }
+
+  @SubscribeEvent
   void commonSetup(final FMLCommonSetupEvent event) {
-    PiggybackCapability.register();
     event.enqueueWork(() -> {
       cake.forEach(block -> ComposterBlock.add(1.0f, block));
       ComposterBlock.add(1.0f, magmaCake.get());
@@ -176,7 +175,7 @@ public final class TinkerGadgets extends TinkerModule {
   @SubscribeEvent
   void gatherData(final GatherDataEvent event) {
     DataGenerator generator = event.getGenerator();
-    generator.addProvider(event.includeServer(), new GadgetRecipeProvider(generator.getPackOutput()));
+    // generator.addProvider(event.includeServer(), new GadgetRecipeProvider(generator.getPackOutput()));
   }
 
   @SubscribeEvent

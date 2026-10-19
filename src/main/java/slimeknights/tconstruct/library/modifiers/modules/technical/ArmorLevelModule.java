@@ -4,7 +4,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.common.util.LazyOptional;
+
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.data.loadable.primitive.BooleanLoadable;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
@@ -68,7 +68,7 @@ public record ArmorLevelModule(TinkerDataKey<Integer> key, boolean allowBroken, 
    * @param amount   Amount to add
    */
   public static void addLevels(EquipmentChangeContext context, TinkerDataKey<Integer> key, int amount) {
-    TinkerDataCapability.Holder data = LogicHelper.orElseNull(context.getTinkerData());
+    TinkerDataCapability.Holder data = context.getTinkerData();
     if (data != null) {
       int totalLevels = data.get(key, 0) + amount;
       if (totalLevels <= 0) {
@@ -114,8 +114,7 @@ public record ArmorLevelModule(TinkerDataKey<Integer> key, boolean allowBroken, 
    * @param key    Key to get
    * @return  Level from the key
    */
-  public static int getLevel(LazyOptional<TinkerDataCapability.Holder> cap, TinkerDataKey<Integer> key) {
-    TinkerDataCapability.Holder data = LogicHelper.orElseNull(cap);
-    return data != null ? data.get(key, 0) : 0;
+  public static int getLevel(TinkerDataCapability.Holder cap, TinkerDataKey<Integer> key) {
+    return cap != null ? cap.get(key, 0) : 0;
   }
 }

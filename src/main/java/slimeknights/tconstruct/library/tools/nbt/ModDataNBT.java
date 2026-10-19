@@ -17,11 +17,18 @@ import java.util.function.BiFunction;
  * Note unlike other NBT classes, the data inside this one is mutable as most of it is directly used by the tools.
  */
 @EqualsAndHashCode
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class ModDataNBT implements IModDataView {
   /** Compound representing modifier data */
   @Getter(AccessLevel.PROTECTED)
   private final CompoundTag data;
+
+  protected ModDataNBT(CompoundTag data) {
+    this.data = data;
+  }
+
+  public CompoundTag getCompound() {
+    return this.data;
+  }
 
   /**
    * Creates a new mod data containing empty data

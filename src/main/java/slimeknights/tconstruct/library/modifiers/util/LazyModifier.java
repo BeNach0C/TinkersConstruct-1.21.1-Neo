@@ -13,14 +13,14 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Supplier that will return a modifier once they are fully registered, typically used with {@link ModifierDeferredRegister} */
-@RequiredArgsConstructor
-public class LazyModifier implements Supplier<Modifier>, IdAwareObject {
+public class LazyModifier implements Supplier<Modifier> {
   /** ID of the modifier to fetch */
-  @Getter
   protected final ModifierId id;
+  public ModifierId getId() { return id; }
   /** Cached value for the modifier */
   protected Modifier result;
 
+  public LazyModifier(ModifierId id) { this.id = id; }
   public LazyModifier(Modifier modifier) {
     this.id = modifier.getId();
     this.result = modifier;
@@ -35,7 +35,7 @@ public class LazyModifier implements Supplier<Modifier>, IdAwareObject {
   protected Modifier getUnchecked() {
     if (result == null) {
       result = ModifierManager.getValue(id);
-      if (result == ModifierManager.INSTANCE.getDefaultValue() && !ModifierId.EMPTY.equals(id)) {
+      if (result == ModifierManager.INSTANCE.getDefaultValue() && !ModifierId.EMPTY.equals(id.getId())) {
         TConstruct.LOG.error("Attempted to fetch modifier with ID {}, but it was not registered. Returning the empty modifier and hoping things don't break.", id);
       }
     }

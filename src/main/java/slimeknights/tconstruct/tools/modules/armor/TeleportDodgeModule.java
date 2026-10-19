@@ -59,14 +59,14 @@ public record TeleportDodgeModule(IJsonPredicate<LivingEntity> defender, IJsonPr
   public float modifyDamageTaken(IToolStackView tool, ModifierEntry modifier, EquipmentContext context, EquipmentSlot slotType, DamageSource source, float amount, boolean isDirectDamage) {
     LivingEntity entity = context.getEntity();
     // entity must not have enderference, and conditions must match
-    if (!entity.hasEffect(TinkerEffects.enderference.get()) && this.defender.matches(entity) && damageSource.matches(source)) {
+    if (!entity.hasEffect(TinkerEffects.enderference) && this.defender.matches(entity) && damageSource.matches(source)) {
       // chance of applying is boosted when blocking with a shield
       float level = CounterModule.getLevel(tool, modifier, slotType, entity);
       if (entity.getRandom().nextFloat() < chance.compute(level) && TeleportHelper.randomNearbyTeleport(context.getEntity(), (e, x, y, z) -> new EnderdodgingTeleportEvent(e, x, y, z, modifier))) {
         // if we successfully teleport, apply the cooldown
         int cooldown = this.cooldown.compute(level);
         if (cooldown > 0) {
-          entity.addEffect(new MobEffectInstance(TinkerEffects.enderference.get(), cooldown));
+          entity.addEffect(new MobEffectInstance(TinkerEffects.enderference, cooldown));
         }
         // damage tool based on how much damage we blocked
         ToolDamageUtil.damageAnimated(tool, (int)amount, entity, slotType, modifier.getId());
@@ -84,14 +84,17 @@ public record TeleportDodgeModule(IJsonPredicate<LivingEntity> defender, IJsonPr
     return new Builder();
   }
 
-  @Setter
-  @Accessors(fluent = true)
+  
   public static class Builder extends ModuleBuilder.Stack<Builder> implements LevelingInt.Builder<TeleportDodgeModule> {
     private IJsonPredicate<LivingEntity> defender = LivingEntityPredicate.ANY;
     private IJsonPredicate<DamageSource> damageSource = DamageSourcePredicate.ANY;
     private LevelingValue chance = LevelingValue.ONE;
 
     private Builder() {}
+
+    public Builder defender(IJsonPredicate<LivingEntity> defender) { this.defender = defender; return this; }
+    public Builder damageSource(IJsonPredicate<DamageSource> damageSource) { this.damageSource = damageSource; return this; }
+    public Builder chance(LevelingValue chance) { this.chance = chance; return this; }
 
     @Override
     public TeleportDodgeModule amount(int flat, int eachLevel) {

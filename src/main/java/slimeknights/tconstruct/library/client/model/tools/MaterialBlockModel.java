@@ -28,12 +28,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.IQuadTransformer;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.client.model.data.ModelProperty;
-import net.minecraftforge.client.model.geometry.IGeometryBakingContext;
-import net.minecraftforge.client.model.geometry.IGeometryLoader;
-import net.minecraftforge.client.model.geometry.IUnbakedGeometry;
+import net.neoforged.neoforge.client.model.IQuadTransformer;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.data.ModelProperty;
+import net.neoforged.neoforge.client.model.geometry.IGeometryBakingContext;
+import net.neoforged.neoforge.client.model.geometry.IGeometryLoader;
+import net.neoforged.neoforge.client.model.geometry.IUnbakedGeometry;
 import org.jetbrains.annotations.NotNull;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.client.model.RetexturedModel;
@@ -116,8 +116,8 @@ public class MaterialBlockModel implements IUnbakedGeometry<MaterialBlockModel> 
   }
 
   @Override
-  public BakedModel bake(IGeometryBakingContext owner, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState transform, ItemOverrides overrides, ResourceLocation location) {
-    BakedModel baked = model.bake(owner, baker, spriteGetter, transform, overrides, location);
+  public BakedModel bake(IGeometryBakingContext owner, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState transform, ItemOverrides overrides) {
+    BakedModel baked = model.bake(owner, baker, spriteGetter, transform, overrides);
     List<Set<String>> parts = this.parts.stream().map(part -> RetexturedModel.getAllRetextured(owner, model, part)).toList();
 
     // part model - fetches material from NBT field
@@ -222,7 +222,7 @@ public class MaterialBlockModel implements IUnbakedGeometry<MaterialBlockModel> 
         // for simplicity, assume the whole part is tinted if so. Build your model to separate distinct material faces if needed
         TintedSprite tint = null;
         for (BlockElementFace face : part.faces.values()) {
-          TintedSprite faceTint = tints.get(face.texture);
+          TintedSprite faceTint = tints.get(face.texture());
           if (faceTint != null) {
             tint = faceTint;
             break;
@@ -231,7 +231,7 @@ public class MaterialBlockModel implements IUnbakedGeometry<MaterialBlockModel> 
         // apply color if we have it
         if (tint != null) {
           IQuadTransformer partTransformer = tint.color() == -1 ? quadTransformer : quadTransformer.andThen(ColoredBlockModel.applyColorQuadTransformer(tint.color()));
-          ColoredBlockModel.bakePart(builder, retextureContext, part, tint.emissivity(), spriteGetter, transformation, partTransformer, uvlock, BAKE_LOCATION);
+          ColoredBlockModel.bakePart(builder, retextureContext, part, tint.emissivity(), spriteGetter, transform, partTransformer, uvlock);
         } else {
           SimpleBlockModel.bakePart(builder, retextureContext, part, spriteGetter, transform, quadTransformer, BAKE_LOCATION);
         }
@@ -279,7 +279,7 @@ public class MaterialBlockModel implements IUnbakedGeometry<MaterialBlockModel> 
       if (resolved != originalModel) {
         return resolved;
       }
-      if (stack.isEmpty() || !stack.hasTag()) {
+      if (stack.isEmpty() || !stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA)) {
         return originalModel;
       }
       return baked.getCachedModel(MaterialIdNBT.from(stack));
@@ -388,7 +388,7 @@ public class MaterialBlockModel implements IUnbakedGeometry<MaterialBlockModel> 
         if (resolved != originalModel) {
           return resolved;
         }
-        if (stack.isEmpty() || !stack.hasTag()) {
+        if (stack.isEmpty() || !stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA)) {
           return originalModel;
         }
         return getCachedModel(IMaterialItem.getMaterialFromStack(stack));
@@ -444,7 +444,7 @@ public class MaterialBlockModel implements IUnbakedGeometry<MaterialBlockModel> 
       @Nullable
       @Override
       public BakedModel resolve(BakedModel originalModel, ItemStack stack, @Nullable ClientLevel world, @Nullable LivingEntity entity, int seed) {
-        if (stack.isEmpty() || !stack.hasTag()) {
+        if (stack.isEmpty() || !stack.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA)) {
           return originalModel;
         }
         Block block = RetexturedHelper.getTexture(stack);

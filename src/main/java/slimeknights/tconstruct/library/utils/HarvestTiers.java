@@ -4,14 +4,14 @@ import com.google.common.collect.Maps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.Tiers;
-import net.minecraftforge.common.TierSortingRegistry;
 import slimeknights.mantle.client.ResourceColorManager;
 import slimeknights.mantle.data.listener.ISafeManagerReloadListener;
 import slimeknights.tconstruct.TConstruct;
 
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -25,9 +25,16 @@ public class HarvestTiers {
   /** Listener to clear name cache so we get new colors */
   public static final ISafeManagerReloadListener RELOAD_LISTENER = manager -> harvestLevelNames.clear();
 
+  public static ResourceLocation getNameLocation(Tier tier) {
+    if (tier instanceof Tiers vanilla) {
+      return ResourceLocation.withDefaultNamespace(vanilla.name().toLowerCase(Locale.ROOT));
+    }
+    return ResourceLocation.withDefaultNamespace(tier.toString().toLowerCase(Locale.ROOT));
+  }
+
   /** Makes a translation key for the given name */
   private static MutableComponent makeLevelKey(Tier tier) {
-    String key = Util.makeTranslationKey("harvest_tier", TierSortingRegistry.getName(tier));
+    String key = Util.makeTranslationKey("harvest_tier", getNameLocation(tier));
     TextColor color = ResourceColorManager.getTextColor(key);
     return TConstruct.makeTranslation("stat", key).withStyle(style -> style.withColor(color));
   }
@@ -38,14 +45,19 @@ public class HarvestTiers {
    * @return  Level name
    */
   public static Component getName(Tier tier) {
-    return harvestLevelNames.computeIfAbsent(tier, n ->  makeLevelKey(tier));
+    return harvestLevelNames.computeIfAbsent(tier, n -> makeLevelKey(tier));
+  }
+
+  private static int getTierOrder(Tier tier) {
+    if (tier instanceof Tiers vanilla) {
+      return vanilla.ordinal();
+    }
+    return 0;
   }
 
   /** Gets the larger of two tiers */
   public static Tier max(Tier a, Tier b) {
-    List<Tier> sorted = TierSortingRegistry.getSortedTiers();
-    // note indexOf returns -1 if the tier is missing, so the larger of an unsorted tier and a sorted one is the sorted one
-    if (sorted.indexOf(b) > sorted.indexOf(a)) {
+    if (getTierOrder(b) > getTierOrder(a)) {
       return b;
     }
     return a;
@@ -53,21 +65,15 @@ public class HarvestTiers {
 
   /** Gets the smaller of two tiers */
   public static Tier min(Tier a, Tier b) {
-    List<Tier> sorted = TierSortingRegistry.getSortedTiers();
-    // note indexOf returns -1 if the tier is missing, so the smaller of an unsorted tier and a sorted one is the unsorted one
-    if (sorted.indexOf(b) < sorted.indexOf(a)) {
+    if (getTierOrder(b) < getTierOrder(a)) {
       return b;
     }
     return a;
   }
 
-  /** Gets the smallest tier in the sorting registry */
+  /** Gets the smallest tier */
   public static Tier minTier() {
-    List<Tier> sortedTiers = TierSortingRegistry.getSortedTiers();
-    if (sortedTiers.isEmpty()) {
-      TConstruct.LOG.error("No sorted tiers exist, this should not happen");
-      return Tiers.WOOD;
-    }
-    return sortedTiers.get(0);
+    return Tiers.WOOD;
   }
 }
+

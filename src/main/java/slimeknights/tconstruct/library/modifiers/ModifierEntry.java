@@ -20,7 +20,6 @@ import javax.annotation.Nullable;
 /**
  * Data class holding a modifier with a level
  */
-@RequiredArgsConstructor
 public class ModifierEntry implements Comparable<ModifierEntry> {
   /** Key for modifier IDs in NBT and JSON */
   public static final String TAG_MODIFIER = "name";
@@ -63,12 +62,17 @@ public class ModifierEntry implements Comparable<ModifierEntry> {
   @Getter @With
   protected final int level;
 
+  public ModifierEntry(LazyModifier modifier, int level) {
+    this.modifier = modifier;
+    this.level = level;
+  }
+
   public ModifierEntry(ModifierId id, int level) {
     this(new LazyModifier(id), level);
   }
 
   public ModifierEntry(Modifier modifier, int level) {
-    this(new LazyModifier(modifier), level);
+    this(new LazyModifier(modifier.getId()), level);
   }
 
   /** Checks if the given modifier is bound */
@@ -172,7 +176,7 @@ public class ModifierEntry implements Comparable<ModifierEntry> {
 
   /** Checks if this entry matches the given modifier */
   public boolean matches(ModifierId id) {
-    return modifier.getId().equals(id);
+    return modifier.getId().equals(id.getId());
   }
 
   /** Checks if this entry matches the given modifier */

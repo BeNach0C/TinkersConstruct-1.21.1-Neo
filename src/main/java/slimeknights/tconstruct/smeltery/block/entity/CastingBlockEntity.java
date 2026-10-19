@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.smeltery.block.entity;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
@@ -23,14 +24,11 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.items.ItemHandlerHelper;
-import net.minecraftforge.items.wrapper.SidedInvWrapper;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.wrapper.SidedInvWrapper;
 import slimeknights.mantle.fluid.FluidTransferHelper;
 import slimeknights.mantle.recipe.helper.RecipeHelper;
 import slimeknights.mantle.util.BlockEntityHelper;
@@ -72,7 +70,10 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
   /** Special casting fluid tank */
   @Getter
   private final CastingFluidHandler tank = new CastingFluidHandler(this);
-  private final LazyOptional<CastingFluidHandler> holder = LazyOptional.of(() -> tank);
+
+  public CastingFluidHandler getTank() {
+    return tank;
+  }
 
   /* Casting recipes */
   /** Recipe type for casting recipes, may be basin or table */
@@ -82,9 +83,18 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
   /** Current recipe progress */
   @Getter
   private int timer;
+
+  public int getTimer() {
+    return timer;
+  }
+
   /** Time needed for the recipe to finish */
   @Getter
   private int coolingTime = -1;
+
+  public int getCoolingTime() {
+    return coolingTime;
+  }
   /** Current in progress recipe */
   private ICastingRecipe currentRecipe;
   /** Name of the current recipe, fetched from Tag. Used since Tag is read before recipe manager access */
@@ -98,6 +108,10 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
   /** Items that count as empty in the casting table */
   @Getter
   private final TagKey<Item> emptyCastTag;
+
+  public TagKey<Item> getEmptyCastTag() {
+    return this.emptyCastTag;
+  }
 
   /* Molding recipes */
   /** Recipe type for molding recipes, may be basin or table */
@@ -120,14 +134,6 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
     this.moldingType = moldingType;
     this.castingInventory = new CastingContainerWrapper(this);
     this.moldingInventory = new MoldingContainerWrapper(itemHandler, INPUT);
-  }
-
-  @Override
-  @Nonnull
-  public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
-    if (capability == ForgeCapabilities.FLUID_HANDLER)
-      return holder.cast();
-    return super.getCapability(capability, facing);
   }
 
   /**
@@ -165,7 +171,7 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
           // if the recipe has a mold, hand item goes on table (if not consumed in crafting)
           setItem(INPUT, result);
           if (!recipe.isPatternConsumed()) {
-            setItem(OUTPUT, ItemHandlerHelper.copyStackWithSize(held, 1));
+            setItem(OUTPUT, held.copyWithCount(1));
             // send a block update for the comparator, needs to be done after the stack is removed
             level.updateNeighborsAt(this.worldPosition, this.getBlockState().getBlock());
           }
@@ -347,7 +353,7 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
     if (this.lastCastingRecipe != null && this.lastCastingRecipe.matches(castingInventory, level)) {
       return this.lastCastingRecipe;
     }
-    ICastingRecipe castingRecipe = level.getRecipeManager().getRecipeFor(this.castingType, castingInventory, level).orElse(null);
+    ICastingRecipe castingRecipe = level.getRecipeManager().getRecipeFor(this.castingType, castingInventory, level).map(net.minecraft.world.item.crafting.RecipeHolder::value).orElse(null);
     if (castingRecipe != null) {
       this.lastCastingRecipe = castingRecipe;
     }
@@ -365,7 +371,7 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
     if (lastMoldingRecipe != null && lastMoldingRecipe.matches(moldingInventory, level)) {
       return lastMoldingRecipe;
     }
-    Optional<MoldingRecipe> newRecipe = level.getRecipeManager().getRecipeFor(moldingType, moldingInventory, level);
+    Optional<MoldingRecipe> newRecipe = level.getRecipeManager().getRecipeFor(moldingType, moldingInventory, level).map(net.minecraft.world.item.crafting.RecipeHolder::value);
     if (newRecipe.isPresent()) {
       lastMoldingRecipe = newRecipe.get();
       return lastMoldingRecipe;
@@ -573,33 +579,31 @@ public abstract class CastingBlockEntity extends TableBlockEntity implements Wor
   }
 
   @Override
-  public void saveAdditional(CompoundTag tags) {
-    super.saveAdditional(tags);
+  public void saveAdditional(CompoundTag tags, net.minecraft.core.HolderLookup.Provider provider) {
+    super.saveAdditional(tags, provider);
     tags.putBoolean(TAG_REDSTONE, lastRedstone);
   }
 
   @Override
   public void saveSynced(CompoundTag tags) {
     super.saveSynced(tags);
-    tags.put(TAG_TANK, tank.writeToTag(new CompoundTag()));
+    net.minecraft.core.HolderLookup.Provider provider = level != null ? level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY;
+    tags.put(TAG_TANK, tank.writeToTag(new CompoundTag(), provider));
     if (currentRecipe != null || recipeName != null) {
       tags.putInt(TAG_TIMER, timer);
     }
-    if (currentRecipe != null) {
-      tags.putString(TAG_RECIPE, currentRecipe.getId().toString());
-    } else if (recipeName != null) {
+    if (recipeName != null) {
       tags.putString(TAG_RECIPE, recipeName.toString());
     }
   }
 
-  @SuppressWarnings("removal")
   @Override
-  public void load(CompoundTag tags) {
-    super.load(tags);
-    tank.readFromTag(tags.getCompound(TAG_TANK));
+  public void loadAdditional(CompoundTag tags, net.minecraft.core.HolderLookup.Provider provider) {
+    super.loadAdditional(tags, provider);
+    tank.readFromTag(tags.getCompound(TAG_TANK), provider);
     timer = tags.getInt(TAG_TIMER);
     if (tags.contains(TAG_RECIPE, CompoundTag.TAG_STRING)) {
-      ResourceLocation name = new ResourceLocation(tags.getString(TAG_RECIPE));
+      ResourceLocation name = ResourceLocation.parse(tags.getString(TAG_RECIPE));
       // if we have a level, fetch the recipe
       if (level != null) {
         loadRecipe(level, name);

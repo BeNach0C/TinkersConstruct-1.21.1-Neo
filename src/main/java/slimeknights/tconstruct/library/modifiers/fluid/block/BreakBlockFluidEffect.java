@@ -21,8 +21,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootParams.Builder;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.data.loadable.primitive.FloatLoadable;
 import slimeknights.mantle.data.loadable.primitive.IntLoadable;
@@ -33,8 +33,11 @@ import slimeknights.tconstruct.library.modifiers.fluid.FluidEffectContext;
 
 import java.util.Map;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+
 /** Breaks a block using a fluid */
-public record BreakBlockFluidEffect(float hardness, Map<Enchantment,Integer> enchantments) implements FluidEffect<FluidEffectContext.Block> {
+public record BreakBlockFluidEffect(float hardness, Map<ResourceKey<Enchantment>,Integer> enchantments) implements FluidEffect<FluidEffectContext.Block> {
   public static final RecordLoadable<BreakBlockFluidEffect> LOADER = RecordLoadable.create(
     FloatLoadable.FROM_ZERO.defaultField("hardness", 0f, false, BreakBlockFluidEffect::hardness),
     Loadables.ENCHANTMENT.mapWithValues(IntLoadable.FROM_ONE, 0).defaultField("enchantments", Map.of(), BreakBlockFluidEffect::enchantments),
@@ -44,7 +47,7 @@ public record BreakBlockFluidEffect(float hardness, Map<Enchantment,Integer> enc
     this(hardness, Map.of());
   }
 
-  public BreakBlockFluidEffect(float hardness, Enchantment enchantment, int level) {
+  public BreakBlockFluidEffect(float hardness, ResourceKey<Enchantment> enchantment, int level) {
     this(hardness, Map.of(enchantment, level));
   }
 
@@ -86,7 +89,12 @@ public record BreakBlockFluidEffect(float hardness, Map<Enchantment,Integer> enc
         ItemStack fakeTool = ItemStack.EMPTY;
         if (!enchantments.isEmpty()) {
           fakeTool = new ItemStack(Items.STICK);
-          EnchantmentHelper.setEnchantments(enchantments, fakeTool);
+          var enchantmentRegistry = server.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+          net.minecraft.world.item.enchantment.ItemEnchantments.Mutable mut = new net.minecraft.world.item.enchantment.ItemEnchantments.Mutable(net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY);
+          for (var entry : enchantments.entrySet()) {
+            enchantmentRegistry.getHolder(entry.getKey()).ifPresent(holder -> mut.set(holder, entry.getValue()));
+          }
+          EnchantmentHelper.setEnchantments(fakeTool, mut.toImmutable());
         }
 
         // ensures tile entity is fetched so its around for afterBlockBreak
@@ -139,13 +147,13 @@ public record BreakBlockFluidEffect(float hardness, Map<Enchantment,Integer> enc
       return Component.translatable(translationKey + ".hardness", hardness);
     } else {
       translationKey += ".enchanted";
+      var reg = registryAccess.registry(Registries.ENCHANTMENT);
       Component enchantments = enchantments().entrySet().stream().<Component>map(entry -> {
-        Enchantment enchantment = entry.getKey();
-        MutableComponent component = Component.translatable(enchantment.getDescriptionId());
-        if (enchantment.getMaxLevel() != 1) {
-          component.append(CommonComponents.SPACE).append(Component.translatable("enchantment.level." + entry.getValue()));
+        var holderOpt = reg.flatMap(r -> r.getHolder(entry.getKey()));
+        if (holderOpt.isPresent()) {
+          return Enchantment.getFullname(holderOpt.get(), entry.getValue());
         }
-        return component;
+        return Component.literal(entry.getKey().location().toString());
       }).reduce(MERGE_COMPONENT_LIST).orElse(Component.empty());
       if (hardness == 0) {
         return Component.translatable(translationKey, enchantments);

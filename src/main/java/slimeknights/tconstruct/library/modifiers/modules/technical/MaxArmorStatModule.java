@@ -85,13 +85,16 @@ public record MaxArmorStatModule(TinkerDataKey<Float> statKey, LevelingValue amo
 
   @Setter
   @Accessors(fluent = true)
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder extends ModuleBuilder.Stack<Builder> implements LevelingValue.Builder<MaxArmorStatModule> {
     private final TinkerDataKey<Float> statKey;
     private boolean allowBroken = false;
     @Nullable
     private TagKey<Item> heldTag;
     private ArmorStatModule.TooltipStyle tooltipStyle = ArmorStatModule.TooltipStyle.NONE;
+
+    public Builder(TinkerDataKey<Float> statKey) {
+      this.statKey = statKey;
+    }
 
     public MaxArmorStatModule.Builder allowBroken() {
       this.allowBroken = true;

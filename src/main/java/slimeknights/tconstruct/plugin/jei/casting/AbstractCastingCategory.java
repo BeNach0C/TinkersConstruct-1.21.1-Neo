@@ -1,6 +1,6 @@
 package slimeknights.tconstruct.plugin.jei.casting;
 
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
@@ -8,9 +8,7 @@ import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated.StartDirection;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
-import mezz.jei.api.gui.widgets.IDrawableWidget;
 import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
-import mezz.jei.api.gui.widgets.IRecipeWidgetTooltipCallback;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.recipe.IFocusGroup;
@@ -22,7 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.recipe.FluidValues;
 import slimeknights.tconstruct.library.recipe.casting.IDisplayableCastingRecipe;
@@ -65,27 +63,34 @@ public abstract class AbstractCastingCategory extends AbstractRecipeCategory<IDi
 
   @Override
   public void createRecipeExtras(IRecipeExtrasBuilder builder, IDisplayableCastingRecipe recipe, IFocusGroup focuses) {
-    builder.addDrawableWidget(block).setPosition(38, 35);
+    builder.addDrawable(block, 38, 35);
     int coolingTime = recipe.getCoolingTime();
     IDrawable arrow = guiHelper.drawableBuilder(BACKGROUND_LOC, 117, 32, 24, 17)
                                   .buildAnimated(Math.max(5, coolingTime), StartDirection.LEFT, false);
-    IDrawableWidget arrowWidget = builder.addDrawableWidget(arrow).setPosition(58, 18);
-    arrowTooltip:
-    {
-      if (recipe.isCoolingTimeDynamic()) {
-        IRecipeSlotDrawable fluid = CategoryUtil.findSlot(builder.getRecipeSlots().getSlots(), FLUID_SLOT);
-        if (fluid != null) {
-          arrowWidget.setTooltip(new CoolingArrowTooltip(recipe, fluid));
-          break arrowTooltip;
-        }
-      }
-      arrowWidget.setTooltip(Component.translatable(KEY_COOLING_TIME, coolingTime / 20));
-    }
+    builder.addDrawable(arrow, 58, 18);
     if (recipe.hasCast()) {
       boolean consumed = recipe.isConsumed();
-      builder.addDrawableWidget(consumed ? castConsumed : castKept)
-        .setPosition(63, 39)
-        .setTooltip(consumed ? CAST_CONSUMED : CAST_KEPT);
+      builder.addDrawable(consumed ? castConsumed : castKept, 63, 39);
+    }
+  }
+
+  @Override
+  public void getTooltip(ITooltipBuilder tooltip, IDisplayableCastingRecipe recipe, IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
+    // Arrow coordinates: (58, 18) to (58+24, 18+17)
+    if (mouseX >= 58 && mouseX <= 82 && mouseY >= 18 && mouseY <= 35) {
+      if (recipe.isCoolingTimeDynamic()) {
+        recipeSlotsView.findSlotByName(FLUID_SLOT).ifPresent(fluidSlot -> {
+          FluidStack fluid = fluidSlot.getDisplayedIngredient(NeoForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
+          tooltip.add(Component.translatable(KEY_COOLING_TIME, recipe.getCoolingTime(fluid) / 20));
+        });
+        return;
+      }
+      tooltip.add(Component.translatable(KEY_COOLING_TIME, recipe.getCoolingTime() / 20));
+      return;
+    }
+    // Cast icon coordinates: (63, 39) to (63+13, 39+11)
+    if (recipe.hasCast() && mouseX >= 63 && mouseX <= 76 && mouseY >= 39 && mouseY <= 50) {
+      tooltip.add(recipe.isConsumed() ? CAST_CONSUMED : CAST_KEPT);
     }
   }
 
@@ -131,7 +136,7 @@ public abstract class AbstractCastingCategory extends AbstractRecipeCategory<IDi
            .addRichTooltipCallback(FluidTooltipCallback.UNITS)
            .setFluidRenderer(capacity, false, 32, 32)
            .setOverlay(tankOverlay, 0, 0)
-           .addIngredients(ForgeTypes.FLUID_STACK, inputs)
+           .addIngredients(NeoForgeTypes.FLUID_STACK, inputs)
       .setSlotName(FLUID_SLOT);
     // pouring fluid
     int h = 11;
@@ -141,7 +146,7 @@ public abstract class AbstractCastingCategory extends AbstractRecipeCategory<IDi
     IRecipeSlotBuilder faucet = builder.addSlot(RecipeIngredientRole.RENDER_ONLY, 43, 8)
       .addRichTooltipCallback(FluidTooltipCallback.UNITS)
       .setFluidRenderer(1, false, 6, h)
-      .addIngredients(ForgeTypes.FLUID_STACK, inputs)
+      .addIngredients(NeoForgeTypes.FLUID_STACK, inputs)
       .setSlotName(FAUCET_SLOT);
 
     // if requested, and they are the same size, link output and fluid
@@ -168,9 +173,9 @@ public abstract class AbstractCastingCategory extends AbstractRecipeCategory<IDi
       if (fluid != null) {
         IRecipeSlotDrawable faucet = CategoryUtil.findSlot(recipeSlots, FAUCET_SLOT);
         if (faucet != null) {
-          fluidSlot = new RecipeSlotWrapper<>(fluid, ForgeTypes.FLUID_STACK, FluidStack.EMPTY, faucet);
+          fluidSlot = new RecipeSlotWrapper<>(fluid, NeoForgeTypes.FLUID_STACK, FluidStack.EMPTY, faucet);
         } else {
-          fluidSlot = new RecipeSlotWrapper<>(fluid, ForgeTypes.FLUID_STACK, FluidStack.EMPTY);
+          fluidSlot = new RecipeSlotWrapper<>(fluid, NeoForgeTypes.FLUID_STACK, FluidStack.EMPTY);
         }
       } else {
         fluidSlot = RecipeSlot.EMPTY_FLUID;
@@ -188,14 +193,5 @@ public abstract class AbstractCastingCategory extends AbstractRecipeCategory<IDi
   @Override
   public ResourceLocation getRegistryName(IDisplayableCastingRecipe recipe) {
     return recipe.getRecipeId();
-  }
-
-  /** Handles the tooltip for the arrow */
-  private record CoolingArrowTooltip(IDisplayableCastingRecipe recipe, IRecipeSlotDrawable fluidSlot) implements IRecipeWidgetTooltipCallback {
-    @Override
-    public void onTooltip(ITooltipBuilder tooltip) {
-      FluidStack fluid = fluidSlot.getDisplayedIngredient(ForgeTypes.FLUID_STACK).orElse(FluidStack.EMPTY);
-      tooltip.add(Component.translatable(KEY_COOLING_TIME, recipe.getCoolingTime(fluid) / 20));
-    }
   }
 }

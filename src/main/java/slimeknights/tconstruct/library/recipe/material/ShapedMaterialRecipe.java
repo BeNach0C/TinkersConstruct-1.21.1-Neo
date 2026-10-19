@@ -32,25 +32,13 @@ import java.util.List;
 public class ShapedMaterialRecipe extends ShapedRecipe {
   private MaterialValueIngredient material;
   private final List<MaterialVariantId> extraMaterials;
-  public ShapedMaterialRecipe(ResourceLocation id, String group, CraftingBookCategory category, int width, int height, NonNullList<Ingredient> ingredients, ItemStack result, boolean showNotification, List<MaterialVariantId> extraMaterials) {
-    super(id, group, category, width, height, ingredients, result, showNotification);
+  public ShapedMaterialRecipe(String group, CraftingBookCategory category, net.minecraft.world.item.crafting.ShapedRecipePattern pattern, ItemStack result, boolean showNotification, List<MaterialVariantId> extraMaterials) {
+    super(group, category, pattern, result, showNotification);
     this.extraMaterials = extraMaterials;
   }
 
   public ShapedMaterialRecipe(ShapedRecipe recipe, List<MaterialVariantId> extraMaterials) {
-    this(recipe.getId(), recipe.getGroup(), recipe.category(), recipe.getRecipeWidth(), recipe.getRecipeHeight(), recipe.getIngredients(), recipe.result, recipe.showNotification(), extraMaterials);
-  }
-
-  /** @deprecated use {@link #ShapedMaterialRecipe(ResourceLocation,String,CraftingBookCategory,int,int,NonNullList,ItemStack,boolean,List)} */
-  @Deprecated(forRemoval = true)
-  public ShapedMaterialRecipe(ResourceLocation id, String group, CraftingBookCategory category, int width, int height, NonNullList<Ingredient> ingredients, ItemStack result, boolean showNotification) {
-    this(id, group, category, width, height, ingredients, result, showNotification, List.of());
-  }
-
-  /** @deprecated use {@link #ShapedMaterialRecipe(ShapedRecipe,List)} */
-  @Deprecated(forRemoval = true)
-  public ShapedMaterialRecipe(ShapedRecipe recipe) {
-    this(recipe, List.of());
+    this(recipe.getGroup(), recipe.category(), recipe.pattern, recipe.getResultItem(null), recipe.showNotification(), extraMaterials);
   }
 
   /** Gets the material to match */
@@ -60,7 +48,7 @@ public class ShapedMaterialRecipe extends ShapedRecipe {
       // assume all material ingredients match the same stat type
       for (Ingredient ingredient : getIngredients()) {
         // collect all ingredients that match
-        if (ingredient instanceof MaterialValueIngredient materialValue) {
+        if (ingredient.getCustomIngredient() instanceof MaterialValueIngredient materialValue) {
           if (material == null) {
             material = materialValue;
           } else {
@@ -71,21 +59,21 @@ public class ShapedMaterialRecipe extends ShapedRecipe {
       }
       // if we found no materials, that is also an issue
       if (material == null) {
-        TConstruct.LOG.error("No material ingredient found for material shaped recipe {}, this indicates a broken recipe", getId());
+        TConstruct.LOG.error("No material ingredient found for material shaped recipe, this indicates a broken recipe");
       }
     }
     return material;
   }
 
   @Nullable
-  private MaterialVariantId findMaterial(CraftingContainer inventory) {
+  private MaterialVariantId findMaterial(net.minecraft.world.item.crafting.CraftingInput inventory) {
     MaterialValueIngredient material = getMaterial();
     if (material == null) {
       return null;
     }
     // ensure same material in all slots
     MaterialVariantId firstMaterial = null;
-    for (int i = 0; i < inventory.getContainerSize(); i++) {
+    for (int i = 0; i < inventory.size(); i++) {
       ItemStack stack = inventory.getItem(i);
       if (!stack.isEmpty()) {
         // ignore anything that does not meet our requirements
@@ -96,8 +84,8 @@ public class ShapedMaterialRecipe extends ShapedRecipe {
             firstMaterial = matchedMaterial;
           } else if (!firstMaterial.matchesVariant(matchedMaterial)) {
             // if same material but different variants, just discard the variant
-            if (firstMaterial.getId().equals(matchedMaterial.getId())) {
-              firstMaterial = firstMaterial.getId();
+            if (firstMaterial.getMaterialId().equals(matchedMaterial.getMaterialId())) {
+              firstMaterial = firstMaterial.getMaterialId();
             } else {
               // if different materials, no match
               return null;
@@ -110,7 +98,7 @@ public class ShapedMaterialRecipe extends ShapedRecipe {
   }
 
   @Override
-  public boolean matches(CraftingContainer inventory, Level level) {
+  public boolean matches(net.minecraft.world.item.crafting.CraftingInput inventory, Level level) {
     if (!super.matches(inventory, level)) {
       return false;
     }
@@ -125,7 +113,7 @@ public class ShapedMaterialRecipe extends ShapedRecipe {
   }
 
   @Override
-  public ItemStack assemble(CraftingContainer inventory, RegistryAccess registryAccess) {
+  public ItemStack assemble(net.minecraft.world.item.crafting.CraftingInput inventory, net.minecraft.core.HolderLookup.Provider registryAccess) {
     ItemStack stack = super.assemble(inventory, registryAccess);
     MaterialVariantId material = findMaterial(inventory);
     if (material != null) {
@@ -140,32 +128,79 @@ public class ShapedMaterialRecipe extends ShapedRecipe {
   }
 
   public static class Serializer implements LoggingRecipeSerializer<ShapedMaterialRecipe> {
-    static final Loadable<List<MaterialVariantId>> EXTRA_MATERIALS = ShapedMaterialsRecipe.Serializer.EXTRA_MATERIALS;
-    static final LoadableField<List<MaterialVariantId>,ShapedMaterialRecipe> MATERIAL_FIELD = EXTRA_MATERIALS.defaultField("extra_materials", List.of(), r -> r.extraMaterials);
-
-    @Override
-    public ShapedMaterialRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-      ShapedMaterialRecipe recipe = new ShapedMaterialRecipe(SHAPED_RECIPE.fromJson(recipeId, json), MATERIAL_FIELD.get(json));
-      // ensure the material is valid, since we have all the needed information to check
-      // better now than at runtime
-      if (recipe.getMaterial() == null) {
-        throw new JsonSyntaxException("Invalid material ingredients for shaped material recipe " + recipeId);
+    private static final slimeknights.mantle.data.loadable.Loadable<List<MaterialVariantId>> EXTRA_MATERIALS = MaterialVariantId.LOADABLE.list(0);
+    public static final com.mojang.serialization.MapCodec<ShapedMaterialRecipe> CODEC = new com.mojang.serialization.MapCodec<>() {
+      @Override
+      public <T> java.util.stream.Stream<T> keys(com.mojang.serialization.DynamicOps<T> ops) {
+        return java.util.stream.Stream.empty();
       }
-      return recipe;
+
+      @Override
+      public <T> com.mojang.serialization.DataResult<ShapedMaterialRecipe> decode(com.mojang.serialization.DynamicOps<T> ops, com.mojang.serialization.MapLike<T> input) {
+        try {
+          JsonObject json = ops.convertTo(com.mojang.serialization.JsonOps.INSTANCE, ops.createMap(input.entries())).getAsJsonObject();
+          com.google.gson.JsonElement nbtElement = null;
+          if (json.has("result") && json.get("result").isJsonObject()) {
+            JsonObject resultObj = json.getAsJsonObject("result");
+            if (resultObj.has("item") && !resultObj.has("id")) {
+              resultObj.add("id", resultObj.get("item"));
+              resultObj.remove("item");
+            }
+            if (resultObj.has("nbt")) {
+              nbtElement = resultObj.remove("nbt");
+            }
+          }
+          ShapedRecipe orig = net.minecraft.world.item.crafting.RecipeSerializer.SHAPED_RECIPE.codec().codec()
+            .parse(com.mojang.serialization.JsonOps.INSTANCE, json)
+            .getOrThrow(JsonSyntaxException::new);
+          ItemStack result = orig.getResultItem(null);
+          if (nbtElement != null) {
+            net.minecraft.nbt.CompoundTag tag = slimeknights.mantle.data.loadable.common.NBTLoadable.ALLOW_STRING.convert(nbtElement, "nbt");
+            result = result.copy();
+            result.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(tag));
+          }
+          List<MaterialVariantId> extraMaterials = EXTRA_MATERIALS.getOrDefault(json, "extra_materials", List.of());
+          return com.mojang.serialization.DataResult.success(
+            new ShapedMaterialRecipe(orig.getGroup(), orig.category(), orig.pattern, result, orig.showNotification(), extraMaterials));
+        } catch (Exception e) {
+          return com.mojang.serialization.DataResult.error(() -> e.getMessage() == null ? e.toString() : e.getMessage());
+        }
+      }
+
+      @Override
+      public <T> com.mojang.serialization.RecordBuilder<T> encode(ShapedMaterialRecipe input, com.mojang.serialization.DynamicOps<T> ops, com.mojang.serialization.RecordBuilder<T> prefix) {
+        return net.minecraft.world.item.crafting.RecipeSerializer.SHAPED_RECIPE.codec().encode(input, ops, prefix);
+      }
+    };
+
+    @Override
+    public com.mojang.serialization.MapCodec<ShapedMaterialRecipe> codec() {
+      return CODEC;
     }
 
     @Override
-    @Nullable
-    public ShapedMaterialRecipe fromNetworkSafe(ResourceLocation recipeId, FriendlyByteBuf buffer) {
-      ShapedRecipe recipe = SHAPED_RECIPE.fromNetwork(recipeId, buffer);
-      List<MaterialVariantId> extraMaterials = MATERIAL_FIELD.decode(buffer);
-      return recipe == null ? null : new ShapedMaterialRecipe(recipe, extraMaterials);
-    }
+    public net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, ShapedMaterialRecipe> streamCodecSafe() {
+      return new net.minecraft.network.codec.StreamCodec<>() {
+        @Override
+        public ShapedMaterialRecipe decode(net.minecraft.network.RegistryFriendlyByteBuf buffer) {
+          ShapedRecipe recipe = net.minecraft.world.item.crafting.RecipeSerializer.SHAPED_RECIPE.streamCodec().decode(buffer);
+          int extraSize = buffer.readVarInt();
+          List<MaterialVariantId> extraMaterials = new java.util.ArrayList<>(extraSize);
+          for (int i = 0; i < extraSize; i++) {
+            extraMaterials.add(MaterialVariantId.fromNetwork(buffer));
+          }
+          return new ShapedMaterialRecipe(recipe, extraMaterials);
+        }
 
-    @Override
-    public void toNetworkSafe(FriendlyByteBuf buffer, ShapedMaterialRecipe recipe) {
-      SHAPED_RECIPE.toNetwork(buffer, recipe);
-      MATERIAL_FIELD.encode(buffer, recipe);
+        @Override
+        public void encode(net.minecraft.network.RegistryFriendlyByteBuf buffer, ShapedMaterialRecipe recipe) {
+          net.minecraft.world.item.crafting.RecipeSerializer.SHAPED_RECIPE.streamCodec().encode(buffer, recipe);
+          buffer.writeVarInt(recipe.extraMaterials.size());
+          for (MaterialVariantId extra : recipe.extraMaterials) {
+            extra.toNetwork(buffer);
+          }
+        }
+      };
     }
   }
 }

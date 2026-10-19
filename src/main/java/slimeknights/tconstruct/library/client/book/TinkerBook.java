@@ -28,6 +28,7 @@ import slimeknights.tconstruct.library.client.book.sectiontransformer.ToolTagInj
 import slimeknights.tconstruct.library.client.book.sectiontransformer.materials.TierRangeMaterialSectionTransformer;
 import slimeknights.tconstruct.library.materials.IMaterialRegistry;
 import slimeknights.tconstruct.library.materials.MaterialRegistry;
+import slimeknights.tconstruct.library.materials.definition.IMaterial;
 import slimeknights.tconstruct.library.materials.definition.MaterialId;
 import slimeknights.tconstruct.shared.item.TinkerBookItem.BookType;
 import slimeknights.tconstruct.tools.stats.GripMaterialStats;
@@ -68,7 +69,7 @@ public class TinkerBook extends BookData {
    * Initializes the books
    */
   public static void initBook() {
-    BookLoader.registerGsonTypeAdapter(Component.class, new Component.Serializer());
+    BookLoader.registerGsonTypeAdapter(Component.class, new Component.SerializerAdapter(net.minecraft.core.RegistryAccess.fromRegistryOfRegistries(net.minecraft.core.registries.BuiltInRegistries.REGISTRY)));
 
     // register page types
     BookLoader.registerPageType(ContentTool.ID, ContentTool.class);
@@ -104,7 +105,7 @@ public class TinkerBook extends BookData {
         .thenComparing(hasStatType(StatlessMaterialStats.ARROW_SHAFT)),
       StatlessMaterialStats.ARROW_HEAD.getIdentifier(), StatlessMaterialStats.ARROW_SHAFT.getIdentifier(), StatlessMaterialStats.FLETCHING.getIdentifier());
     TierRangeMaterialSectionTransformer.registerMaterialType(getResource("armor"), ArmorMaterialContent::new,
-      Comparator.comparing(mat -> {
+      Comparator.comparing((IMaterial mat) -> {
         // ordering:
         // 1: cuirass exclusive
         // 2: cuirass + maille
@@ -120,22 +121,22 @@ public class TinkerBook extends BookData {
           return registry.getMaterialStats(id, StatlessMaterialStats.MAILLE.getIdentifier()).isPresent() ? 2 : 1;
         }
         // anything with plating goes 4th
-        if (registry.getMaterialStats(id, CHESTPLATE.getId()).isPresent()) {
+        if (registry.getMaterialStats(id, CHESTPLATE.getStatId()).isPresent()) {
           return 4;
         }
         // if it has maille, it goes before plating. Otherwise (shield cores), it goes after
         return registry.getMaterialStats(id, StatlessMaterialStats.MAILLE.getIdentifier()).isPresent() ? 3 : 5;
       }),
-      HELMET.getId(), CHESTPLATE.getId(), LEGGINGS.getId(), BOOTS.getId(), SHIELD.getId(),
+      HELMET.getStatId(), CHESTPLATE.getStatId(), LEGGINGS.getStatId(), BOOTS.getStatId(), SHIELD.getStatId(),
       StatlessMaterialStats.MAILLE.getIdentifier(), StatlessMaterialStats.CUIRASS.getIdentifier(),
       StatlessMaterialStats.SHIELD_CORE.getIdentifier());
     // slimesuit
     TierRangeMaterialSectionTransformer.registerMaterialType(SlimeStats.ID, SlimeMaterialContent::new);
     TierRangeMaterialSectionTransformer.registerMaterialType(getResource("skull"), ContentMaterialSkull::new,
       Comparator.comparing(TierRangeMaterialSectionTransformer.tagOrder(TinkerTags.Materials.SLIMESKULL)), SkullStats.ID);
-    TierRangeMaterialSectionTransformer.registerMaterialType(RepairStats.RIBCAGE.getId(), RibcageMaterialContent::new);
-    TierRangeMaterialSectionTransformer.registerMaterialType(RepairStats.SHELL.getId(), ShellMaterialContent::new);
-    TierRangeMaterialSectionTransformer.registerMaterialType(RepairStats.LACES.getId(), LacesMaterialContent::new);
+    TierRangeMaterialSectionTransformer.registerMaterialType(RepairStats.RIBCAGE.getStatId(), RibcageMaterialContent::new);
+    TierRangeMaterialSectionTransformer.registerMaterialType(RepairStats.SHELL.getStatId(), ShellMaterialContent::new);
+    TierRangeMaterialSectionTransformer.registerMaterialType(RepairStats.LACES.getStatId(), LacesMaterialContent::new);
 
     // add transformers that load modifiers from tags
     ToolSectionTransformer armorTransformer = new ToolSectionTransformer("armor");
@@ -184,7 +185,7 @@ public class TinkerBook extends BookData {
    */
   @SuppressWarnings("removal")
   private static void addStandardData(BookData book, ResourceLocation id, BookTransformer... extraTransformers) {
-    book.addRepository(new FileRepository(new ResourceLocation(id.getNamespace(), "book/" + id.getPath())));
+    book.addRepository(new FileRepository(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "book/" + id.getPath())));
     book.addTransformer(BookTransformer.indexTranformer());
     book.addTransformer(TierRangeMaterialSectionTransformer.INSTANCE);
 

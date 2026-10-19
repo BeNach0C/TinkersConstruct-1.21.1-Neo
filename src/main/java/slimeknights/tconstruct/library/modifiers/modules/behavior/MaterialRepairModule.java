@@ -29,12 +29,11 @@ import java.util.Set;
 import static slimeknights.tconstruct.library.tools.definition.module.material.MaterialRepairModule.getDurability;
 
 /** Collection of modules for different repair options */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public sealed class MaterialRepairModule implements ModifierModule, MaterialRepairModifierHook, ConditionalModule<IToolStackView>, IAmLoadable.Record permits MaterialRepairModule.StatType {
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<MaterialRepairModule>defaultHooks(ModifierHooks.MATERIAL_REPAIR);
   private static final LoadableField<MaterialId, MaterialRepairModule> MATERIAL_FIELD = MaterialId.PARSER.requiredField("material", m -> m.material);
-  private static final RecordLoadable<MaterialRepairModule> CONSTANT = RecordLoadable.create(MATERIAL_FIELD, IntLoadable.FROM_ONE.requiredField("durability", m -> m.repairAmount), ModifierCondition.TOOL_FIELD, MaterialRepairModule::new);
-  private static final RecordLoadable<StatType> STAT_TYPE = RecordLoadable.create(MATERIAL_FIELD, MaterialStatsId.PARSER.requiredField("stat_type", m -> m.statType), ModifierCondition.TOOL_FIELD, StatType::new);
+  private static final RecordLoadable<MaterialRepairModule> CONSTANT = RecordLoadable.create(MATERIAL_FIELD, IntLoadable.FROM_ONE.requiredField("durability", (MaterialRepairModule m) -> m.repairAmount), ModifierCondition.TOOL_FIELD, MaterialRepairModule::new);
+  private static final RecordLoadable<StatType> STAT_TYPE = RecordLoadable.create(MATERIAL_FIELD, MaterialStatsId.PARSER.requiredField("stat_type", (StatType m) -> m.statType), ModifierCondition.TOOL_FIELD, StatType::new);
   public static final RecordLoadable<MaterialRepairModule> LOADER = EitherLoadable.<MaterialRepairModule>record().key("durability", CONSTANT).key("stat_type", STAT_TYPE).build(CONSTANT);
 
   /** Material used for repairing */
@@ -42,9 +41,18 @@ public sealed class MaterialRepairModule implements ModifierModule, MaterialRepa
   /** Amount to repair */
   protected int repairAmount;
   /** Conditions to apply this module */
-  @Getter
-  @Accessors(fluent = true)
   private final ModifierCondition<IToolStackView> condition;
+
+  public MaterialRepairModule(MaterialId material, int repairAmount, ModifierCondition<IToolStackView> condition) {
+    this.material = material;
+    this.repairAmount = repairAmount;
+    this.condition = condition;
+  }
+
+  @Override
+  public ModifierCondition<IToolStackView> condition() {
+    return this.condition;
+  }
 
   @Override
   public List<ModuleHook<?>> getDefaultHooks() {
@@ -110,9 +118,12 @@ public sealed class MaterialRepairModule implements ModifierModule, MaterialRepa
     return new Builder(material);
   }
 
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Builder extends ModuleBuilder.Stack<Builder> {
     private final MaterialId material;
+
+    public Builder(MaterialId material) {
+      this.material = material;
+    }
 
     /** Creates a module with a constant repair amount */
     public MaterialRepairModule constant(int repairAmount) {

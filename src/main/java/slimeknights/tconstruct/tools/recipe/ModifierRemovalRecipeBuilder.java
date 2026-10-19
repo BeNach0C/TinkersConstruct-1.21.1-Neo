@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -35,16 +35,16 @@ public class ModifierRemovalRecipeBuilder extends AbstractSizedIngredientRecipeB
   private IJsonPredicate<ModifierId> modifierPredicate = ModifierPredicate.ANY;
 
   public static ModifierRemovalRecipeBuilder removal() {
-    return removal(ModifierRemovalRecipe::new);
+    return null; // removal(ModifierRemovalRecipe::new);
   }
 
   public static ModifierRemovalRecipeBuilder extract() {
-    return removal(ExtractModifierRecipe::new);
+    return null; // removal(ExtractModifierRecipe::new);
   }
 
   /** Sets the name from the given slot */
   public ModifierRemovalRecipeBuilder slotName(SlotType slot) {
-    return setName(slot.getName());
+    return this;
   }
 
   /**
@@ -78,16 +78,16 @@ public class ModifierRemovalRecipeBuilder extends AbstractSizedIngredientRecipeB
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer) {
+  public void save(RecipeOutput consumer) {
     save(consumer, BuiltInRegistries.ITEM.getKey(leftovers.get(0).getItem()));
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
+  public void save(RecipeOutput consumer, ResourceLocation id) {
     if (inputs.isEmpty()) {
       throw new IllegalStateException("Must have at least one input");
     }
-    ResourceLocation advancementId = buildOptionalAdvancement(id, "modifiers");
-    consumer.accept(new LoadableFinishedRecipe<>(constructor.apply(id, name, tools, inputs, leftovers, modifierPredicate), ModifierRemovalRecipe.LOADER, advancementId));
+    ResourceLocation advancementId = buildOptionalAdvancement(id, "modifiers").id();
+    // consumer.accept(new LoadableFinishedRecipe<>(constructor.apply(id, name, tools, inputs, leftovers, modifierPredicate), ModifierRemovalRecipe.LOADER, null));
   }
 }

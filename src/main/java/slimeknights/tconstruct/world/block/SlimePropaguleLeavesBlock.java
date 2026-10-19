@@ -19,16 +19,14 @@ public class SlimePropaguleLeavesBlock extends SlimeLeavesBlock implements Bonem
   }
 
   @Override
-  public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state, boolean isClient) {
+  public boolean isValidBonemealTarget(LevelReader level, BlockPos pos, BlockState state) {
     return level.getBlockState(pos.below()).isAir();
   }
 
-  @Override
   public boolean isBonemealSuccess(Level level, RandomSource random, BlockPos pos, BlockState state) {
     return true;
   }
 
-  @Override
   public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
     level.setBlock(pos.below(), TinkerWorld.slimeSapling.get(FoliageType.ENDER).defaultBlockState().setValue(HANGING, Boolean.TRUE).setValue(AGE, 0), 2);
   }

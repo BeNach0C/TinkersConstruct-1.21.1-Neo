@@ -6,10 +6,16 @@ import lombok.Getter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Rarity;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.network.packet.IThreadsafePacket;
 import slimeknights.tconstruct.library.materials.MaterialRegistry;
 import slimeknights.tconstruct.library.utils.GenericTagUtil;
+
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import slimeknights.tconstruct.TConstruct;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,11 +26,19 @@ import java.util.Map.Entry;
 @Getter
 @AllArgsConstructor
 public class UpdateMaterialsPacket implements IThreadsafePacket {
+  public static final CustomPacketPayload.Type<UpdateMaterialsPacket> ID = new CustomPacketPayload.Type<>(TConstruct.getResource("update_materials"));
+  public static final StreamCodec<RegistryFriendlyByteBuf, UpdateMaterialsPacket> CODEC = StreamCodec.of((buf, packet) -> packet.encode(buf), UpdateMaterialsPacket::new);
+
+  @Override
+  public CustomPacketPayload.Type<UpdateMaterialsPacket> type() {
+    return ID;
+  }
+
   private final Map<MaterialId,IMaterial> materials;
   private final Map<MaterialId,MaterialId> redirects;
   private final Map<TagKey<IMaterial>,List<IMaterial>> tags;
 
-  public UpdateMaterialsPacket(FriendlyByteBuf buffer) {
+  public UpdateMaterialsPacket(RegistryFriendlyByteBuf buffer) {
     int materialCount = buffer.readInt();
     ImmutableMap.Builder<MaterialId,IMaterial> materials = ImmutableMap.builder();
 
@@ -35,7 +49,7 @@ public class UpdateMaterialsPacket implements IThreadsafePacket {
       Rarity rarity = buffer.readEnum(Rarity.class);
       boolean craftable = buffer.readBoolean();
       boolean hidden = buffer.readBoolean();
-      materials.put(id, new Material(id, tier, sortOrder, rarity, craftable, hidden));
+      materials.put(id, new Material(id.getId(), tier, sortOrder, rarity, craftable, hidden));
     }
     this.materials = materials.build();
     // process redirects
@@ -52,10 +66,10 @@ public class UpdateMaterialsPacket implements IThreadsafePacket {
   }
 
   @Override
-  public void encode(FriendlyByteBuf buffer) {
+  public void encode(RegistryFriendlyByteBuf buffer) {
     buffer.writeInt(this.materials.size());
     for (IMaterial material : this.materials.values()) {
-      buffer.writeResourceLocation(material.getIdentifier());
+      buffer.writeResourceLocation(material.getIdentifier().getId());
       buffer.writeVarInt(material.getTier());
       buffer.writeVarInt(material.getSortOrder());
       buffer.writeEnum(material.getRarity());
@@ -67,11 +81,11 @@ public class UpdateMaterialsPacket implements IThreadsafePacket {
       buffer.writeUtf(entry.getKey().toString());
       buffer.writeUtf(entry.getValue().toString());
     }
-    GenericTagUtil.encodeTags(buffer, IMaterial::getIdentifier, this.tags);
+    GenericTagUtil.encodeTags(buffer, m -> m.getIdentifier().getId(), this.tags);
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(IPayloadContext context) {
     MaterialRegistry.updateMaterialsFromServer(this);
   }
 }

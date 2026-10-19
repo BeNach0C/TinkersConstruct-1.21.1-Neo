@@ -11,6 +11,13 @@ import static net.minecraft.world.damagesource.CombatRules.getDamageAfterAbsorb;
 public class ArmorUtil {
   private ArmorUtil() {}
 
+  /** Standard armor reduction formula matching vanilla */
+  public static float getDamageAfterAbsorb(float damage, float armor, float toughness) {
+    float f = 2.0F + toughness / 4.0F;
+    float f1 = Mth.clamp(armor - damage / f, armor * 0.2F, 20.0F);
+    return damage * (1.0F - f1 / 25.0F);
+  }
+
   /**
    * Inverse of {@link net.minecraft.world.damagesource.CombatRules#getDamageAfterAbsorb(float, float, float)}  with respect to damage
    * @param damage     Damage returned by the vanilla function, must be 0 or more
@@ -71,7 +78,7 @@ public class ArmorUtil {
   }
 
   /**
-   * Calculates the final damage for use in {@link net.minecraftforge.event.entity.living.LivingHurtEvent}. Requires applying several inverse functions to cancel out vanilla formulas that are applied later
+   * Calculates the final damage for use in {@link net.neoforged.neoforge.event.entity.living.LivingHurtEvent}. Requires applying several inverse functions to cancel out vanilla formulas that are applied later
    * @param originalDamage     Original damage to be dealt
    * @param armor              Armor amount on the player
    * @param toughness          Armor toughness attribute

@@ -1,6 +1,6 @@
 package slimeknights.tconstruct.plugin.jei.util;
 
-import mezz.jei.api.ingredients.subtypes.IIngredientSubtypeInterpreter;
+import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import net.minecraft.world.item.ItemStack;
 import slimeknights.tconstruct.library.materials.definition.MaterialId;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Subtype interpreter for tools, treats the tool as unique in ingredient list, generic in recipes
  */
-public enum ToolSubtypeInterpreter implements IIngredientSubtypeInterpreter<ItemStack> {
+public enum ToolSubtypeInterpreter implements ISubtypeInterpreter<ItemStack> {
   /** Materials are always considered */
   ALWAYS,
   /** Materials are only considered in the ingredients view */
@@ -21,13 +21,14 @@ public enum ToolSubtypeInterpreter implements IIngredientSubtypeInterpreter<Item
   FIRST;
 
   @Override
-  public String apply(ItemStack itemStack, UidContext context) {
+  public String getLegacyStringSubtypeInfo(ItemStack itemStack, mezz.jei.api.ingredients.subtypes.UidContext context) { return ""; }
+  public Object getSubtypeData(ItemStack itemStack, UidContext context) {
     boolean isIngredient = context == UidContext.Ingredient;
     if (isIngredient || this != INGREDIENT) {
       List<MaterialVariantId> materialList = MaterialIdNBT.from(itemStack).getMaterials();
       if (!materialList.isEmpty()) {
         // if in first mode and looking at a recipe, only use the first material
-        MaterialId first = materialList.get(0).getId();
+        MaterialId first = materialList.get(0).getMaterialId();
         if (!isIngredient && this == FIRST) {
           return first.toString();
         }
@@ -36,11 +37,11 @@ public enum ToolSubtypeInterpreter implements IIngredientSubtypeInterpreter<Item
         builder.append(first);
         for (int i = 1; i < materialList.size(); i++) {
           builder.append(',');
-          builder.append(materialList.get(i).getId());
+          builder.append(materialList.get(i).getMaterialId());
         }
         return builder.toString();
       }
     }
-    return NONE;
+    return "";
   }
 }

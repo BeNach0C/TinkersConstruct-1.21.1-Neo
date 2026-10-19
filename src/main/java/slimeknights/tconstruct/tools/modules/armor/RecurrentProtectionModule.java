@@ -1,4 +1,6 @@
 package slimeknights.tconstruct.tools.modules.armor;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.DamageTypeTags;
@@ -8,7 +10,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 import slimeknights.mantle.client.TooltipKey;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.tconstruct.TConstruct;
@@ -72,7 +74,7 @@ public record RecurrentProtectionModule(LevelingValue percent, LevelingInt durat
         // step 2: apply momentum based on damage taken
         int reduction = (int)(percent.compute(level) * amount);
         if (reduction > 0) {
-          entity.addEffect(new MobEffectInstance(effect, duration.compute(level), reduction - 1, false, false, true));
+          entity.addEffect(new MobEffectInstance(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect), duration.compute(level), reduction - 1, false, false, true));
         }
       }
     }

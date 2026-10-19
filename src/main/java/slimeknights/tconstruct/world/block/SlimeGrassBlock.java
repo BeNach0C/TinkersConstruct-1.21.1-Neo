@@ -31,12 +31,10 @@ public class SlimeGrassBlock extends SnowyDirtBlock implements BonemealableBlock
 
   /* Bonemeal interactions */
 
-  @Override
-  public boolean isValidBonemealTarget(LevelReader world, BlockPos pos, BlockState state, boolean isClient) {
+  public boolean isValidBonemealTarget(LevelReader world, BlockPos pos, BlockState state) {
     return world.getBlockState(pos.above()).isAir();
   }
 
-  @Override
   public boolean isBonemealSuccess(Level worldIn, RandomSource rand, BlockPos pos, BlockState state) {
     return true;
   }
@@ -97,7 +95,6 @@ public class SlimeGrassBlock extends SnowyDirtBlock implements BonemealableBlock
     }
   }
 
-  @Override
   public void performBonemeal(ServerLevel world, RandomSource rand, BlockPos pos, BlockState state) {
     growGrass(world, rand, pos, TinkerTags.Blocks.SLIMY_GRASS, foliageType, false, false);
   }

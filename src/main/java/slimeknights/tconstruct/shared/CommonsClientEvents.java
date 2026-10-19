@@ -1,16 +1,17 @@
 package slimeknights.tconstruct.shared;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.FontManager;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelEvent.RegisterGeometryLoaders;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ModelEvent.RegisterGeometryLoaders;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.EventBusSubscriber.Bus;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.ClientEventBase;
 import slimeknights.tconstruct.library.client.book.TinkerBook;
@@ -27,7 +28,7 @@ public class CommonsClientEvents extends ClientEventBase {
 
   @SubscribeEvent
   static void registerModelLoaders(RegisterGeometryLoaders event) {
-    event.register("gui", UniqueGuiModel.LOADER);
+    event.register(slimeknights.tconstruct.TConstruct.getResource("gui"), UniqueGuiModel.LOADER);
   }
 
   @SubscribeEvent
@@ -46,16 +47,8 @@ public class CommonsClientEvents extends ClientEventBase {
     event.registerSpecial(TinkerCommons.fluidParticle.get(), new FluidParticle.Factory());
   }
 
-  private static Font unicodeRenderer;
-
-  /** Gets the unicode font renderer */
+  /** Gets the font renderer for books */
   public static Font unicodeFontRender() {
-    if (unicodeRenderer == null)
-      unicodeRenderer = new Font(rl -> {
-        FontManager resourceManager = Minecraft.getInstance().fontManager;
-        return resourceManager.fontSets.get(Minecraft.UNIFORM_FONT);
-      }, false);
-
-    return unicodeRenderer;
+    return Minecraft.getInstance().font;
   }
 }

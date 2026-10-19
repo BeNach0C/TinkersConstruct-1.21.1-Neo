@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:villager_job_sites",
+                       "required":  false
+                   }
+               ]
+}

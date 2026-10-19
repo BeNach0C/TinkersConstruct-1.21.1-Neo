@@ -52,7 +52,7 @@ public class ToolStats {
   /** Logs an error message for unsupported stats */
   private static void logUnsupportedConditional(INumericToolStat<?> stat) {
     // TODO 1.21: make this error instead of log
-    ResourceLocation id = stat.getName();
+    ResourceLocation id = stat.getName().getId();
     if (TConstruct.MOD_ID.equals(id.getNamespace())) {
       TConstruct.LOG.error("Tool stat {} does not support conditional stats but is used in a conditional stat loader.", id);
     } else {

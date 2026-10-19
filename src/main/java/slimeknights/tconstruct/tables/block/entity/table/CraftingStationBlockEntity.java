@@ -14,10 +14,9 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.common.CommonHooks;
+import net.neoforged.neoforge.event.EventHooks;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.common.network.TinkerNetwork;
 import slimeknights.tconstruct.shared.inventory.ConfigurableInvWrapperCapability;
@@ -37,7 +36,8 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
 
   /** Last crafted crafting recipe */
   @Nullable
-  private CraftingRecipe lastRecipe;
+  private net.minecraft.world.item.crafting.RecipeHolder<CraftingRecipe> lastRecipe;
+  public CraftingRecipe getLastRecipe() { return lastRecipe == null ? null : lastRecipe.value(); }
   /** Result inventory, lazy loads results */
   @Getter
   private final LazyResultContainer craftingResult;
@@ -47,7 +47,7 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
   public CraftingStationBlockEntity(BlockPos pos, BlockState state) {
     super(TinkerTables.craftingStationTile.get(), pos, state, NAME, 9);
     this.itemHandler = new ConfigurableInvWrapperCapability(this, false, false);
-    this.itemHandlerCap = LazyOptional.of(() -> this.itemHandler);
+    this.itemHandlerCap = this.itemHandler;
     this.craftingInventory = new CraftingContainerWrapper(this, 3, 3);
     this.craftingResult = new LazyResultContainer(this);
   }
@@ -60,7 +60,7 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
 
   @Override
   public AABB getRenderBoundingBox() {
-    return new AABB(worldPosition, worldPosition.offset(1, 2, 1));
+    return AABB.encapsulatingFullBlocks(worldPosition, worldPosition.offset(1, 2, 1));
   }
 
   /* Crafting */
@@ -76,30 +76,31 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
       RecipeManager manager = this.level.getServer().getRecipeManager();
 
       // first, try the cached recipe
-      ForgeHooks.setCraftingPlayer(player);
-      CraftingRecipe recipe = lastRecipe;
+      CommonHooks.setCraftingPlayer(player);
+      net.minecraft.world.item.crafting.RecipeHolder<CraftingRecipe> recipeHolder = lastRecipe;
       // if it does not match, find a new recipe
       // note we intentionally have no player access during matches, that could lead to an unstable recipe
-      if (recipe == null || !recipe.matches(this.craftingInventory, this.level)) {
-        recipe = manager.getRecipeFor(RecipeType.CRAFTING, this.craftingInventory, this.level).orElse(null);
+      if (recipeHolder == null || !recipeHolder.value().matches(this.craftingInventory.asCraftInput(), this.level)) {
+        recipeHolder = manager.getRecipeFor(RecipeType.CRAFTING, this.craftingInventory.asCraftInput(), this.level).orElse(null);
       }
 
       // if we have a recipe, fetch its result
-      if (recipe != null) {
-        result = recipe.assemble(this.craftingInventory, level.registryAccess());
+      if (recipeHolder != null) {
+        CraftingRecipe recipe = recipeHolder.value();
+        result = recipe.assemble(this.craftingInventory.asCraftInput(), level.registryAccess());
 
         // sync if the recipe is different
-        if (recipe != lastRecipe) {
-          this.lastRecipe = recipe;
+        if (recipeHolder != lastRecipe) {
+          this.lastRecipe = recipeHolder;
           this.syncToRelevantPlayers(this::syncRecipe);
         }
       }
-      ForgeHooks.setCraftingPlayer(null);
+      CommonHooks.setCraftingPlayer(null);
     }
-    else if (this.lastRecipe != null && this.lastRecipe.matches(this.craftingInventory, this.level)) {
-      ForgeHooks.setCraftingPlayer(player);
-      result = this.lastRecipe.assemble(this.craftingInventory, level.registryAccess());
-      ForgeHooks.setCraftingPlayer(null);
+    else if (this.lastRecipe != null && this.lastRecipe.value().matches(this.craftingInventory.asCraftInput(), this.level)) {
+      CommonHooks.setCraftingPlayer(player);
+      result = this.lastRecipe.value().assemble(this.craftingInventory.asCraftInput(), level.registryAccess());
+      CommonHooks.setCraftingPlayer(null);
     }
     return result;
   }
@@ -110,36 +111,17 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
    * @return  Player sensitive result
    */
   public ItemStack getResultForPlayer(Player player) {
-    ForgeHooks.setCraftingPlayer(player);
-    CraftingRecipe recipe = this.lastRecipe; // local variable just to prevent race conditions if the field changes, though that is unlikely
+    CommonHooks.setCraftingPlayer(player);
+    net.minecraft.world.item.crafting.RecipeHolder<CraftingRecipe> recipeHolder = this.lastRecipe; // local variable just to prevent race conditions if the field changes, though that is unlikely
 
     // try matches again now that we have player access
-    if (recipe == null || this.level == null || !recipe.matches(craftingInventory, level)) {
-      ForgeHooks.setCraftingPlayer(null);
+    if (recipeHolder == null || this.level == null || !recipeHolder.value().matches(craftingInventory.asCraftInput(), level)) {
+      CommonHooks.setCraftingPlayer(null);
       return ItemStack.EMPTY;
     }
 
-    // check if the player has access to the recipe, if not give up
-    // Disabled because this is an absolute mess of logic, and the gain is rather small, treating this like a furnace instead
-    // note the gamerule is client side only anyways, so you would have to sync it, such as in the container
-    // if you want limited crafting, disable the crafting station, the design of the station is incompatible with the game rule and vanilla syncing
-//    if (!recipe.isDynamic() && world.getGameRules().getBoolean(GameRules.DO_LIMITED_CRAFTING)) {
-//      // mojang, why can't PlayerEntity just have a RecipeBook getter, why must I go through the sided classes? grr
-//      boolean locked;
-//      if (!world.isRemote) {
-//        locked = player instanceof ServerPlayerEntity && !((ServerPlayerEntity) player).getRecipeBook().isUnlocked(recipe);
-//      } else {
-//        locked = DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> player instanceof ClientPlayerEntity && !((ClientPlayerEntity) player).getRecipeBook().isUnlocked(recipe));
-//      }
-//      // if the player cannot craft this, block crafting
-//      if (locked) {
-//        ForgeHooks.setCraftingPlayer(null);
-//        return ItemStack.EMPTY;
-//      }
-//    }
-
-    ItemStack result = recipe.assemble(craftingInventory, level.registryAccess());
-    ForgeHooks.setCraftingPlayer(null);
+    ItemStack result = recipeHolder.value().assemble(craftingInventory.asCraftInput(), level.registryAccess());
+    CommonHooks.setCraftingPlayer(null);
     return result;
   }
 
@@ -150,43 +132,51 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
    * @param amount  Number of times crafted
    */
   public void takeResult(Player player, ItemStack result, int amount) {
-    CraftingRecipe recipe = this.lastRecipe; // local variable just to prevent race conditions if the field changes, though that is unlikely
-    if (recipe == null || this.level == null) {
+    net.minecraft.world.item.crafting.RecipeHolder<CraftingRecipe> recipeHolder = this.lastRecipe; // local variable just to prevent race conditions if the field changes, though that is unlikely
+    if (recipeHolder == null || this.level == null) {
       return;
     }
+    CraftingRecipe recipe = recipeHolder.value();
 
     // fire crafting events
     if (!recipe.isSpecial()) {
       // unlock the recipe if it was not unlocked, so it shows in the recipe book
-      player.awardRecipes(Collections.singleton(recipe));
+      player.awardRecipes(Collections.singleton(recipeHolder));
     }
     result.onCraftedBy(this.level, player, amount);
-    ForgeEventFactory.firePlayerCraftingEvent(player, result, this.craftingInventory);
+    EventHooks.firePlayerCraftingEvent(player, result, this.craftingInventory);
 
     // update all slots in the inventory
     // remove remaining items
-    ForgeHooks.setCraftingPlayer(player);
-    NonNullList<ItemStack> remaining = recipe.getRemainingItems(craftingInventory);
-    ForgeHooks.setCraftingPlayer(null);
-    for (int i = 0; i < remaining.size(); ++i) {
-      ItemStack original = this.getItem(i);
-      ItemStack newStack = remaining.get(i);
+    net.minecraft.world.item.crafting.CraftingInput.Positioned positioned = this.craftingInventory.asPositionedCraftInput();
+    net.minecraft.world.item.crafting.CraftingInput input = positioned.input();
+    int left = positioned.left();
+    int top = positioned.top();
 
-      // if empty or size 1, set directly (decreases by 1)
-      if (original.isEmpty() || original.getCount() == 1) {
-        this.setItem(i, newStack);
-      }
-      else if (ItemStack.isSameItemSameTags(original, newStack)) {
-        // if matching, merge (decreasing by 1
-        newStack.grow(original.getCount() - 1);
-        this.setItem(i, newStack);
-      }
-      else {
-        // directly update the slot
-        this.setItem(i, ItemHandlerHelper.copyStackWithSize(original, original.getCount() - 1));
-        // otherwise, drop the item as the player
-        if (!newStack.isEmpty() && !player.getInventory().add(newStack)) {
-          player.drop(newStack, false);
+    CommonHooks.setCraftingPlayer(player);
+    NonNullList<ItemStack> remaining = recipe.getRemainingItems(input);
+    CommonHooks.setCraftingPlayer(null);
+
+    for (int row = 0; row < input.height(); ++row) {
+      for (int col = 0; col < input.width(); ++col) {
+        int slotIndex = (col + left) + (row + top) * this.craftingInventory.getWidth();
+        ItemStack original = this.getItem(slotIndex);
+        ItemStack newStack = remaining.get(col + row * input.width());
+
+        if (!original.isEmpty()) {
+          this.removeItem(slotIndex, 1);
+          original = this.getItem(slotIndex);
+        }
+
+        if (!newStack.isEmpty()) {
+          if (original.isEmpty()) {
+            this.setItem(slotIndex, newStack);
+          } else if (ItemStack.isSameItemSameComponents(original, newStack)) {
+            newStack.grow(original.getCount());
+            this.setItem(slotIndex, newStack);
+          } else if (!player.getInventory().add(newStack)) {
+            player.drop(newStack, false);
+          }
         }
       }
     }
@@ -226,7 +216,7 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
   public void syncRecipe(Player player) {
     // must have a last recipe and a server world
     if (this.lastRecipe != null && this.level != null && !this.level.isClientSide && player instanceof ServerPlayer) {
-      TinkerNetwork.getInstance().sendTo(new UpdateCraftingRecipePacket(this.worldPosition, this.lastRecipe), (ServerPlayer) player);
+      TinkerNetwork.getInstance().sendTo(new UpdateCraftingRecipePacket(this.worldPosition, this.lastRecipe.id()), (ServerPlayer) player);
     }
   }
 
@@ -235,7 +225,7 @@ public class CraftingStationBlockEntity extends RetexturedTableBlockEntity imple
    * @param recipe  New recipe
    */
   public void updateRecipe(CraftingRecipe recipe) {
-    this.lastRecipe = recipe;
+    this.lastRecipe = recipe == null ? null : new net.minecraft.world.item.crafting.RecipeHolder<>(net.minecraft.resources.ResourceLocation.parse("tconstruct:synced"), recipe);
     this.craftingResult.clearContent();
   }
 }

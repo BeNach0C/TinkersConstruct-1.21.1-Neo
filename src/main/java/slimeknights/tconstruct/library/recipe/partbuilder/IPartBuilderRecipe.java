@@ -63,7 +63,7 @@ public interface IPartBuilderRecipe extends ICommonRecipe<IPartBuilderContainer>
   }
 
   /** Assembles the result with the given pattern */
-  default ItemStack assemble(IPartBuilderContainer inv, RegistryAccess access, Pattern pattern) {
+  default ItemStack assemble(IPartBuilderContainer inv, net.minecraft.core.HolderLookup.Provider access, Pattern pattern) {
     return assemble(inv, access);
   }
 

@@ -5,12 +5,13 @@ import com.google.common.collect.ImmutableMap;
 import io.netty.handler.codec.DecoderException;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraftforge.network.NetworkEvent.Context;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import slimeknights.mantle.network.packet.IThreadsafePacket;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.modifiers.impl.ComposableModifier;
@@ -25,6 +26,13 @@ import java.util.Map.Entry;
 /** Packet to sync modifiers */
 @RequiredArgsConstructor
 public class UpdateModifiersPacket implements IThreadsafePacket {
+  public static final CustomPacketPayload.Type<UpdateModifiersPacket> ID = new CustomPacketPayload.Type<>(TConstruct.getResource("update_modifiers"));
+  public static final StreamCodec<RegistryFriendlyByteBuf, UpdateModifiersPacket> CODEC = StreamCodec.of((buf, packet) -> packet.encode(buf), UpdateModifiersPacket::new);
+
+  @Override
+  public CustomPacketPayload.Type<UpdateModifiersPacket> type() {
+    return ID;
+  }
   /** Collection of all modifiers */
   private final Map<ModifierId,Modifier> allModifiers;
   /** Map of all modifier tags */
@@ -75,14 +83,14 @@ public class UpdateModifiersPacket implements IThreadsafePacket {
     return modifier;
   }
 
-  public UpdateModifiersPacket(FriendlyByteBuf buffer) {
+  public UpdateModifiersPacket(RegistryFriendlyByteBuf buffer) {
     // read in modifiers
     int size = buffer.readVarInt();
     Map<ModifierId,Modifier> modifiers = new HashMap<>();
     for (int i = 0; i < size; i++) {
       ModifierId id = new ModifierId(buffer.readUtf(Short.MAX_VALUE));
       try {
-        Modifier modifier = ComposableModifier.LOADER.decode(buffer, ModifierManager.contextBuilder(id).build());
+        Modifier modifier = ComposableModifier.LOADER.decode(buffer, ModifierManager.contextBuilder(id.getId()).build());
         modifier.setId(id);
         modifiers.put(id, modifier);
       } catch (RuntimeException e) {
@@ -103,9 +111,9 @@ public class UpdateModifiersPacket implements IThreadsafePacket {
     ImmutableMap.Builder<Enchantment,Modifier> enchantmentBuilder = ImmutableMap.builder();
     size = buffer.readVarInt();
     for (int i = 0; i < size; i++) {
-      enchantmentBuilder.put(
-        buffer.readRegistryIdUnsafe(ForgeRegistries.ENCHANTMENTS),
-        getModifier(modifiers, new ModifierId(buffer.readResourceLocation())));
+      // TODO 1.21: Enchantments are dynamic registry / data-driven
+      buffer.readResourceLocation();
+      buffer.readResourceLocation();
     }
     enchantmentMap = enchantmentBuilder.build();
     ImmutableMap.Builder<TagKey<Enchantment>, Modifier> enchantmentTagBuilder = ImmutableMap.builder();
@@ -119,12 +127,12 @@ public class UpdateModifiersPacket implements IThreadsafePacket {
   }
 
   @Override
-  public void encode(FriendlyByteBuf buffer) {
+  public void encode(RegistryFriendlyByteBuf buffer) {
     ensureCalculated();
     // write modifiers
     buffer.writeVarInt(modifiers.size());
     for (ComposableModifier modifier : modifiers) {
-      ResourceLocation id = modifier.getId();
+      ResourceLocation id = modifier.getId().getId();
       buffer.writeResourceLocation(id);
       try {
         ComposableModifier.LOADER.encode(buffer, modifier);
@@ -137,26 +145,22 @@ public class UpdateModifiersPacket implements IThreadsafePacket {
     // write redirects
     buffer.writeVarInt(redirects.size());
     for (Entry<ModifierId,ModifierId> entry : redirects.entrySet()) {
-      buffer.writeResourceLocation(entry.getKey());
-      buffer.writeResourceLocation(entry.getValue());
-    }
-    GenericTagUtil.encodeTags(buffer, Modifier::getId, this.tags);
-
-    // enchantment mapping
-    buffer.writeVarInt(enchantmentMap.size());
-    for (Entry<Enchantment,Modifier> entry : enchantmentMap.entrySet()) {
-      buffer.writeRegistryIdUnsafe(ForgeRegistries.ENCHANTMENTS, entry.getKey());
+      buffer.writeResourceLocation(entry.getKey().getId());
       buffer.writeResourceLocation(entry.getValue().getId());
     }
+    GenericTagUtil.encodeTags(buffer, m -> m.getId().getId(), this.tags);
+
+    // enchantment mapping
+    buffer.writeVarInt(0); // TODO 1.21: Enchantments are dynamic registry / data-driven
     buffer.writeVarInt(enchantmentTagMappings.size());
     for (Entry<TagKey<Enchantment>, Modifier> entry : enchantmentTagMappings.entrySet()) {
       buffer.writeResourceLocation(entry.getKey().location());
-      buffer.writeResourceLocation(entry.getValue().getId());
+      buffer.writeResourceLocation(entry.getValue().getId().getId());
     }
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(IPayloadContext context) {
     ModifierManager.INSTANCE.updateModifiersFromServer(allModifiers, tags, enchantmentMap, enchantmentTagMappings);
   }
 }

@@ -172,7 +172,7 @@ public class MaterialRecipeCache {
   /** Registers a material variant for the lookups. */
   public static void addKnownVariant(MaterialVariantId variant) {
     LISTENER.checkClear();
-    KNOWN_VARIANTS.put(variant.getId(), variant);
+    KNOWN_VARIANTS.put(variant.getMaterialId(), variant);
     // null cache of sorted variants as its outdated now
     SORTED_VARIANTS = null;
     HIDDEN_VARIANTS = null;

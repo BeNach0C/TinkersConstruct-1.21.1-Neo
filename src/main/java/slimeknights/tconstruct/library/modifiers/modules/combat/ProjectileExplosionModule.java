@@ -153,7 +153,6 @@ public record ProjectileExplosionModule(LevelingValue radius, float eflnBonus, L
     explode(modifier, projectile, persistentData, projectile.position());
   }
 
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
   @Accessors(fluent = true)
   @Setter
   @CanIgnoreReturnValue
@@ -161,6 +160,10 @@ public record ProjectileExplosionModule(LevelingValue radius, float eflnBonus, L
   public static class Builder {
     /** Explosion distance from target */
     private final LevelingValue radius;
+
+    public Builder(LevelingValue radius) {
+      this.radius = radius;
+    }
     /** Explosion distance from target */
     private float eflnBonus = 0;
     /** Explosion knockback multiplier for entities */

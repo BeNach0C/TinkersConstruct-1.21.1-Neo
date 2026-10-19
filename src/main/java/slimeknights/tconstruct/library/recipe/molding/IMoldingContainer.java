@@ -6,7 +6,7 @@ import slimeknights.mantle.recipe.container.IRecipeContainer;
 /**
  * Inventory for molding recipes
  */
-public interface IMoldingContainer extends IRecipeContainer {
+public interface IMoldingContainer extends IRecipeContainer, net.minecraft.world.item.crafting.RecipeInput {
   /**
    * Gets the material being molded, typically sand
    * @return  Material item
@@ -21,6 +21,11 @@ public interface IMoldingContainer extends IRecipeContainer {
 
 
   /* Required methods */
+
+  @Override
+  default int size() {
+    return 2;
+  }
 
   /** @deprecated use {@link #getMaterial()} and {@link #getPattern()} */
   @Deprecated

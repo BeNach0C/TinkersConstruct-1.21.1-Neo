@@ -3,6 +3,7 @@ package slimeknights.tconstruct.library.tools.part.block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
@@ -25,7 +26,8 @@ public class MaterialBlockItem extends BlockItem implements IMaterialItem {
 
   @Override
   public MaterialVariantId getMaterial(ItemStack stack) {
-    return MaterialItem.getMaterialId(stack.getTag());
+    var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+    return MaterialItem.getMaterialId(customData != null ? customData.copyTag() : null);
   }
 
   @Override
@@ -33,29 +35,25 @@ public class MaterialBlockItem extends BlockItem implements IMaterialItem {
     return MaterialItem.getName(this, stack);
   }
 
-  @Override
   public Rarity getRarity(ItemStack stack) {
-    return MaterialRegistry.getMaterial(getMaterial(stack).getId()).getRarity();
+    return MaterialRegistry.getMaterial(getMaterial(stack).getMaterialId()).getRarity();
   }
 
-  @Override
   public boolean isFoil(ItemStack stack) {
-    return MaterialRegistry.getInstance().isInTag(getMaterial(stack).getId(), TinkerTags.Materials.SHINY);
+    return MaterialRegistry.getInstance().isInTag(getMaterial(stack).getMaterialId(), TinkerTags.Materials.SHINY);
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-    MaterialItem.appendHoverText(this, stack, tooltip, flag);
-    super.appendHoverText(stack, level, tooltip, flag);
+  public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    MaterialItem.appendHoverText(this, stack, context, tooltip, flag);
+    super.appendHoverText(stack, context, tooltip, flag);
   }
 
   @Nullable
-  @Override
   public String getCreatorModId(ItemStack stack) {
     return MaterialItem.getCreatorModId(this, stack);
   }
 
-  @Override
   public void verifyTagAfterLoad(CompoundTag tag) {
     MaterialItem.verifyTag(tag);
   }

@@ -48,6 +48,7 @@ public class ModifierRecipeCategory extends AbstractTinkerStationCategory<IDispl
       return SlotIngredientRenderer.INPUT.getHeight();
     }
 
+    @SuppressWarnings("DataFlowIssue") // we make it nullable for this renderer
     @Override
     public void draw(GuiGraphics graphics, int xOffset, int yOffset) {
       SlotIngredientRenderer.INPUT.render(graphics, null, xOffset, yOffset);
@@ -96,15 +97,29 @@ public class ModifierRecipeCategory extends AbstractTinkerStationCategory<IDispl
     ModifierEntry result = recipe.getDisplayResult();
     Component requirementsError = result.getHook(ModifierHooks.REQUIREMENTS).requirementsError(result);
     if (requirementsError != null) {
-      builder.addDrawableWidget(requirements).setPosition(66, 58).setTooltip(requirementsError);
+      builder.addDrawable(requirements, 66, 58);
     }
     if (recipe.isIncremental()) {
-      builder.addDrawableWidget(incremental).setPosition(83, 59).setTooltip(TEXT_INCREMENTAL);
+      builder.addDrawable(incremental, 83, 59);
     }
     if (recipe.getSlots() == null) {
-      builder.addDrawableWidget(SLOTLESS)
-        .setPosition(102, 58)
-        .setTooltip(SlotIngredientRenderer.TEXT_FREE);
+      builder.addDrawable(SLOTLESS, 102, 58);
+    }
+  }
+
+  @Override
+  public void getTooltip(mezz.jei.api.gui.builder.ITooltipBuilder tooltip, IDisplayModifierRecipe recipe, mezz.jei.api.gui.ingredient.IRecipeSlotsView recipeSlotsView, double mouseX, double mouseY) {
+    super.getTooltip(tooltip, recipe, recipeSlotsView, mouseX, mouseY);
+    ModifierEntry result = recipe.getDisplayResult();
+    Component requirementsError = result.getHook(ModifierHooks.REQUIREMENTS).requirementsError(result);
+    if (requirementsError != null && mouseX >= 66 && mouseX <= 82 && mouseY >= 58 && mouseY <= 74) {
+      tooltip.add(requirementsError);
+    }
+    if (recipe.isIncremental() && mouseX >= 83 && mouseX <= 99 && mouseY >= 59 && mouseY <= 75) {
+      tooltip.add(TEXT_INCREMENTAL);
+    }
+    if (recipe.getSlots() == null && mouseX >= 102 && mouseX <= 118 && mouseY >= 58 && mouseY <= 74) {
+      tooltip.addAll(SlotIngredientRenderer.TEXT_FREE);
     }
   }
 

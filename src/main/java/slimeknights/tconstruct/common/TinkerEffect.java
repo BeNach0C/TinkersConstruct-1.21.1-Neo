@@ -1,12 +1,13 @@
 package slimeknights.tconstruct.common;
 
+import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraftforge.client.extensions.common.IClientMobEffectExtensions;
+import net.neoforged.neoforge.client.extensions.common.IClientMobEffectExtensions;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -26,7 +27,7 @@ public class TinkerEffect extends MobEffect {
 
   // override to change return type
   @Override
-  public TinkerEffect addAttributeModifier(Attribute pAttribute, String pUuid, double pAmount, Operation pOperation) {
+  public TinkerEffect addAttributeModifier(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> pAttribute, net.minecraft.resources.ResourceLocation pUuid, double pAmount, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation pOperation) {
     super.addAttributeModifier(pAttribute, pUuid, pAmount, pOperation);
     return this;
   }
@@ -86,7 +87,7 @@ public class TinkerEffect extends MobEffect {
    */
   @Deprecated
   public MobEffectInstance apply(LivingEntity entity, int duration, int amplifier, boolean showIcon) {
-    MobEffectInstance effect = new MobEffectInstance(this, duration, amplifier, false, false, showIcon);
+    MobEffectInstance effect = new MobEffectInstance(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(this), duration, amplifier, false, false, showIcon);
     entity.addEffect(effect);
     return effect;
   }
@@ -96,7 +97,7 @@ public class TinkerEffect extends MobEffect {
    * @param entity  Entity to check
    * @return  Level, or 0 if inactive
    */
-  public static int getLevel(LivingEntity entity, MobEffect effect) {
+  public static int getLevel(LivingEntity entity, Holder<MobEffect> effect) {
     return getAmplifier(entity, effect) + 1;
   }
 
@@ -105,21 +106,27 @@ public class TinkerEffect extends MobEffect {
    * @param entity  Entity to check
    * @return  Level, or 0 if inactive
    */
-  public static int getLevel(LivingEntity entity, Supplier<? extends MobEffect> effect) {
-    return getAmplifier(entity, effect.get()) + 1;
+  public static int getLevel(LivingEntity entity, MobEffect effect) {
+    return getLevel(entity, net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect));
   }
+
+  // Supplier overload removed as DeferredHolder implements both Holder and Supplier, causing ambiguity
 
   /**
    * Gets the amplifier of the effect on the entity starting from 0, or -1 if not active
    * @param entity  Entity to check
    * @return  Amplifier, or -1 if inactive
    */
-  public static int getAmplifier(LivingEntity entity, MobEffect effect) {
+  public static int getAmplifier(LivingEntity entity, Holder<MobEffect> effect) {
     MobEffectInstance instance = entity.getEffect(effect);
     if (instance != null) {
       return instance.getAmplifier();
     }
     return -1;
+  }
+
+  public static int getAmplifier(LivingEntity entity, MobEffect effect) {
+    return getAmplifier(entity, net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect));
   }
 
   /** @deprecated use {@link #getAmplifier(LivingEntity, MobEffect)} which is better named or {@link #getLevel(LivingEntity, MobEffect)} which gives a more useful return */

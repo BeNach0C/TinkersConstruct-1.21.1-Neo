@@ -18,10 +18,10 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.HitResult.Type;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import slimeknights.tconstruct.common.TinkerTags.Fluids;
 import slimeknights.tconstruct.common.config.Config;
 import slimeknights.tconstruct.library.modifiers.fluid.FluidEffectContext;
@@ -96,7 +96,7 @@ public class ImmersiveEngineeringPlugin {
       int amount = (int) (projectileValue * projectiles.size());
       if (amount > 0) {
         // run the effect and consume projectiles
-        float consumed = recipe.applyToEntity(new FluidStack(fluid, amount), 1,
+        float consumed = recipe.applyToEntity(fluid.copyWithAmount(amount), 1,
           FluidEffectContext.builder(target.level()).user(shooter).stack(thrower).target(target),
           FluidAction.EXECUTE);
         consumeProjectiles(projectiles, consumed, projectileValue);
@@ -136,7 +136,7 @@ public class ImmersiveEngineeringPlugin {
       int amount = (int) (projectileValue * projectiles.size());
       if (amount > 0) {
         // run the effect and consume projectiles
-        float consumed = recipe.applyToBlock(new FluidStack(fluid, amount), 1,
+        float consumed = recipe.applyToBlock(fluid.copyWithAmount(amount), 1,
           FluidEffectContext.builder(world).user(shooter).stack(thrower).block(hitResult),
           FluidAction.EXECUTE);
         consumeProjectiles(projectiles, consumed, projectileValue);

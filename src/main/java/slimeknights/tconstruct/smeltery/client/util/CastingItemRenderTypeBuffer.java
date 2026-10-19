@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
 
+import java.lang.reflect.Field;
 import java.util.Set;
 
 /**
@@ -16,6 +17,21 @@ import java.util.Set;
  */
 public class CastingItemRenderTypeBuffer implements MultiBufferSource {
   private static final Set<String> MAKE_TRANSPARENT = ImmutableSet.of("entity_solid", "entity_cutout", "entity_cutout_no_cull", "entity_translucent", "entity_no_outline");
+  private static final Field STATE_FIELD;
+
+  static {
+    Field f = null;
+    try {
+      f = RenderType.CompositeRenderType.class.getDeclaredField("state");
+      f.setAccessible(true);
+    } catch (Throwable ignored) {
+      try {
+        f = RenderType.CompositeRenderType.class.getDeclaredField("f_110511_");
+        f.setAccessible(true);
+      } catch (Throwable ignored2) {}
+    }
+    STATE_FIELD = f;
+  }
 
   /** Base render type buffer */
   private final MultiBufferSource inner;
@@ -41,11 +57,28 @@ public class CastingItemRenderTypeBuffer implements MultiBufferSource {
 
   @Override
   public VertexConsumer getBuffer(RenderType type) {
-    if (alpha < 255 && MAKE_TRANSPARENT.contains(type.name) && type instanceof RenderType.CompositeRenderType composite && composite.state.textureState instanceof TextureStateShard textureState) {
-      ResourceLocation texture = textureState.texture.orElse(InventoryMenu.BLOCK_ATLAS);
-      type = RenderType.entityTranslucentCull(texture);
+    if (alpha < 255 && MAKE_TRANSPARENT.contains(type.name) && type instanceof RenderType.CompositeRenderType composite) {
+      try {
+        if (STATE_FIELD != null) {
+          Object state = STATE_FIELD.get(composite);
+          if (state != null) {
+            Field texStateField = state.getClass().getDeclaredField("textureState");
+            texStateField.setAccessible(true);
+            Object texState = texStateField.get(state);
+            if (texState instanceof TextureStateShard) {
+              Field texField = TextureStateShard.class.getDeclaredField("texture");
+              texField.setAccessible(true);
+              @SuppressWarnings("unchecked")
+              java.util.Optional<ResourceLocation> optTex = (java.util.Optional<ResourceLocation>) texField.get(texState);
+              ResourceLocation texture = optTex != null ? optTex.orElse(InventoryMenu.BLOCK_ATLAS) : InventoryMenu.BLOCK_ATLAS;
+              type = RenderType.entityTranslucentCull(texture);
+            }
+          }
+        }
+      } catch (Throwable ignored) {}
     }
 
     return new TintedVertexBuilder(inner.getBuffer(type), red, green, blue, alpha);
   }
 }
+

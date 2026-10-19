@@ -82,19 +82,31 @@ public class CastingTankBlock extends InventoryBlock implements ITankBlock, Enti
     return new CastingTankBlockEntity(pPos, pState, this);
   }
 
-  @Deprecated
   @Override
-  public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+  public net.minecraft.world.ItemInteractionResult useItemOn(ItemStack heldStack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    if (player.isShiftKeyDown() || heldStack.isEmpty()) {
+      return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
     if (world.getBlockEntity(pos) instanceof CastingTankBlockEntity tank) {
       tank.interact(player, hand, hit.getLocation().y - pos.getY() < 0.6875);
-      return InteractionResult.SUCCESS;
+      return net.minecraft.world.ItemInteractionResult.sidedSuccess(world.isClientSide);
+    }
+    return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+  }
+
+  @Override
+  public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+    if (world.getBlockEntity(pos) instanceof CastingTankBlockEntity tank) {
+      tank.interact(player, InteractionHand.MAIN_HAND, hit.getLocation().y - pos.getY() < 0.6875);
+      return InteractionResult.sidedSuccess(world.isClientSide);
     }
     return InteractionResult.FAIL;
   }
 
+
   @Override
   public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-    CompoundTag nbt = stack.getTag();
+    CompoundTag nbt = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA) != null ? stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA).copyTag() : null;
     if (nbt != null && worldIn.getBlockEntity(pos) instanceof CastingTankBlockEntity tank) {
       tank.updateTank(nbt.getCompound(NBTTags.TANK));
     }
@@ -138,7 +150,7 @@ public class CastingTankBlock extends InventoryBlock implements ITankBlock, Enti
   }
 
   @Override
-  public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter world, BlockPos pos, Player player) {
+  public ItemStack getCloneItemStack(net.minecraft.world.level.LevelReader world, BlockPos pos, BlockState state) {
     return ITankBlockEntity.getCloneItemStack(new ItemStack(this), world, pos);
   }
 

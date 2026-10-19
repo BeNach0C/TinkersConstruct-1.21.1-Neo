@@ -5,3 +5,4 @@ package slimeknights.tconstruct.smeltery.network;
 import net.minecraft.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+

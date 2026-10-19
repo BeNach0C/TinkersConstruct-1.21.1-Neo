@@ -1,9 +1,9 @@
-{
+﻿{
   "level_display": "tconstruct:default",
   "modules": [
     {
       "type": "tconstruct:attribute",
-      "attribute": "forge:step_height_addition",
+      "attribute": "minecraft:generic.step_height",
       "each_level": 0.5,
       "operation": "addition",
       "slots": [

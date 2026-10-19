@@ -13,9 +13,12 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Block;
 
 /** Placement predicate using a slime type */
-@RequiredArgsConstructor
 public class SlimePlacementPredicate<T extends Slime> implements SpawnPredicate<T> {
   private final TagKey<Block> tag;
+
+  public SlimePlacementPredicate(TagKey<Block> tag) {
+    this.tag = tag;
+  }
 
   @Override
   public boolean test(EntityType<T> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {

@@ -121,6 +121,7 @@ public final class SlotType {
   /** Name of this slot type, used for serialization */
   @Getter
   private final String name;
+    public String getName() { return this.name; }
   /** Cached color of this slot type */
   private TextColor color = null;
 

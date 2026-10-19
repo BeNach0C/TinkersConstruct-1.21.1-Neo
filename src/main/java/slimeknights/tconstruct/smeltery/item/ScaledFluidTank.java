@@ -1,8 +1,8 @@
 package slimeknights.tconstruct.smeltery.item;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 
 import javax.annotation.Nonnull;
 
@@ -83,21 +83,21 @@ public class ScaledFluidTank extends FluidTank {
 
   /* NBT */
 
-  @Override
-  public FluidTank readFromNBT(CompoundTag nbt) {
-    // scale the fluid on reading from NBT; as each instance should store the fluid relative to stack size 1
-    FluidStack fluid = FluidStack.loadFluidStackFromNBT(nbt);
+    @Override
+  public FluidTank readFromNBT(net.minecraft.core.HolderLookup.Provider provider, CompoundTag nbt) {
+    FluidStack fluid = FluidStack.parseOptional(provider, nbt.getCompound("Fluid"));
     fluid.setAmount(fluid.getAmount() * scale);
     setFluid(fluid);
     return this;
   }
 
   @Override
-  public CompoundTag writeToNBT(CompoundTag nbt) {
-    // scale the fluid on reading from NBT; as each instance should store the fluid relative to stack size 1
+  public CompoundTag writeToNBT(net.minecraft.core.HolderLookup.Provider provider, CompoundTag nbt) {
     FluidStack fluid = this.fluid.copy();
     fluid.setAmount(fluid.getAmount() / scale);
-    fluid.writeToNBT(nbt);
+    if (!fluid.isEmpty()) {
+      nbt.put("Fluid", fluid.save(provider));
+    }
     return nbt;
   }
 }

@@ -13,7 +13,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent.BreakSpeed;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.tools.nbt.IToolStackView;
@@ -38,7 +38,7 @@ public sealed interface BreakSpeedContext {
   /** If true, the tool is effective against this block type */
   boolean isEffective();
 
-  /** Original mining speed before modifiers applied. Includes modifiers from other listeners to {@link net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed}. */
+  /** Original mining speed before modifiers applied. Includes modifiers from other listeners to {@link net.neoforged.neoforge.event.entity.player.PlayerEvent.BreakSpeed}. */
   float originalSpeed();
 
   /** Calculated modifier from potion effects such as haste and environment such as water, use for additive bonuses to ensure consistency with the mining speed stat. */
@@ -74,7 +74,7 @@ public sealed interface BreakSpeedContext {
       }
     }
     // water
-    if (entity.isEyeInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(entity)) {
+    if (entity.isEyeInFluid(FluidTags.WATER) /* && !EnchantmentHelper.hasAquaAffinity(entity) */) {
       modifier /= 5.0F;
     }
     if (!entity.onGround()) {
@@ -113,7 +113,6 @@ public sealed interface BreakSpeedContext {
   /** Implementation for non-event usages of the hook, such as {@link slimeknights.tconstruct.tools.entity.ThrownTool} */
   @Getter
   @Accessors(fluent = true)
-  @RequiredArgsConstructor
   final class Direct implements BreakSpeedContext {
     private final Player player;
     private final BlockState state;
@@ -122,6 +121,14 @@ public sealed interface BreakSpeedContext {
     private final boolean isEffective;
     private final float originalSpeed;
     private final float miningSpeedMultiplier;
+    public Direct(Player player, BlockState state, @Nullable BlockPos pos, Direction sideHit, boolean isEffective, float originalSpeed, float miningSpeedMultiplier) { this.player = player; this.state = state; this.pos = pos; this.sideHit = sideHit; this.isEffective = isEffective; this.originalSpeed = originalSpeed; this.miningSpeedMultiplier = miningSpeedMultiplier; }
+    @Override public Player player() { return player; }
+    @Override public BlockState state() { return state; }
+    @Override public BlockPos pos() { return pos; }
+    @Override public Direction sideHit() { return sideHit; }
+    @Override public boolean isEffective() { return isEffective; }
+    @Override public float originalSpeed() { return originalSpeed; }
+    @Override public float miningSpeedMultiplier() { return miningSpeedMultiplier; }
     private BreakSpeed event;
 
     @Override

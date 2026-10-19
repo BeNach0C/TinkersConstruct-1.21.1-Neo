@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.tables.menu.module;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import net.minecraft.core.Direction;
@@ -6,10 +7,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.wrapper.EmptyHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 import slimeknights.mantle.inventory.BaseContainerMenu;
 import slimeknights.mantle.inventory.SmartItemHandlerSlot;
 
@@ -18,10 +16,11 @@ import javax.annotation.Nullable;
 public class SideInventoryContainer<TILE extends BlockEntity> extends BaseContainerMenu<TILE> {
 
   @Getter
-  private final int columns;
-  @Getter
+    private final int columns;
+  public int getColumns() { return columns; }
   private final int slotCount;
-  protected final LazyOptional<IItemHandler> itemHandler;
+  public int getSlotCount() { return slotCount; }
+  protected final IItemHandler itemHandler;
 
   public SideInventoryContainer(MenuType<?> containerType, int windowId, Inventory inv, @Nullable TILE tile, int x, int y, int columns) {
     this(containerType, windowId, inv, tile, null, x, y, columns);
@@ -31,21 +30,21 @@ public class SideInventoryContainer<TILE extends BlockEntity> extends BaseContai
     super(containerType, windowId, inv, tile);
 
     // must have a TE
-    if (tile == null) {
-      this.itemHandler = LazyOptional.of(() -> EmptyHandler.INSTANCE);
+    if (tile == null || tile.getLevel() == null) {
+      this.itemHandler = net.neoforged.neoforge.items.wrapper.EmptyItemHandler.INSTANCE;
     } else {
-      this.itemHandler = tile.getCapability(ForgeCapabilities.ITEM_HANDLER, inventoryDirection);
+      IItemHandler cap = tile.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, tile.getBlockPos(), inventoryDirection);
+      this.itemHandler = cap != null ? cap : net.neoforged.neoforge.items.wrapper.EmptyItemHandler.INSTANCE;
     }
 
     // slot properties
-    IItemHandler handler = itemHandler.orElse(EmptyHandler.INSTANCE);
+    IItemHandler handler = this.itemHandler;
     this.slotCount = handler.getSlots();
-    this.columns = columns;
-    int rows = this.slotCount / columns;
-    if (this.slotCount % columns != 0) {
+    this.columns = Math.max(1, columns);
+    int rows = this.slotCount / this.columns;
+    if (this.slotCount % this.columns != 0) {
       rows++;
     }
-
     // add slots
     int index = 0;
     for (int r = 0; r < rows; r++) {

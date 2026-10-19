@@ -26,8 +26,8 @@ public class SlimeFungusConfig extends HugeFungusConfiguration {
     Codec.BOOL.fieldOf("planted").orElse(false).forGetter(config -> config.planted)
   ).apply(instance, SlimeFungusConfig::new));
 
-  @Getter
   private final TagKey<Block> groundTag;
+  public TagKey<Block> getGroundTag() { return this.groundTag; }
   public SlimeFungusConfig(TagKey<Block> groundTag, BlockState stem, BlockState hat, BlockState decor, BlockPredicate replaceableBlocks, boolean planted) {
     super(Blocks.AIR.defaultBlockState(), stem, hat, decor, replaceableBlocks, planted);
     this.groundTag = groundTag;

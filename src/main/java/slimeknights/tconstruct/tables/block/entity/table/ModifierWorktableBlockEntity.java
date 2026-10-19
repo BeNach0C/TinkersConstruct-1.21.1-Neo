@@ -8,9 +8,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.event.EventHooks;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.recipe.RecipeResult;
@@ -42,10 +41,11 @@ public class ModifierWorktableBlockEntity extends RetexturedTableBlockEntity imp
 
   /** Result inventory, lazy loads results */
   @Getter
-  private final LazyResultContainer craftingResult;
+    private final LazyResultContainer craftingResult;
+  public LazyResultContainer getCraftingResult() { return craftingResult; }
   /** Crafting inventory for the recipe calls */
-  @Getter
   private final ModifierWorktableContainerWrapper inventoryWrapper;
+  public ModifierWorktableContainerWrapper getInventoryWrapper() { return inventoryWrapper; }
 
   /** If true, the last recipe is the current recipe. If false, no recipe was found. If null, have not tried recipe lookup */
   private Boolean recipeValid;
@@ -60,15 +60,16 @@ public class ModifierWorktableBlockEntity extends RetexturedTableBlockEntity imp
 
   /** Current result, may be modified again later */
   @Nullable @Getter
-  private LazyToolStack result = null;
+    private LazyToolStack result = null;
+  public LazyToolStack getResult() { return result; }
   /** Current message displayed on the screen */
-  @Getter
   private Component currentMessage = Component.empty();
+  public Component getCurrentMessage() { return currentMessage; }
 
   public ModifierWorktableBlockEntity(BlockPos pos, BlockState state) {
     super(TinkerTables.modifierWorktableTile.get(), pos, state, NAME, 3);
     this.itemHandler = new ConfigurableInvWrapperCapability(this, false, false);
-    this.itemHandlerCap = LazyOptional.of(() -> this.itemHandler);
+    this.itemHandlerCap = this.itemHandler;
     this.inventoryWrapper = new ModifierWorktableContainerWrapper(this);
     this.craftingResult = new LazyResultContainer(this);
   }
@@ -139,7 +140,7 @@ public class ModifierWorktableBlockEntity extends RetexturedTableBlockEntity imp
         return updateRecipe(lastRecipe);
       }
       // look for a new recipe, if it matches cache it
-      Optional<IModifierWorktableRecipe> recipe = level.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MODIFIER_WORKTABLE.get(), inventoryWrapper, level);
+      Optional<IModifierWorktableRecipe> recipe = level.getRecipeManager().getRecipeFor(TinkerRecipeTypes.MODIFIER_WORKTABLE.get(), inventoryWrapper, level).map(net.minecraft.world.item.crafting.RecipeHolder::value);
       if (recipe.isPresent()) {
         return updateRecipe(recipe.get());
       }
@@ -178,7 +179,7 @@ public class ModifierWorktableBlockEntity extends RetexturedTableBlockEntity imp
     ItemStack original = getItem(slot);
     super.setItem(slot, stack);
     // if the stack changed, clear everything
-    if (original.getCount() != stack.getCount() || !ItemStack.isSameItemSameTags(original, stack)) {
+    if (original.getCount() != stack.getCount() || !ItemStack.isSameItemSameComponents(original, stack)) {
       onSlotChanged(slot);
     }
   }
@@ -210,7 +211,7 @@ public class ModifierWorktableBlockEntity extends RetexturedTableBlockEntity imp
 
     // we are definitely crafting at this point
     resultItem.onCraftedBy(this.level, player, amount);
-    ForgeEventFactory.firePlayerCraftingEvent(player, resultItem, this.inventoryWrapper);
+    net.neoforged.neoforge.event.EventHooks.firePlayerCraftingEvent(player, resultItem, this.inventoryWrapper);
     this.playCraftSound(player);
 
     // run the recipe, will shrink inputs
@@ -225,7 +226,7 @@ public class ModifierWorktableBlockEntity extends RetexturedTableBlockEntity imp
       if (tinkerable.getCount() <= shrinkToolSlot) {
         this.setItem(TINKER_SLOT, ItemStack.EMPTY);
       } else {
-        this.setItem(TINKER_SLOT, ItemHandlerHelper.copyStackWithSize(tinkerable, tinkerable.getCount() - shrinkToolSlot));
+        this.setItem(TINKER_SLOT, tinkerable.copyWithCount(tinkerable.getCount() - shrinkToolSlot));
       }
     }
     // screen should reset back to empty now that we crafted

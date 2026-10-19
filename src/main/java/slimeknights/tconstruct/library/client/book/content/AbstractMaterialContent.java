@@ -12,8 +12,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.ForgeI18n;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.client.resources.language.I18n;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.client.book.HTMLUtils;
 import slimeknights.mantle.client.book.data.BookData;
 import slimeknights.mantle.client.book.data.content.PageContent;
@@ -133,7 +133,7 @@ public abstract class AbstractMaterialContent extends PageContent {
   /** Gets the text to display, empty if no text */
   protected String getTextKey(MaterialId material) {
     // allow both the encyclopedia and flavor keys to use a separate variant if defined
-    String rootKey = "material." + material.toLanguageKey() + (detailed ? ".encyclopedia" : ".flavor");
+    String rootKey = net.minecraft.Util.makeDescriptionId("material", material.getId()) + (detailed ? ".encyclopedia" : ".flavor");
     String suffix = translationSuffix();
     // allow the suffix to override the translation key
     if (!suffix.isEmpty()) {
@@ -159,7 +159,7 @@ public abstract class AbstractMaterialContent extends PageContent {
   /** Gets the material for this page */
   protected IMaterial getMaterial() {
     if (material == null) {
-      material = MaterialRegistry.getMaterial(getMaterialVariant().getId());
+      material = MaterialRegistry.getMaterial(getMaterialVariant().getMaterialId());
     }
     return material;
   }
@@ -183,7 +183,7 @@ public abstract class AbstractMaterialContent extends PageContent {
       if (repairStacks.isEmpty()) {
         // use the fallback stacks
         repairStacks = FALLBACKS.stream().map(Supplier::get)
-          .filter(part -> part.canUseMaterial(material.getId()))
+          .filter(part -> part.canUseMaterial(material.getMaterialId()))
           .map(part -> part.withMaterialForDisplay(material)).toList();
 
         // no matching fallback? just use a repair kit
@@ -254,7 +254,7 @@ public abstract class AbstractMaterialContent extends PageContent {
     }
     IMaterialRegistry registry = MaterialRegistry.getInstance();
     MaterialVariantId material = getMaterialVariant();
-    Optional<IMaterialStats> stats = registry.getMaterialStats(material.getId(), statsId);
+    Optional<IMaterialStats> stats = registry.getMaterialStats(material.getMaterialId(), statsId);
     if (stats.isEmpty()) {
       return y;
     }
@@ -278,7 +278,7 @@ public abstract class AbstractMaterialContent extends PageContent {
     if (includeStats) {
       addStatLines(lineData, stats.get());
     }
-    addTraitLines(lineData, registry.getTraits(material.getId(), statsId));
+    addTraitLines(lineData, registry.getTraits(material.getMaterialId(), statsId));
 
     list.add(new TextComponentElement(x, y, w, BookScreen.PAGE_HEIGHT, lineData));
 
@@ -385,7 +385,7 @@ public abstract class AbstractMaterialContent extends PageContent {
           // TODO: filter out tool parts that cannot be casted due to a composite cast conflict
           List<ItemStack> compositeParts = MaterialCastingLookup.getAllItemCosts().stream()
             .map(Entry::getKey)
-            .filter(part -> part.canUseMaterial(inputId.getId()) && part.canUseMaterial(material) && (!(part instanceof IToolPart toolPart) || supportsStatType(toolPart.getStatType())))
+            .filter(part -> part.canUseMaterial(inputId.getMaterialId()) && part.canUseMaterial(material) && (!(part instanceof IToolPart toolPart) || supportsStatType(toolPart.getStatType())))
             .map(part -> part.withMaterial(inputId))
             .toList();
           if (!compositeParts.isEmpty()) {
@@ -407,7 +407,7 @@ public abstract class AbstractMaterialContent extends PageContent {
   protected void addDisplayItems(ArrayList<BookElement> list, int x, MaterialVariantId materialVariant) {
     List<ItemElement> displayTools = Lists.newArrayList();
 
-    addCategory(displayTools, materialVariant.getId());
+    addCategory(displayTools, materialVariant.getMaterialId());
 
     // add display items
     displayTools.add(new TinkerItemElement(0, 0, 1f, getRepairStacks()));
@@ -415,7 +415,7 @@ public abstract class AbstractMaterialContent extends PageContent {
 
     // fill in leftover space
     if (displayTools.size() < 9) {
-      MaterialId materialId = materialVariant.getId();
+      MaterialId materialId = materialVariant.getMaterialId();
       toolLoop:
       for (Holder<Item> item : BuiltInRegistries.ITEM.getTagOrEmpty(TinkerTags.Items.MULTIPART_TOOL)) {
         if (item.value() instanceof IModifiable tool && (showAllTools || !item.is(TinkerTags.Items.ANCIENT_TOOLS))) {
@@ -467,10 +467,10 @@ public abstract class AbstractMaterialContent extends PageContent {
   /** Adds the display text at the end of the material description */
   protected void addDescription(int x, int y, List<BookElement> list) {
     // inspirational quote, or boring description text
-    String textKey = getTextKey(materialVariant.getId());
+    String textKey = getTextKey(materialVariant.getMaterialId());
     if (I18n.exists(textKey)) {
       // using forge instead of I18n.format as that prevents % from being interpreted as a format key
-      String translated = ForgeI18n.getPattern(textKey);
+      String translated = I18n.get(textKey);
       if (!detailed ) {
         translated = '"' + translated + '"';
       }
@@ -520,7 +520,7 @@ public abstract class AbstractMaterialContent extends PageContent {
       .add(makeTitleHTML().classes("format-custom").color(rgb))
       .add(makeStatsHtml(book));
     HtmlElement description = HtmlElement.p().classes("trait");
-    String text = ForgeI18n.getPattern(getTextKey(getMaterialVariant().getId()));
+    String text = I18n.get(getTextKey(getMaterialVariant().getMaterialId()));
     page.add(description);
     if (!detailed) {
       description.style("font-style", "italic");
@@ -554,7 +554,7 @@ public abstract class AbstractMaterialContent extends PageContent {
    * @return  Element for the stats.
    */
   protected HtmlSerializable makeStatHtml(MaterialStatsId statsId, @Nullable String name, boolean addStats, boolean hasPart) {
-    Optional<IMaterialStats> statsOptional = MaterialRegistry.getInstance().getMaterialStats(getMaterialVariant().getId(), statsId);
+    Optional<IMaterialStats> statsOptional = MaterialRegistry.getInstance().getMaterialStats(getMaterialVariant().getMaterialId(), statsId);
     if (statsOptional.isEmpty()) return HtmlSerializable.EMPTY;
     IMaterialStats stats = statsOptional.get();
 
@@ -585,7 +585,7 @@ public abstract class AbstractMaterialContent extends PageContent {
   /** Formats materials traits as HTML */
   protected HtmlSerializable makeTraitsHtml(MaterialStatsId statsId) {
     HtmlGroup group = HtmlGroup.indent();
-    for (ModifierEntry entry : MaterialRegistry.getInstance().getTraits(getMaterialVariant().getId(), statsId)) {
+    for (ModifierEntry entry : MaterialRegistry.getInstance().getTraits(getMaterialVariant().getMaterialId(), statsId)) {
       if (!entry.isBound()) {
         continue;
       }

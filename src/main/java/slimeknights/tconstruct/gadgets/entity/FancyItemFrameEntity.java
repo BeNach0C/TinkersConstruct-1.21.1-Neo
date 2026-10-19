@@ -21,13 +21,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import slimeknights.tconstruct.common.Sounds;
 import slimeknights.tconstruct.gadgets.TinkerGadgets;
 import slimeknights.tconstruct.library.utils.Util;
 
-public class FancyItemFrameEntity extends ItemFrame implements IEntityAdditionalSpawnData {
+public class FancyItemFrameEntity extends ItemFrame implements IEntityWithComplexSpawn {
   private static final int DIAMOND_TIMER = 300;
   private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(FancyItemFrameEntity.class, EntityDataSerializers.INT);
   private static final String TAG_VARIANT = "Variant";
@@ -62,7 +62,13 @@ public class FancyItemFrameEntity extends ItemFrame implements IEntityAdditional
       Level level = level();
       BlockState state = level.getBlockState(behind);
       if (!state.isAir()) {
-        InteractionResult result = state.use(level, player, hand, Util.createTraceResult(behind, direction, false));
+        ItemStack heldItem = player.getItemInHand(hand);
+        net.minecraft.world.phys.BlockHitResult hitResult = Util.createTraceResult(behind, direction, false);
+        net.minecraft.world.ItemInteractionResult itemResult = state.useItemOn(heldItem, level, player, hand, hitResult);
+        if (itemResult.consumesAction()) {
+          return itemResult.result();
+        }
+        InteractionResult result = state.useWithoutItem(level, player, hitResult);
         if (result.consumesAction()) {
           return result;
         }
@@ -124,10 +130,7 @@ public class FancyItemFrameEntity extends ItemFrame implements IEntityAdditional
 
   /** Internal logic to set the rotation */
   private void setRotationRaw(int rotationIn, boolean updateComparator) {
-    this.getEntityData().set(DATA_ROTATION, rotationIn);
-    if (updateComparator) {
-      this.level().updateNeighbourForOutputSignal(this.pos, Blocks.AIR);
-    }
+    this.setRotation(rotationIn, updateComparator);
   }
 
   @Override
@@ -146,18 +149,17 @@ public class FancyItemFrameEntity extends ItemFrame implements IEntityAdditional
       } else {
         rotationIn = rotationIn % 16;
       }
-      // diamond allows rotation between 0 and 16
-      setRotationRaw(rotationIn, updateComparator);
+      super.setRotation(rotationIn, updateComparator);
     } else {
       // non diamond rotates around after 7
-      setRotationRaw(rotationIn % 8, updateComparator);
+      super.setRotation(rotationIn % 8, updateComparator);
     }
   }
 
   @Override
-  protected void defineSynchedData() {
-    super.defineSynchedData();
-    this.entityData.define(VARIANT, 0);
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+    super.defineSynchedData(builder);
+    builder.define(VARIANT, 0);
   }
 
   /** Gets the frame type */
@@ -196,8 +198,8 @@ public class FancyItemFrameEntity extends ItemFrame implements IEntityAdditional
   }
 
   @Override
-  public boolean ignoreExplosion() {
-    return super.ignoreExplosion() || getFrameId() == FrameType.NETHERITE.getId();
+  public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
+    return super.ignoreExplosion(explosion) || getFrameId() == FrameType.NETHERITE.getId();
   }
 
   @Override
@@ -235,19 +237,14 @@ public class FancyItemFrameEntity extends ItemFrame implements IEntityAdditional
   }
 
   @Override
-  public Packet<ClientGamePacketListener> getAddEntityPacket() {
-    return NetworkHooks.getEntitySpawningPacket(this);
-  }
-
-  @Override
-  public void writeSpawnData(FriendlyByteBuf buffer) {
+  public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
     buffer.writeVarInt(this.getFrameId());
     buffer.writeBlockPos(this.pos);
     buffer.writeVarInt(this.direction.get3DDataValue());
   }
 
   @Override
-  public void readSpawnData(FriendlyByteBuf buffer) {
+  public void readSpawnData(RegistryFriendlyByteBuf buffer) {
     this.entityData.set(VARIANT, buffer.readVarInt());
     this.pos = buffer.readBlockPos();
     this.setDirection(Direction.from3DDataValue(buffer.readVarInt()));

@@ -69,7 +69,7 @@ public class PartSwappingOverrideRecipe extends MaterialIndexSwappingRecipe impl
   private List<IDisplayToolModification> multiRecipes;
 
   @Override
-  public List<IDisplayToolModification> getRecipes(RegistryAccess access) {
+  public List<IDisplayToolModification> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       IMaterialRegistry registry = MaterialRegistry.getInstance();
       MaterialStatsId statType = part.getStatType();

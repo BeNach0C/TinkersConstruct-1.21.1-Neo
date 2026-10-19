@@ -49,7 +49,7 @@ public interface EntityVariable extends IHaveLoader {
   });
   /** Returns 2 if entity is in water, or 1 if in rain */
   EntityVariable WATER = simple(entity -> {
-    if (entity.isInWater() || entity.wasEyeInWater) {
+    if (entity.isInWater() || entity.isUnderWater()) {
       return 2;
     }
     if (LivingEntityPredicate.RAINING.matches(entity)) {

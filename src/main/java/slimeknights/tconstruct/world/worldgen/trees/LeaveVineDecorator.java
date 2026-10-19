@@ -19,13 +19,14 @@ import slimeknights.tconstruct.world.TinkerStructures;
  * Recreation of {@link net.minecraft.world.level.levelgen.feature.treedecorators.LeaveVineDecorator} with variable vine type.
  */
 @SuppressWarnings("deprecation")
-@RequiredArgsConstructor
 public class LeaveVineDecorator extends TreeDecorator {
-  public static final Codec<LeaveVineDecorator> CODEC = RecordCodecBuilder.create(inst ->
+  public static final com.mojang.serialization.MapCodec<LeaveVineDecorator> CODEC = RecordCodecBuilder.mapCodec(inst ->
     inst.group(
       BuiltInRegistries.BLOCK.byNameCodec().fieldOf("vines").forGetter(d -> d.vines),
       Codec.floatRange(0.0F, 1.0F).fieldOf("probability").forGetter(d -> d.probability)
     ).apply(inst, LeaveVineDecorator::new));
+
+  public LeaveVineDecorator(Block vines, float probability) { this.vines = vines; this.probability = probability; }
 
   private final Block vines;
   private final float probability;

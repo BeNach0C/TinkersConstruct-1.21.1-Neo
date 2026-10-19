@@ -58,7 +58,7 @@ public record UniqueMaterialToolName(int index) implements ToolNameHook, ToolMod
         key = materialKey;
       // if we cannot, try the base key to use that
       } else if (material.hasVariant()) {
-        materialKey = key + MaterialTooltipCache.getKey(material.getId());
+        materialKey = key + MaterialTooltipCache.getKey(material.getMaterialId());
         if (Util.canTranslate(materialKey)) {
           key = materialKey;
         }

@@ -96,6 +96,9 @@ public class ItemPartRecipe implements IDisplayPartBuilderRecipe {
 
   @Override
   public boolean partialMatch(IPartBuilderContainer inv) {
+    if (result.get().isEmpty()) {
+      return false;
+    }
     // first, must have a pattern
     if (!patternItem.test(inv.getPatternStack())) {
       return false;
@@ -115,6 +118,9 @@ public class ItemPartRecipe implements IDisplayPartBuilderRecipe {
 
   @Override
   public boolean matches(IPartBuilderContainer inv, Level worldIn) {
+    if (result.get().isEmpty()) {
+      return false;
+    }
     if (material.isEmpty()) {
       return inv.getStack().isEmpty();
     }
@@ -132,12 +138,12 @@ public class ItemPartRecipe implements IDisplayPartBuilderRecipe {
   }
 
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return result.get();
   }
 
   @Override
-  public ItemStack assemble(IPartBuilderContainer inv, RegistryAccess access) {
+  public ItemStack assemble(IPartBuilderContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ItemStack result = getResultItem(access).copy();
     IMaterialValue materialRecipe = inv.getMaterial();
     if (materialRecipe != null) {

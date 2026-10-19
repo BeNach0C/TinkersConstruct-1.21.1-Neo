@@ -6,7 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 record MaterialVariantIdImpl(MaterialId material, String variant) implements MaterialVariantId {
 
   @Override
-  public MaterialId getId() {
+  public MaterialId getMaterialId() {
     return material;
   }
 
@@ -25,14 +25,14 @@ record MaterialVariantIdImpl(MaterialId material, String variant) implements Mat
     // special case: material#default will match against the empty variant, to allow recipes to look for a material with no variant
     if (DEFAULT_VARIANT.equals(variant)) {
       String otherVariant = other.getVariant();
-      return this.material.equals(other.getId()) && (otherVariant.isEmpty() || DEFAULT_VARIANT.equals(otherVariant));
+      return this.material.equals(other.getMaterialId()) && (otherVariant.isEmpty() || DEFAULT_VARIANT.equals(otherVariant));
     }
     return this.sameVariant(other);
   }
 
   @Override
   public ResourceLocation getLocation(char separator) {
-    return material.withSuffix(separator + variant);
+    return material.getId().withSuffix(separator + variant);
   }
 
   @Override

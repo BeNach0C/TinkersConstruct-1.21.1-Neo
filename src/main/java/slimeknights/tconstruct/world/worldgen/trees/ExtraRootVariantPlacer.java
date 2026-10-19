@@ -37,14 +37,16 @@ import java.util.function.Predicate;
 
 /** Extension of {@link MangroveRootPlacer} to allow more root variants */
 public class ExtraRootVariantPlacer extends MangroveRootPlacer {
-  public static final Codec<ExtraRootVariantPlacer> CODEC = RecordCodecBuilder.create(inst -> rootPlacerParts(inst).and(inst.group(
-    MangroveRootPlacement.CODEC.fieldOf("mangrove_root_placement").forGetter(p -> p.mangroveRootPlacement),
+  public static final com.mojang.serialization.MapCodec<ExtraRootVariantPlacer> CODEC = RecordCodecBuilder.mapCodec(inst -> rootPlacerParts(inst).and(inst.group(
+    MangroveRootPlacement.CODEC.fieldOf("mangrove_root_placement").forGetter(p -> p.myMangrovePlacement),
     RootVariant.CODEC.listOf().fieldOf("root_variants").forGetter(p -> p.rootVariants))).apply(inst, ExtraRootVariantPlacer::new));
 
   private final List<RootVariant> rootVariants;
+  private final MangroveRootPlacement myMangrovePlacement;
   public ExtraRootVariantPlacer(IntProvider pTrunkOffset, BlockStateProvider pRootProvider, Optional<AboveRootPlacement> pAboveRootPlacement, MangroveRootPlacement mangrovePlacement, List<RootVariant> rootVariants) {
     super(pTrunkOffset, pRootProvider, pAboveRootPlacement, mangrovePlacement);
     this.rootVariants = rootVariants;
+    this.myMangrovePlacement = mangrovePlacement;
   }
 
   @Override
@@ -85,11 +87,14 @@ public class ExtraRootVariantPlacer extends MangroveRootPlacer {
   @Accessors(fluent = true)
   public static class Builder {
     private IntProvider trunkOffset = null;
+      public Builder trunkOffset(IntProvider trunkOffset) { this.trunkOffset = trunkOffset; return this; }
     @Setter
     private BlockStateProvider roots = null;
+      public Builder roots(BlockStateProvider roots) { this.roots = roots; return this; }
     @Nullable
     private AboveRootPlacement aboveRootPlacement = null;
     private HolderSet<Block> canGrowThrough = null;
+      public Builder canGrowThrough(HolderSet<Block> canGrowThrough) { this.canGrowThrough = canGrowThrough; return this; }
     private int maxRootWidth = 8;
     private int maxRootLength = 15;
     private float randomSkewChance = 0.2f;

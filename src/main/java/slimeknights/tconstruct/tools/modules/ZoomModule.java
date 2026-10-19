@@ -8,7 +8,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.UseAnim;
-import net.minecraftforge.common.util.LazyOptional;
 import slimeknights.mantle.client.TooltipKey;
 import slimeknights.mantle.data.loadable.mapping.SimpleRecordLoadable;
 import slimeknights.mantle.data.loadable.primitive.EnumLoadable;
@@ -67,8 +66,8 @@ public enum ZoomModule implements ModifierModule, GeneralInteractionModifierHook
   /** Loader instance */
   public static final RecordLoadable<ZoomModule> LOADER = new SimpleRecordLoadable<>(new EnumLoadable<>(ZoomModule.class), "style", null, false);
 
-  @Getter
   private final List<ModuleHook<?>> defaultHooks;
+  public List<ModuleHook<?>> getDefaultHooks() { return this.defaultHooks; }
 
   @SafeVarargs
   ZoomModule(ModuleHook<? super ZoomModule>... hooks) {
@@ -90,12 +89,13 @@ public enum ZoomModule implements ModifierModule, GeneralInteractionModifierHook
 
   /** Starts spyglass style zooming */
   private static void setZoom(ModifierEntry modifier, LivingEntity living, float amount) {
-    living.getCapability(TinkerDataCapability.CAPABILITY).ifPresent(data -> data.computeIfAbsent(TinkerDataKeys.FOV_MODIFIER).set(modifier.getId(), amount));
+    var data = living.getCapability(TinkerDataCapability.CAPABILITY);
+    if (data != null) data.computeIfAbsent(TinkerDataKeys.FOV_MODIFIER).set(modifier.getId().getId(), amount);
   }
 
   /** Stops zooming */
-  private static void stopZoom(ModifierEntry modifier, LazyOptional<TinkerDataCapability.Holder> tinkerData) {
-    tinkerData.ifPresent(data -> data.computeIfAbsent(TinkerDataKeys.FOV_MODIFIER).remove(modifier.getId()));
+  private static void stopZoom(ModifierEntry modifier, TinkerDataCapability.Holder data) {
+    if (data != null) data.computeIfAbsent(TinkerDataKeys.FOV_MODIFIER).remove(modifier.getId().getId());
   }
 
   /** Stops zooming */

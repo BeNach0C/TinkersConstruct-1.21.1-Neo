@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import slimeknights.mantle.data.loadable.common.IngredientLoadable;
@@ -40,7 +40,7 @@ public class TippedToolTransformRecipe extends ToolBuildingRecipe {
 
   protected final ModifierId modifier;
   public TippedToolTransformRecipe(ResourceLocation id, String group, IModifiable output, @Nullable ResourceLocation layoutSlot, Ingredient ingredient, List<MaterialVariantId> materials, ModifierId modifier) {
-    super(id, group, output, 1, layoutSlot, List.of(ingredient), List.of(), materials);
+    super(id, group, output, 1, layoutSlot, List.of(ingredient), java.util.List.<slimeknights.tconstruct.library.tools.part.IToolPart>of(), materials);
     this.modifier = modifier;
   }
 
@@ -50,9 +50,9 @@ public class TippedToolTransformRecipe extends ToolBuildingRecipe {
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     RecipeResult<LazyToolStack> result = super.getValidatedResult(inv, access);
-    if (result.isSuccess()) {
+    if (result != null) {
       // tool must have modifier, else we are adding bad data
       IToolStackView tool = result.getResult().getTool();
       if (tool.getModifierLevel(modifier) > 0) {
@@ -66,10 +66,8 @@ public class TippedToolTransformRecipe extends ToolBuildingRecipe {
         }
         // if we found one, set its NBT into the result tool
         if (!stack.isEmpty()) {
-          CompoundTag tag = stack.getTag();
-          if (tag != null && tag.contains(PotionUtils.TAG_POTION, Tag.TAG_STRING)) {
-            tool.getPersistentData().putString(modifier, tag.getString(PotionUtils.TAG_POTION));
-          }
+          net.minecraft.world.item.alchemy.PotionContents potion = stack.get(net.minecraft.core.component.DataComponents.POTION_CONTENTS);
+          if (potion != null) { tool.getPersistentData().putString(modifier.getId(), net.minecraft.core.registries.BuiltInRegistries.POTION.getKey(potion.potion().get().value()).toString()); }
         }
       }
     }
@@ -82,10 +80,10 @@ public class TippedToolTransformRecipe extends ToolBuildingRecipe {
       ItemStack result = super.getDisplayOutput().get(0);
       displayOutput = Arrays.stream(ingredients.get(0).getItems())
         .map(stack -> {
-          CompoundTag tag = stack.getTag();
-          if (tag != null) {
+          net.minecraft.world.item.alchemy.PotionContents potion = stack.get(net.minecraft.core.component.DataComponents.POTION_CONTENTS);
+          if (potion != null) {
             ItemStack copy = result.copy();
-            ToolStack.from(copy).getPersistentData().putString(modifier, tag.getString(PotionUtils.TAG_POTION));
+            ToolStack.from(copy).getPersistentData().putString(modifier.getId(), net.minecraft.core.registries.BuiltInRegistries.POTION.getKey(potion.potion().get().value()).toString());
             return copy;
           }
           return result;

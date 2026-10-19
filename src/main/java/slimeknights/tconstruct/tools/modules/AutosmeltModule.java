@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /** Module implementing autosmelt */
-@RequiredArgsConstructor
+
 public class AutosmeltModule implements ModifierModule, ProcessLootModifierHook {
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<AutosmeltModule>defaultHooks(ModifierHooks.PROCESS_LOOT);
   @SuppressWarnings("unchecked") // no way to check, its generics with no concrete value
@@ -41,12 +41,14 @@ public class AutosmeltModule implements ModifierModule, ProcessLootModifierHook 
     FloatLoadable.PERCENT.requiredField("extra_drop_chance", m -> m.extraDropChance),
     AutosmeltModule::new);
   /** Inventory instance to use for recipe search */
-  private static final SingleItemContainer INVENTORY = new SingleItemContainer();
+  
 
   private final List<RecipeType<? extends AbstractCookingRecipe>> recipeTypes;
   private final float extraDropChance;
+
+  public AutosmeltModule(List<RecipeType<? extends AbstractCookingRecipe>> recipeTypes, float extraDropChance) { this.recipeTypes = recipeTypes; this.extraDropChance = extraDropChance; }
   /** Cache of relevant smelting recipes */
-  private final Cache<Item, Optional<? extends AbstractCookingRecipe>> recipeCache = CacheBuilder
+  private final Cache<Item, Optional<net.minecraft.world.item.crafting.RecipeHolder<? extends AbstractCookingRecipe>>> recipeCache = CacheBuilder
     .newBuilder()
     .maximumSize(64)
     .build();
@@ -82,17 +84,16 @@ public class AutosmeltModule implements ModifierModule, ProcessLootModifierHook 
    * @param world  World instance
    * @return  Furnace recipe
    */
-  private Optional<? extends AbstractCookingRecipe> findRecipe(ItemStack stack, Level world) {
-    INVENTORY.setStack(stack);
+  private Optional<net.minecraft.world.item.crafting.RecipeHolder<? extends AbstractCookingRecipe>> findRecipe(ItemStack stack, Level world) {
     // try each recipe type to see if we have a recipe for any of them
-    Optional<? extends AbstractCookingRecipe> recipe = Optional.empty();
+    net.minecraft.world.item.crafting.SingleRecipeInput input = new net.minecraft.world.item.crafting.SingleRecipeInput(stack);
+    Optional<net.minecraft.world.item.crafting.RecipeHolder<? extends AbstractCookingRecipe>> recipe = Optional.empty();
     for (RecipeType<? extends AbstractCookingRecipe> recipeType : recipeTypes) {
-      recipe = world.getRecipeManager().getRecipeFor(recipeType, INVENTORY, world);
+      recipe = (Optional<net.minecraft.world.item.crafting.RecipeHolder<? extends AbstractCookingRecipe>>)(Object)world.getRecipeManager().getRecipeFor((RecipeType)recipeType, input, world);
       if (recipe.isPresent()) {
         break;
       }
     }
-    INVENTORY.setStack(ItemStack.EMPTY);
     return recipe;
   }
 
@@ -103,9 +104,9 @@ public class AutosmeltModule implements ModifierModule, ProcessLootModifierHook 
    * @return Cached recipe
    */
   @Nullable
-  private AbstractCookingRecipe findCachedRecipe(ItemStack stack, Level world) {
+  private net.minecraft.world.item.crafting.RecipeHolder<? extends AbstractCookingRecipe> findCachedRecipe(ItemStack stack, Level world) {
     // don't use the cache if there is a tag, prevent breaking NBT sensitive recipes
-    if (stack.hasTag()) {
+    if (!stack.getComponents().isEmpty()) {
       return findRecipe(stack, world).orElse(null);
     }
     try {
@@ -126,12 +127,10 @@ public class AutosmeltModule implements ModifierModule, ProcessLootModifierHook 
     if (stack.is(TinkerTags.Items.AUTOSMELT_BLACKLIST)) {
       return stack;
     }
-    AbstractCookingRecipe recipe = findCachedRecipe(stack, world);
+    net.minecraft.world.item.crafting.RecipeHolder<? extends AbstractCookingRecipe> recipe = findCachedRecipe(stack, world);
     if (recipe != null) {
       // fetch recipe result, may be input sensitive
-      INVENTORY.setStack(stack);
-      ItemStack output = recipe.assemble(INVENTORY, world.registryAccess());
-      INVENTORY.setStack(ItemStack.EMPTY);
+      ItemStack output = recipe.value().assemble(new net.minecraft.world.item.crafting.SingleRecipeInput(stack), world.registryAccess());
       // scale the stack size based on the input size
       if (stack.getCount() > 1) {
         // recipe output is a copy, safe to modify

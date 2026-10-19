@@ -3,7 +3,7 @@ package slimeknights.tconstruct.library.recipe.modifiers.adding;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -30,7 +30,7 @@ public class OverslimeModifierRecipeBuilder extends AbstractRecipeBuilder<Oversl
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer) {
+  public void save(RecipeOutput consumer) {
     ItemStack[] stacks = ingredient.getItems();
     if (stacks.length == 0) {
       throw new IllegalStateException("Empty ingredient not allowed");
@@ -39,21 +39,21 @@ public class OverslimeModifierRecipeBuilder extends AbstractRecipeBuilder<Oversl
   }
 
   @Override
-  public void save(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
+  public void save(RecipeOutput consumer, ResourceLocation id) {
     if (ingredient == Ingredient.EMPTY) {
       throw new IllegalStateException("Empty ingredient not allowed");
     }
-    ResourceLocation advancementId = buildOptionalAdvancement(id, "modifiers");
-    consumer.accept(new LoadableFinishedRecipe<>(new OverslimeModifierRecipe(id, tools, ingredient, restoreAmount), OverslimeModifierRecipe.LOADER, advancementId));
+    net.minecraft.advancements.AdvancementHolder advancementId = buildOptionalAdvancement(id, "modifiers");
+    consumer.accept(id, new OverslimeModifierRecipe(id, tools, ingredient, restoreAmount), null);
   }
 
   /** Creates a crafting table overslime repair recipe */
-  public OverslimeModifierRecipeBuilder saveCrafting(Consumer<FinishedRecipe> consumer, ResourceLocation id) {
+  public OverslimeModifierRecipeBuilder saveCrafting(RecipeOutput consumer, ResourceLocation id) {
     if (ingredient == Ingredient.EMPTY) {
       throw new IllegalStateException("Empty ingredient not allowed");
     }
-    ResourceLocation advancementId = buildOptionalAdvancement(id, "modifiers");
-    consumer.accept(new LoadableFinishedRecipe<>(new OverslimeCraftingTableRecipe(id, tools, ingredient, restoreAmount), OverslimeCraftingTableRecipe.LOADER, advancementId));
+    net.minecraft.advancements.AdvancementHolder advancementId = buildOptionalAdvancement(id, "modifiers");
+    consumer.accept(id, new OverslimeCraftingTableRecipe(id, tools, ingredient, restoreAmount), null);
     return this;
   }
 }

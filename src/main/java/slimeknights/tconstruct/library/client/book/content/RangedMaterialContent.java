@@ -59,7 +59,7 @@ public class RangedMaterialContent extends AbstractMaterialContent {
   protected String getTextKey(MaterialId material) {
     // TODO 1.21: drop legacy key
     if (detailed) {
-      String legacyKey = "material." + material.toLanguageKey() + ".ranged";
+      String legacyKey = net.minecraft.Util.makeDescriptionId("material", material.getId()) + ".ranged";
       if (Util.canTranslate(legacyKey)) {
         return legacyKey;
       }

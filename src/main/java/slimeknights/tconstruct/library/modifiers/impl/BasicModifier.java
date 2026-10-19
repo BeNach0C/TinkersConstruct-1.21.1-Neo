@@ -81,15 +81,21 @@ public class BasicModifier extends Modifier {
 
   /** Determines when this modifier shows in tooltips */
   @Deprecated(forRemoval = true)
-  @RequiredArgsConstructor
   public enum TooltipDisplay {
     // while semantically the replacement would have the same name, logically the replacements all need to include the 3 new values
     ALWAYS(ShowInTooltips.ALWAYS),
     TINKER_STATION(ShowInTooltips.BONUS_SLOT),
     NEVER(ShowInTooltips.PARTS_ONLY);
 
-    @Getter
     private final ShowInTooltips showInTooltips;
+
+    TooltipDisplay(ShowInTooltips showInTooltips) {
+      this.showInTooltips = showInTooltips;
+    }
+
+    public ShowInTooltips getShowInTooltips() {
+      return this.showInTooltips;
+    }
   }
 
   /**

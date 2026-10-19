@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.smeltery.block;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,7 +31,6 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import slimeknights.mantle.datagen.MantleTags;
 import slimeknights.mantle.util.BlockEntityHelper;
 import slimeknights.mantle.util.RegistryHelper;
@@ -151,7 +151,7 @@ public class ChannelBlock extends Block implements EntityBlock {
 	}
 
   @Override
-  public boolean isPathfindable(BlockState state, BlockGetter worldIn, BlockPos pos, PathComputationType type) {
+  public boolean isPathfindable(BlockState state, PathComputationType type) {
     return false;
   }
 
@@ -165,8 +165,10 @@ public class ChannelBlock extends Block implements EntityBlock {
 	 * @return  True if its a fluid handler
 	 */
 	private static boolean isFluidHandler(LevelAccessor world, Direction side, BlockPos pos) {
-		BlockEntity te = world.getBlockEntity(pos);
-		return te != null && te.getCapability(ForgeCapabilities.FLUID_HANDLER, side).isPresent();
+		if (world instanceof Level level) {
+			return level.getCapability(Capabilities.FluidHandler.BLOCK, pos, side) != null;
+		}
+		return false;
 	}
 
 	/**
@@ -285,14 +287,13 @@ public class ChannelBlock extends Block implements EntityBlock {
 		return null;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
-	public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+	public InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
 		Direction hitFace = hit.getDirection();
 		if (world.getBlockState(pos.relative(hitFace)).canBeReplaced()) {
 			// if the player is holding a channel, skip unless we clicked the top
 			// they can shift click to place one on the top
-			ItemStack stack = player.getItemInHand(hand);
+			ItemStack stack = player.getMainHandItem();
 			if (stack.getItem() == this.asItem()) {
 				return InteractionResult.PASS;
 			}

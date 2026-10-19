@@ -1,9 +1,9 @@
 package slimeknights.tconstruct.smeltery.menu;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import slimeknights.mantle.inventory.SmartItemHandlerSlot;
 import slimeknights.tconstruct.shared.inventory.TriggeringBaseContainerMenu;
 import slimeknights.tconstruct.smeltery.TinkerSmeltery;
@@ -17,8 +17,8 @@ public class SingleItemContainerMenu extends TriggeringBaseContainerMenu<BlockEn
   public SingleItemContainerMenu(int id, @Nullable Inventory inv, @Nullable BlockEntity te) {
     super(TinkerSmeltery.singleItemContainer.get(), id, inv, te);
     if (te != null) {
-      te.getCapability(ForgeCapabilities.ITEM_HANDLER)
-        .ifPresent(handler -> this.addSlot(new SmartItemHandlerSlot(handler, 0, 80, 20)));
+      net.neoforged.neoforge.items.IItemHandler handler = te.getLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK, te.getBlockPos(), te.getBlockState(), te, null);
+      if (handler != null) this.addSlot(new SmartItemHandlerSlot(handler, 0, 80, 20));
       this.addInventorySlots();
     }
   }

@@ -18,6 +18,7 @@ public class SlotButtonItem extends Button {
 
   @Getter
   private final StationSlotLayout layout;
+  public StationSlotLayout getLayout() { return layout; }
   public boolean pressed;
   public final int buttonId;
 
@@ -39,10 +40,7 @@ public class SlotButtonItem extends Button {
     return this;
   }
 
-  @Override
-  public void render(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-    super.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
-  }
+  
 
   @Override
   public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {

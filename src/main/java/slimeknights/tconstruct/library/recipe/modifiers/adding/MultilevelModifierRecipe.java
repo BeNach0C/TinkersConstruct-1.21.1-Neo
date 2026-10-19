@@ -60,7 +60,7 @@ public class MultilevelModifierRecipe extends ModifierRecipe implements IMultiRe
   }
 
   @Override
-  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, RegistryAccess access) {
+  public RecipeResult<LazyToolStack> getValidatedResult(ITinkerStationContainer inv, net.minecraft.core.HolderLookup.Provider access) {
     ToolStack tool = inv.getTinkerable();
 
     // next few checks depend on the current level to decide
@@ -106,7 +106,7 @@ public class MultilevelModifierRecipe extends ModifierRecipe implements IMultiRe
   private List<IDisplayModifierRecipe> displayRecipes = null;
 
   @Override
-  public List<IDisplayModifierRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayModifierRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     // no inputs means this recipe is to handle internal crystal stuff
     if (inputs.isEmpty()) {
       return Collections.emptyList();

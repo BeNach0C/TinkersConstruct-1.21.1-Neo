@@ -24,6 +24,7 @@ public class ModifierWorktableContainerMenu extends TabbedContainerMenu<Modifier
   // slots
   @Getter
   private final List<Slot> inputSlots;
+  public List<Slot> getInputSlots() { return inputSlots; }
   @Getter
   private final LazyResultSlot outputSlot;
 
@@ -45,10 +46,18 @@ public class ModifierWorktableContainerMenu extends TabbedContainerMenu<Modifier
       this.addSlot(this.outputSlot = new LazyResultSlot(tile.getCraftingResult(), 125, 42));
 
       // listen for the button to change in the tile
-      this.addDataSlot(new LambdaDataSlot(-1, tile::getSelectedIndex, i -> {
-        tile.selectModifier(i);
-        this.updateScreen();
-      }));
+            this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+        @Override
+        public int get() {
+          return tile.getSelectedIndex();
+        }
+
+        @Override
+        public void set(int i) {
+          tile.selectModifier(i);
+          ModifierWorktableContainerMenu.this.updateScreen();
+        }
+      });
       // update for the first time
       this.updateScreen();
     } else {
@@ -58,7 +67,9 @@ public class ModifierWorktableContainerMenu extends TabbedContainerMenu<Modifier
 
     // add armor and offhand slots, for convenience
     for (ArmorItem.Type slotType : ArmorItem.Type.values()) {
-      this.addSlot(new ArmorSlot(inv, slotType.getSlot(), 152, 16 + slotType.ordinal() * 18));
+      if (slotType != ArmorItem.Type.BODY) {
+        this.addSlot(new ArmorSlot(inv, slotType.getSlot(), 152, 16 + slotType.ordinal() * 18));
+      }
     }
     this.addSlot(new Slot(inv, 40, 132, 70).setBackground(InventoryMenu.BLOCK_ATLAS, InventoryMenu.EMPTY_ARMOR_SLOT_SHIELD));
 

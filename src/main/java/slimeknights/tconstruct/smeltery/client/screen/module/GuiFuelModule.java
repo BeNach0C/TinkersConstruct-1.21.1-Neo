@@ -7,7 +7,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.client.screen.ScalableElementScreen;
 import slimeknights.mantle.fluid.tooltip.FluidTooltipHandler;
 import slimeknights.tconstruct.TConstruct;
@@ -74,8 +74,8 @@ public class GuiFuelModule implements IScreenWithFluidTank, ClickableTankModule 
   /** Gets the current height of the fluid */
   private int getFluidHeight() {
     int capacity = fuelInfo.getCapacity();
-    if (capacity == 0) {
-      return height;
+    if (capacity <= 0) {
+      return 0;
     }
     return height * fuelInfo.getTotalAmount() / capacity;
   }
@@ -171,7 +171,7 @@ public class GuiFuelModule implements IScreenWithFluidTank, ClickableTankModule 
         tooltip = hasTank ? TOOLTIP_NO_FUEL : TOOLTIP_NO_TANK;
       }
 
-      graphics.renderComponentTooltip(screen.font, tooltip, mouseX, mouseY);
+      graphics.renderComponentTooltip(net.minecraft.client.Minecraft.getInstance().font, tooltip, mouseX, mouseY);
     }
   }
 

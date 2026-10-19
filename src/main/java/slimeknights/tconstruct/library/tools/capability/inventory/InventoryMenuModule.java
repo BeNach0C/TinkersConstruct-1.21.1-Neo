@@ -26,7 +26,6 @@ import java.util.function.Function;
  * Modifier module that opens a tool's inventory on right click or armor interact.
  * Note this does not add an inventory to the tool, it simply allows opening it using the modifier priority system.
  */
-@RequiredArgsConstructor
 public enum InventoryMenuModule implements ModifierModule, KeybindInteractModifierHook, GeneralInteractionModifierHook {
   ANY(TooltipKey.UNKNOWN),
   NORMAL(TooltipKey.NORMAL),
@@ -38,6 +37,10 @@ public enum InventoryMenuModule implements ModifierModule, KeybindInteractModifi
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<InventoryMenuModule>defaultHooks(ModifierHooks.ARMOR_INTERACT, ModifierHooks.GENERAL_INTERACT);
 
   private final TooltipKey requiredKey;
+
+  InventoryMenuModule(TooltipKey requiredKey) {
+    this.requiredKey = requiredKey;
+  }
 
   @Override
   public RecordLoadable<InventoryMenuModule> getLoader() {

@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Plane;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
@@ -33,7 +34,6 @@ import java.util.function.Predicate;
 /**
  * Base class for all cuboid multiblocks
  */
-@RequiredArgsConstructor
 public abstract class MultiblockCuboid<T extends MultiblockStructureData> {
   /** Error if the multiblock detection logic never ran */
   protected static final MultiblockResult NO_ATTEMPT = MultiblockResult.error(null, TConstruct.makeTranslation("multiblock", "generic.no_attempt"));
@@ -77,9 +77,29 @@ public abstract class MultiblockCuboid<T extends MultiblockStructureData> {
   /** Maximum inner size of the structure */
   private final int innerLimit;
 
+  public int getMaxHeight() {
+    return maxHeight;
+  }
+
   /** Gets the last result of the structure */
   @Setter(AccessLevel.PROTECTED) @Getter
   private MultiblockResult lastResult = NO_ATTEMPT;
+
+  public MultiblockResult getLastResult() {
+    return lastResult;
+  }
+
+  protected void setLastResult(MultiblockResult lastResult) {
+    this.lastResult = lastResult;
+  }
+
+  public MultiblockCuboid(boolean hasFloor, boolean hasFrame, boolean hasCeiling, int maxHeight, int innerLimit) {
+    this.hasFloor = hasFloor;
+    this.hasFrame = hasFrame;
+    this.hasCeiling = hasCeiling;
+    this.maxHeight = maxHeight;
+    this.innerLimit = innerLimit;
+  }
 
   /**
    * Constructor with default belowLimit of 64 and innerLimit of 9
@@ -442,11 +462,21 @@ public abstract class MultiblockCuboid<T extends MultiblockStructureData> {
     if (!rootTag.contains(key, Tag.TAG_LIST)) {
       return Collections.emptyList();
     }
-    ListTag list = rootTag.getList(key, Tag.TAG_COMPOUND);
+    ListTag list = rootTag.getList(key, Tag.TAG_INT_ARRAY);
+    if (list.isEmpty()) {
+      list = rootTag.getList(key, Tag.TAG_COMPOUND);
+    }
     List<BlockPos> collection = new ArrayList<>(list.size());
     for (int i = 0; i < list.size(); i++) {
-      BlockPos pos = NbtUtils.readBlockPos(list.getCompound(i));
-      if (!pos.equals(BlockPos.ZERO)) {
+      Tag element = list.get(i);
+      BlockPos pos = null;
+      if (element instanceof IntArrayTag arr && arr.getAsIntArray().length == 3) {
+        int[] vals = arr.getAsIntArray();
+        pos = new BlockPos(vals[0], vals[1], vals[2]);
+      } else if (element instanceof CompoundTag comp) {
+        pos = new BlockPos(comp.getInt("X"), comp.getInt("Y"), comp.getInt("Z"));
+      }
+      if (pos != null && !pos.equals(BlockPos.ZERO)) {
         collection.add(pos.offset(offset));
       }
     }

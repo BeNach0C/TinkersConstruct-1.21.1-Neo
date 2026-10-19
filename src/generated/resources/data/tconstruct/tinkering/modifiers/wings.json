@@ -3,7 +3,7 @@
   "modules": [
     {
       "type": "tconstruct:volatile_flag",
-      "flag": "tconstruct:elyta"
+      "flag": "tconstruct:elytra"
     }
   ]
 }

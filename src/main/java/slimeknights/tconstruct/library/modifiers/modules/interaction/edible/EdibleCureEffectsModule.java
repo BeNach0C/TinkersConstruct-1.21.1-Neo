@@ -46,7 +46,8 @@ public record EdibleCureEffectsModule(ItemStack curativeItem, IJsonPredicate<Liv
   @Override
   public void onToolEaten(IToolStackView tool, ModifierEntry modifier, Player player, EquipmentSlot eatenSlot, int hunger, float saturation, List<ItemStack> representativeItems) {
     if (condition.matches(tool, modifier) && holder.matches(player)) {
-      player.curePotionEffects(curativeItem);
+      net.neoforged.neoforge.common.EffectCure cure = curativeItem.is(net.minecraft.world.item.Items.HONEY_BOTTLE) ? net.neoforged.neoforge.common.EffectCures.HONEY : net.neoforged.neoforge.common.EffectCures.MILK;
+      player.removeEffectsCuredBy(cure);
     }
   }
 }

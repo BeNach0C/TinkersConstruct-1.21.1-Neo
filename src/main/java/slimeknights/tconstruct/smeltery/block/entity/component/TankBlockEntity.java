@@ -1,4 +1,5 @@
 package slimeknights.tconstruct.smeltery.block.entity.component;
+import net.neoforged.neoforge.capabilities.Capabilities;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,14 +13,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidType;
-import net.minecraftforge.fluids.IFluidTank;
-import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
+import net.neoforged.neoforge.fluids.IFluidTank;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import slimeknights.tconstruct.common.multiblock.IMasterLogic;
 import slimeknights.tconstruct.library.client.model.ModelProperties;
 import slimeknights.tconstruct.library.fluid.FluidTankAnimated;
@@ -61,13 +59,24 @@ public class TankBlockEntity extends SmelteryComponentBlockEntity implements ITa
   }
 
   /** Internal fluid tank instance */
-  @Getter
   protected final FluidTankAnimated tank;
-  /** Capability holder for the tank */
-  private final LazyOptional<IFluidHandler> holder;
+
+  @Override
+  public FluidTankAnimated getTank() {
+    return tank;
+  }
   /** Last comparator strength to reduce block updates */
-  @Getter @Setter
   private int lastStrength = -1;
+
+  @Override
+  public int getLastStrength() {
+    return lastStrength;
+  }
+
+  @Override
+  public void setLastStrength(int lastStrength) {
+    this.lastStrength = lastStrength;
+  }
 
   public TankBlockEntity(BlockPos pos, BlockState state) {
     this(pos, state, state.getBlock() instanceof ITankBlock tank
@@ -85,28 +94,12 @@ public class TankBlockEntity extends SmelteryComponentBlockEntity implements ITa
   protected TankBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, ITankBlock block) {
     super(type, pos, state);
     tank = new FluidTankAnimated(block.getCapacity(), this);
-    holder = LazyOptional.of(() -> tank);
   }
 
 
   /*
    * Tank methods
    */
-
-  @Override
-  @Nonnull
-  public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-    if (capability == ForgeCapabilities.FLUID_HANDLER) {
-      return holder.cast();
-    }
-    return super.getCapability(capability, facing);
-  }
-
-  @Override
-  public void invalidateCaps() {
-    super.invalidateCaps();
-    holder.invalidate();
-  }
 
   @Nonnull
   @Override
@@ -161,7 +154,7 @@ public class TankBlockEntity extends SmelteryComponentBlockEntity implements ITa
     if (nbt.isEmpty()) {
       tank.setFluid(FluidStack.EMPTY);
     } else {
-      tank.readFromNBT(nbt);
+      tank.readFromNBT(level != null ? level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY, nbt);
       updateLight(this, tank);
     }
   }
@@ -172,10 +165,13 @@ public class TankBlockEntity extends SmelteryComponentBlockEntity implements ITa
   }
 
   @Override
-  public void load(CompoundTag tag) {
+  public void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
     tank.setCapacity(getCapacity(getBlockState().getBlock()));
-    updateTank(tag.getCompound(NBTTags.TANK));
-    super.load(tag);
+    if (tag.contains(NBTTags.TANK, net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+      tank.readFromNBT(provider, tag.getCompound(NBTTags.TANK));
+      updateLight(this, tank);
+    }
+    super.loadAdditional(tag, provider);
   }
 
   @Override
@@ -183,7 +179,7 @@ public class TankBlockEntity extends SmelteryComponentBlockEntity implements ITa
     super.saveSynced(tag);
     // want tank on the client on world load
     if (!tank.isEmpty()) {
-      tag.put(NBTTags.TANK, tank.writeToNBT(new CompoundTag()));
+      tag.put(NBTTags.TANK, tank.writeToNBT(level != null ? level.registryAccess() : net.minecraft.core.RegistryAccess.EMPTY, new CompoundTag()));
     }
   }
 

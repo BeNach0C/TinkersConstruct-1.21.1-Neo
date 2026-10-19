@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -85,7 +85,7 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
   private final Ingredient pattern;
   private final List<IMaterialItem> parts;
 
-  /** @deprecated use {@link FinishedRecipe} */
+  /** @deprecated use {@link RecipeOutput} */
   @Deprecated(forRemoval = true)
   public PartBuilderToolRecycle(ResourceLocation id, SizedIngredient toolRequirement, Ingredient pattern) {
     this(id, toolRequirement, pattern, List.of());
@@ -130,7 +130,7 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
   }
 
   @Override
-  public ItemStack assemble(IPartBuilderContainer inv, RegistryAccess access, Pattern pattern) {
+  public ItemStack assemble(IPartBuilderContainer inv, net.minecraft.core.HolderLookup.Provider access, Pattern pattern) {
     ToolStack tool = ToolStack.from(inv.getStack());
     // find our parts list, either set or override
     ToolDefinition definition = tool.getDefinition();
@@ -157,7 +157,7 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
     }
     // special handling for oddball cases with ancient tool recycling
     MaterialVariantId variant = tool.getMaterial(matchIndex).getVariant();
-    if (!match.canUseMaterial(variant.getId())) {
+    if (!match.canUseMaterial(variant.getMaterialId())) {
       return ItemStack.EMPTY;
     }
     return match.withMaterial(variant);
@@ -207,7 +207,7 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
   /** @deprecated use {@link IPartBuilderRecipe#assemble(IPartBuilderContainer, RegistryAccess, Pattern)} */
   @Deprecated
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return ItemStack.EMPTY;
   }
 
@@ -241,7 +241,7 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
   }
 
   @Override
-  public List<IDisplayPartBuilderRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayPartBuilderRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
       // if we have a parts override, might as well only compute this map once
       Object2IntMap<IMaterialItem> partsOverride = parts.isEmpty() ? Object2IntMaps.emptyMap() : getDisplayParts(parts);
@@ -261,7 +261,7 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
             List.of(IModifiableDisplay.getDisplayStack(stack)),
             parts.object2IntEntrySet().stream().map(pi -> {
               ItemStack part = pi.getKey().withMaterialForDisplay(ToolBuildHandler.getRenderMaterial(pi.getIntValue()));
-              part.getOrCreateTag().putBoolean(TooltipUtil.KEY_DISPLAY, true);
+              net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA, part, tag -> tag.putBoolean(TooltipUtil.KEY_DISPLAY, true));
               return part;
             }).toList(),
             partItems.stream().flatMap(part -> MaterialItemCache.getAllMaterials(part).stream()).toList()
@@ -297,7 +297,6 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
       return patterns.get(0);
     }
 
-    @Override
     public ResourceLocation getId() {
       return id;
     }
@@ -351,33 +350,6 @@ public class PartBuilderToolRecycle implements IPartBuilderRecipe, IMultiRecipe<
         }
       }
       return resultItems;
-    }
-  }
-
-  /** @deprecated use {@link slimeknights.tconstruct.library.recipe.partbuilder.recycle.PartBuilderToolRecycleBuilder} */
-  @Deprecated(forRemoval = true)
-  public record Finished(ResourceLocation getId, SizedIngredient tools, Ingredient pattern) implements FinishedRecipe {
-    @Override
-    public void serializeRecipeData(JsonObject json) {
-      json.add("tools", SizedIngredient.LOADABLE.serialize(tools));
-      json.add("pattern", pattern.toJson());
-    }
-
-    @Override
-    public RecipeSerializer<?> getType() {
-      return TinkerTables.partBuilderToolRecycling.get();
-    }
-
-    @Nullable
-    @Override
-    public JsonObject serializeAdvancement() {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public ResourceLocation getAdvancementId() {
-      return null;
     }
   }
 }

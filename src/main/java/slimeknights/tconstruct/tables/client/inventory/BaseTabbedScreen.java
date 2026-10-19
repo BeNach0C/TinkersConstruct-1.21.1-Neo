@@ -45,6 +45,19 @@ public class BaseTabbedScreen<TILE extends BlockEntity, CONTAINER extends Tabbed
     super.init();
 
     this.tabsScreen = addRenderableWidget(new TinkerTabsWidget(this));
+
+    long now = System.currentTimeMillis();
+    if (now - TinkerTabsWidget.lastTabClickTime < 1000) {
+      TinkerTabsWidget.lastTabClickTime = 0;
+      double x = TinkerTabsWidget.savedCursorX;
+      double y = TinkerTabsWidget.savedCursorY;
+      com.mojang.blaze3d.platform.InputConstants.grabOrReleaseMouse(
+        this.minecraft.getWindow().getWindow(),
+        com.mojang.blaze3d.platform.InputConstants.CURSOR_NORMAL,
+        x,
+        y
+      );
+    }
   }
 
   @Nullable

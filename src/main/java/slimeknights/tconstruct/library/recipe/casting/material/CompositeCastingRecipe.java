@@ -5,13 +5,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.predicate.IJsonPredicate;
 import slimeknights.mantle.recipe.IMultiRecipe;
 import slimeknights.mantle.recipe.helper.LoadableRecipeSerializer;
 import slimeknights.mantle.recipe.helper.TypeAwareRecipeSerializer;
+import slimeknights.tconstruct.library.recipe.casting.TinkerTypeAwareRecipeSerializer;
 import slimeknights.tconstruct.library.json.predicate.material.MaterialPredicate;
 import slimeknights.tconstruct.library.materials.definition.MaterialVariant;
 import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
@@ -32,7 +33,7 @@ import java.util.List;
  */
 public class CompositeCastingRecipe extends MaterialCastingRecipe implements IMultiRecipe<IDisplayableCastingRecipe> {
   public static final RecordLoadable<CompositeCastingRecipe> LOADER = RecordLoadable.create(
-    LoadableRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(),
+    TinkerTypeAwareRecipeSerializer.TYPED_SERIALIZER.requiredField(), ContextKey.ID.requiredField(),
     LoadableRecipeSerializer.RECIPE_GROUP, ITEM_COST_FIELD, RESULT_FIELD, MATERIALS_FIELD,
     MaterialStatsId.PARSER.nullableField("casting_stat_conflict", r -> r.castingStatConflict),
     CompositeCastingRecipe::new);
@@ -80,7 +81,7 @@ public class CompositeCastingRecipe extends MaterialCastingRecipe implements IMu
   }
 
   @Override
-  public List<IDisplayableCastingRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayableCastingRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (multiRecipes == null) {
       List<MaterialFluidRecipe> recipes = MaterialCastingLookup.getSortedCompositeFluids();
       List<FluidStack> displayFluids = new ArrayList<>(recipes.size());
@@ -116,7 +117,7 @@ public class CompositeCastingRecipe extends MaterialCastingRecipe implements IMu
         List<ItemStack> inputs;
         if (inputId.getVariant().isEmpty()) {
           // skip outputs that are the same variant as the input; those are not valid recipes
-          inputs = MaterialRecipeCache.getVariants(input.getId()).stream().filter(material -> !output.sameVariant(material)).map(result::withMaterial).toList();
+          inputs = MaterialRecipeCache.getVariants(input.getId()).stream().filter(material -> !output.sameVariant(material.getMaterialId())).map(result::withMaterial).toList();
         } else {
           inputs = List.of(result.withMaterial(inputId.normalizeVariant()));
         }

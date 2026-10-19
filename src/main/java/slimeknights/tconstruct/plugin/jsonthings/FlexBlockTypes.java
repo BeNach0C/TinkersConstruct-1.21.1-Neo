@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.FlowingFluid;
-import net.minecraftforge.common.util.Lazy;
+import net.neoforged.neoforge.common.util.Lazy;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.plugin.jsonthings.block.FlexBurningLiquidBlock;
@@ -59,7 +59,7 @@ public class FlexBlockTypes {
       return (props, builder) -> {
         final List<Property<?>> _properties = builder.getProperties();
         Lazy<MobEffect> effect = Lazy.of(() -> Loadables.MOB_EFFECT.fromKey(effectName, "effect"));
-        return new FlexMobEffectLiquidBlock(props, builder.getPropertyDefaultValues(), fluidSupplier(Objects.requireNonNullElse(fluidField, builder.getRegistryName())), () -> new MobEffectInstance(effect.get(), 5*20, effectLevel - 1)) {
+        return new FlexMobEffectLiquidBlock(props, builder.getPropertyDefaultValues(), fluidSupplier(Objects.requireNonNullElse(fluidField, builder.getRegistryName())), () -> new MobEffectInstance(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect.get()), 5*20, effectLevel - 1)) {
           @Override
           protected void createBlockStateDefinition(Builder<Block,BlockState> stateBuilder) {
             super.createBlockStateDefinition(stateBuilder);

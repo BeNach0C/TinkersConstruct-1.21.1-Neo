@@ -19,7 +19,6 @@ import slimeknights.tconstruct.library.materials.definition.MaterialVariantId;
 import slimeknights.tconstruct.library.materials.stats.IMaterialStats;
 import slimeknights.tconstruct.library.materials.stats.MaterialStatType;
 import slimeknights.tconstruct.library.materials.stats.MaterialStatsId;
-import slimeknights.tconstruct.tools.data.sprite.TinkerPartSpriteProvider;
 import slimeknights.tconstruct.tools.stats.GripMaterialStats;
 import slimeknights.tconstruct.tools.stats.HandleMaterialStats;
 import slimeknights.tconstruct.tools.stats.HeadMaterialStats;
@@ -46,6 +45,12 @@ public abstract class AbstractMaterialSpriteProvider {
   /** List of built materials */
   private Map<ResourceLocation, MaterialSpriteInfo> builtMaterials = null;
 
+  public static final MaterialStatsId ARMOR_MAILLE = new MaterialStatsId(slimeknights.tconstruct.TConstruct.MOD_ID, "armor_maille");
+  public static final MaterialStatsId ARMOR_CUIRASS = new MaterialStatsId(slimeknights.tconstruct.TConstruct.MOD_ID, "armor_cuirass");
+  public static final MaterialStatsId ARMOR_PLATING = new MaterialStatsId(slimeknights.tconstruct.TConstruct.MOD_ID, "armor_plating");
+  public static final MaterialStatsId SLIMESUIT = new MaterialStatsId(slimeknights.tconstruct.TConstruct.MOD_ID, "slimesuit");
+  public static final MaterialStatsId SLIMESUIT_OVERLAY = new MaterialStatsId(slimeknights.tconstruct.TConstruct.MOD_ID, "slimesuit_overlay");
+
   /** Gets the name of this material list */
   public abstract String getName();
 
@@ -68,6 +73,12 @@ public abstract class AbstractMaterialSpriteProvider {
     return getMaterials().get(name);
   }
 
+  /** Gets the info for the given material */
+  @Nullable
+  public MaterialSpriteInfo getMaterialInfo(MaterialId name) {
+    return getMaterialInfo(name.getId());
+  }
+
   /** Adds a new texture to the data generator */
   protected MaterialSpriteInfoBuilder buildMaterial(ResourceLocation name) {
     if (builtMaterials != null) {
@@ -78,7 +89,7 @@ public abstract class AbstractMaterialSpriteProvider {
 
   /** Adds a new material to the data generator */
   protected MaterialSpriteInfoBuilder buildMaterial(MaterialId name) {
-    return buildMaterial((ResourceLocation)name);
+    return buildMaterial(name.getId());
   }
 
   /** Adds a new material variant to the data generator */
@@ -176,7 +187,7 @@ public abstract class AbstractMaterialSpriteProvider {
     /** Adds a stat type as supported */
     public MaterialSpriteInfoBuilder statType(MaterialStatType<?>... stats) {
       for (MaterialStatType<?> stat : stats) {
-        statTypes.add(stat.getId());
+        statTypes.add(stat.getStatId());
       }
       return this;
     }
@@ -184,7 +195,7 @@ public abstract class AbstractMaterialSpriteProvider {
     /** Adds a stat type as supported */
     public MaterialSpriteInfoBuilder statType(List<? extends MaterialStatType<?>> stats) {
       for (MaterialStatType<?> stat : stats) {
-        statTypes.add(stat.getId());
+        statTypes.add(stat.getStatId());
       }
       return this;
     }
@@ -214,23 +225,23 @@ public abstract class AbstractMaterialSpriteProvider {
     /** Adds stat types for maille */
     public MaterialSpriteInfoBuilder maille() {
       statType(StatlessMaterialStats.MAILLE.getIdentifier());
-      statType(TinkerPartSpriteProvider.ARMOR_MAILLE);
+      statType(ARMOR_MAILLE);
       return this;
     }
 
     /** Adds stat types for maille */
     public MaterialSpriteInfoBuilder cuirass() {
       statType(StatlessMaterialStats.CUIRASS.getIdentifier());
-      statType(TinkerPartSpriteProvider.ARMOR_CUIRASS);
+      statType(ARMOR_CUIRASS);
       repairKit(); // used by traveler's gear
       return this;
     }
 
     /** Adds all plating stat types */
     public MaterialSpriteInfoBuilder plating() {
-      statType(TinkerPartSpriteProvider.ARMOR_PLATING);
+      statType(ARMOR_PLATING);
       for (MaterialStatType<?> type : PlatingMaterialStats.TYPES) {
-        statType(type.getId());
+        statType(type.getStatId());
       }
       repairKit();
       return this;
@@ -245,12 +256,12 @@ public abstract class AbstractMaterialSpriteProvider {
 
     /** Adds slime textures for the given material. */
     public MaterialSpriteInfoBuilder slime() {
-      return statType(SlimeStats.ID, TinkerPartSpriteProvider.SLIMESUIT).repairKit();
+      return statType(SlimeStats.ID, SLIMESUIT).repairKit();
     }
 
     /** Adds a slimesuit ribcage part for the given material. */
     public MaterialSpriteInfoBuilder ribcage() {
-      return statType(RepairStats.RIBCAGE).statType(TinkerPartSpriteProvider.SLIMESUIT_OVERLAY).repairKit();
+      return statType(RepairStats.RIBCAGE).statType(SLIMESUIT_OVERLAY).repairKit();
     }
 
     /** Adds a slimesuit shell part for the given material. */
@@ -260,7 +271,7 @@ public abstract class AbstractMaterialSpriteProvider {
 
     /** Adds a slimesuit laces part for the given material. */
     public MaterialSpriteInfoBuilder laces() {
-      return statType(RepairStats.LACES).statType(TinkerPartSpriteProvider.SLIMESUIT_OVERLAY).repairKit();
+      return statType(RepairStats.LACES).statType(SLIMESUIT_OVERLAY).repairKit();
     }
 
     /** Makes this work as the wood part for a shield */

@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:drinks/honey",
+                       "required":  false
+                   }
+               ]
+}

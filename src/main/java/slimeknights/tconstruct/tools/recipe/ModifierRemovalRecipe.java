@@ -6,7 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import slimeknights.mantle.data.loadable.common.ItemStackLoadable;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.field.LoadableField;
@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class ModifierRemovalRecipe extends AbstractWorktableRecipe {
+  @Override public net.minecraft.network.chat.Component getTitle() { return net.minecraft.network.chat.Component.empty(); }
   public static final String BASE_KEY = TConstruct.makeTranslationKey("recipe", "remove_modifier");
   private static final Component DESCRIPTION = TConstruct.makeTranslation("recipe", "remove_modifier.description");
   private static final Component NO_MODIFIERS = TConstruct.makeTranslation("recipe", "remove_modifier.no_modifiers");
@@ -175,7 +176,7 @@ public class ModifierRemovalRecipe extends AbstractWorktableRecipe {
       tools = sizedTool.getMatchingStacks().stream().map(stack -> {
         ItemStack tool = IModifiableDisplay.getDisplayStack(stack.getItem());
         if (stack.getCount() > 1) {
-          tool = ItemHandlerHelper.copyStackWithSize(tool, stack.getCount());
+          tool = stack.copy();
         }
         return tool;
       }).toList();

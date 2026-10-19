@@ -14,7 +14,6 @@ import slimeknights.tconstruct.library.tools.nbt.IToolStackView;
 import java.util.List;
 
 /** Hook to cure effects using the worn item when its unequipped. Not enabled for composable simply because there is no benefit in JSON even if serialization is trivial. */
-@RequiredArgsConstructor
 public enum CureOnRemovalModule implements HookProvider, EquipmentChangeModifierHook {
   HELMET(EquipmentSlot.HEAD),
   CHESTPLATE(EquipmentSlot.CHEST),
@@ -24,6 +23,10 @@ public enum CureOnRemovalModule implements HookProvider, EquipmentChangeModifier
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<CureOnRemovalModule>defaultHooks(ModifierHooks.EQUIPMENT_CHANGE);
 
   private final EquipmentSlot slot;
+
+  CureOnRemovalModule(EquipmentSlot slot) {
+    this.slot = slot;
+  }
 
   @Override
   public List<ModuleHook<?>> getDefaultHooks() {
@@ -36,7 +39,7 @@ public enum CureOnRemovalModule implements HookProvider, EquipmentChangeModifier
       IToolStackView replacement = context.getReplacementTool();
       if (replacement == null || replacement.getModifierLevel(modifier.getModifier()) == 0 || replacement.getItem() != tool.getItem()) {
         // cure effects using the helmet
-        context.getEntity().curePotionEffects(new ItemStack(tool.getItem()));
+        context.getEntity().removeEffectsCuredBy(net.neoforged.neoforge.common.EffectCures.MILK);
       }
     }
   }

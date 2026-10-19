@@ -3,7 +3,7 @@ package slimeknights.tconstruct.plugin.jei.util;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotDrawable;
@@ -12,7 +12,7 @@ import mezz.jei.api.recipe.IFocus;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -64,7 +64,7 @@ public final class CategoryUtil {
         slotConsumer.accept(builder.addSlot(role.apply(ingredient), fluidX, y)
           .addRichTooltipCallback(tooltip.apply(ingredient))
           .setFluidRenderer(maxAmount, false, width, height)
-          .addIngredients(ForgeTypes.FLUID_STACK, mapper.apply(ingredient)));
+          .addIngredients(NeoForgeTypes.FLUID_STACK, mapper.apply(ingredient)));
       }
       // for the last, the width is the full remaining width
       int fluidX = x + last * width;
@@ -72,7 +72,7 @@ public final class CategoryUtil {
       slotConsumer.accept(builder.addSlot(role.apply(ingredient), fluidX, y)
         .addRichTooltipCallback(tooltip.apply(ingredient))
         .setFluidRenderer(maxAmount, false, totalWidth - (width * last), height)
-        .addIngredients(ForgeTypes.FLUID_STACK, mapper.apply(ingredient)));
+        .addIngredients(NeoForgeTypes.FLUID_STACK, mapper.apply(ingredient)));
     }
     return maxAmount;
   }
@@ -100,16 +100,5 @@ public final class CategoryUtil {
       return focus.getTypedValue().getIngredient();
     }
     return ItemStack.EMPTY;
-  }
-
-  /** Gets the width and height of the grid for a shapeless recipe in a {@link mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension} */
-  public static int getShapelessSize(int total) {
-    if (total > 4) {
-      return 3;
-    } else if (total > 1) {
-      return 2;
-    } else {
-      return 1;
-    }
   }
 }

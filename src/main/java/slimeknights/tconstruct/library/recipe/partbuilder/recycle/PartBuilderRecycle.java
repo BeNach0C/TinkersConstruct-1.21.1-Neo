@@ -103,7 +103,7 @@ public class PartBuilderRecycle implements IPartBuilderRecipe, IMultiRecipe<IDis
   }
 
   @Override
-  public ItemStack assemble(IPartBuilderContainer inv, RegistryAccess access, Pattern pattern) {
+  public ItemStack assemble(IPartBuilderContainer inv, net.minecraft.core.HolderLookup.Provider access, Pattern pattern) {
     int maxCount = getAmount(inv.getStack(), resultCount);
     ItemOutput result = results.get(pattern);
     // should never happen
@@ -148,7 +148,7 @@ public class PartBuilderRecycle implements IPartBuilderRecipe, IMultiRecipe<IDis
   /** @deprecated use {@link #assemble(IPartBuilderContainer, RegistryAccess, Pattern)} */
   @Deprecated
   @Override
-  public ItemStack getResultItem(RegistryAccess access) {
+  public ItemStack getResultItem(net.minecraft.core.HolderLookup.Provider access) {
     return ItemStack.EMPTY;
   }
 
@@ -182,7 +182,7 @@ public class PartBuilderRecycle implements IPartBuilderRecipe, IMultiRecipe<IDis
   private List<IDisplayPartBuilderRecipe> displayRecipes;
 
   @Override
-  public List<IDisplayPartBuilderRecipe> getRecipes(RegistryAccess access) {
+  public List<IDisplayPartBuilderRecipe> getRecipes(net.minecraft.core.HolderLookup.Provider access) {
     if (displayRecipes == null) {
       List<ItemStack> patternItems = List.of(pattern.getItems());
       displayRecipes = Arrays.stream(tool.getItems()).map(tool -> DisplayPartRecipe.id(id)

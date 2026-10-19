@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:chests/trapped",
+                       "required":  false
+                   }
+               ]
+}

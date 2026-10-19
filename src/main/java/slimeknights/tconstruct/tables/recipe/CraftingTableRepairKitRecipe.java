@@ -1,8 +1,8 @@
 package slimeknights.tconstruct.tables.recipe;
 
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
@@ -31,8 +31,8 @@ import javax.annotation.Nullable;
  * @see slimeknights.mantle.recipe.helper.SimpleFinishedRecipe
  */
 public class CraftingTableRepairKitRecipe extends CustomRecipe {
-  public CraftingTableRepairKitRecipe(ResourceLocation id) {
-    super(id, CraftingBookCategory.EQUIPMENT);
+  public CraftingTableRepairKitRecipe(CraftingBookCategory category) {
+    super(category);
   }
 
   /**
@@ -52,10 +52,10 @@ public class CraftingTableRepairKitRecipe extends CustomRecipe {
    * @return  Relevant inputs, or null if invalid
    */
   @Nullable
-  protected ToolRepair getRelevantInputs(CraftingContainer inv) {
+  protected ToolRepair getRelevantInputs(CraftingInput inv) {
     ItemStack tool = null;
     ItemStack repairKit = null;
-    for (int i = 0; i < inv.getContainerSize(); i++) {
+    for (int i = 0; i < inv.size(); i++) {
       ItemStack stack = inv.getItem(i);
       if (stack.isEmpty()) {
         continue;
@@ -85,14 +85,14 @@ public class CraftingTableRepairKitRecipe extends CustomRecipe {
   }
 
   @Override
-  public boolean matches(CraftingContainer inv, Level worldIn) {
+  public boolean matches(CraftingInput inv, Level worldIn) {
     // no match
     ToolRepair inputs = getRelevantInputs(inv);
     if (inputs == null) {
       return false;
     }
     // if the material is invalid
-    MaterialId inputMaterial = IMaterialItem.getMaterialFromStack(inputs.repairKit).getId();
+    MaterialId inputMaterial = IMaterialItem.getMaterialFromStack(inputs.repairKit).getMaterialId();
     if (inputMaterial.equals(MaterialId.UNKNOWN)) {
       return false;
     }
@@ -103,14 +103,14 @@ public class CraftingTableRepairKitRecipe extends CustomRecipe {
 
   /** Gets the amount to repair for the given material */
   protected float getRepairAmount(IToolStackView tool, ItemStack repairStack) {
-    return MaterialRepairToolHook.repairAmount(tool, IMaterialItem.getMaterialFromStack(repairStack).getId());
+    return MaterialRepairToolHook.repairAmount(tool, IMaterialItem.getMaterialFromStack(repairStack).getMaterialId());
   }
 
   @Override
-  public ItemStack assemble(CraftingContainer inv, RegistryAccess access) {
+  public ItemStack assemble(CraftingInput inv, HolderLookup.Provider access) {
     ToolRepair inputs = getRelevantInputs(inv);
     if (inputs == null) {
-      TConstruct.LOG.error("Recipe repair on {} failed to find items after matching", getId());
+      TConstruct.LOG.error("Recipe repair failed to find items after matching");
       return ItemStack.EMPTY;
     }
 

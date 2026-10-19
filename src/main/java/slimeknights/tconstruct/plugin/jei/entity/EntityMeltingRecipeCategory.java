@@ -1,7 +1,7 @@
 package slimeknights.tconstruct.plugin.jei.entity;
 
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.gui.builder.IIngredientAcceptor;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -19,10 +19,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.mantle.fluid.tooltip.FluidTooltipHandler;
-import slimeknights.mantle.plugin.jei.MantleJEIConstants;
-import slimeknights.mantle.plugin.jei.entity.EntityIngredientRenderer;
 import slimeknights.mantle.recipe.ingredient.EntityIngredient;
 import slimeknights.tconstruct.TConstruct;
 import slimeknights.tconstruct.library.recipe.FluidValues;
@@ -43,8 +41,7 @@ public class EntityMeltingRecipeCategory extends AbstractRecipeCategory<EntityMe
   private static final String KEY_PER_HEARTS = TConstruct.makeTranslationKey("jei", "entity_melting.per_hearts");
   private static final Component TOOLTIP_PER_HEART = Component.translatable(TConstruct.makeTranslationKey("jei", "entity_melting.per_heart")).withStyle(ChatFormatting.GRAY);
 
-  /** Renderer instance to use in this category */
-  private final EntityIngredientRenderer entityRenderer = new EntityIngredientRenderer(32);
+  // private final EntityIngredientRenderer entityRenderer = new EntityIngredientRenderer(32);
 
   private final IDrawable background;
   private final IDrawable arrow;
@@ -59,7 +56,7 @@ public class EntityMeltingRecipeCategory extends AbstractRecipeCategory<EntityMe
 
   @Override
   public void createRecipeExtras(IRecipeExtrasBuilder builder, EntityMeltingRecipe recipe, IFocusGroup focuses) {
-    builder.addDrawableWidget(arrow).setPosition(71, 21);
+    builder.addDrawable(arrow, 71, 21);
     builder.addText(Component.literal(Float.toString(recipe.getDamage() / 2f)), 84, 9)
       .setPosition(0, 8)
       .setColor(Color.RED.getRGB())
@@ -75,27 +72,25 @@ public class EntityMeltingRecipeCategory extends AbstractRecipeCategory<EntityMe
   public void setRecipe(IRecipeLayoutBuilder builder, EntityMeltingRecipe recipe, IFocusGroup focuses) {
     // inputs, filtered by spawn egg item
     EntityIngredient input = recipe.getIngredient();
-    IIngredientAcceptor<?> entities = builder.addInputSlot(19, 11)
-                                             .setCustomRenderer(MantleJEIConstants.ENTITY_TYPE, entityRenderer)
-                                             .addIngredients(MantleJEIConstants.ENTITY_TYPE, input.getDisplay());
+    // IIngredientAcceptor<?> entities = builder.addInputSlot(19, 11).setCustomRenderer(MantleJEIConstants.ENTITY_TYPE, entityRenderer).addIngredients(MantleJEIConstants.ENTITY_TYPE, input.getDisplay());
     // add spawn eggs as hidden inputs
     // currently JEI doesn't accept empty for a focus linked slot, so use null
     List<ItemStack> eggStacks = input.getEggs().stream().map(stack -> stack.isEmpty() ? null : stack).toList();
     IIngredientAcceptor<?> eggs = builder.addInvisibleIngredients(RecipeIngredientRole.INPUT).addIngredients(VanillaTypes.ITEM_STACK, eggStacks);
-    builder.createFocusLink(entities, eggs);
+    // builder.createFocusLink(entities, eggs);
 
     // output
     builder.addOutputSlot(115, 11)
            .setFluidRenderer(FluidValues.INGOT * 2, false, 16, 32)
            .addRichTooltipCallback(new FluidTooltip(recipe.getDamage()))
-           .addIngredient(ForgeTypes.FLUID_STACK, recipe.getOutput());
+           .addIngredient(NeoForgeTypes.FLUID_STACK, recipe.getOutput());
 
     // show fuels that are valid for this recipe
     builder.addSlot(RecipeIngredientRole.CATALYST, 75, 43)
            .setFluidRenderer(1, false, 16, 16)
            .setOverlay(tank, 0, 0)
            .addRichTooltipCallback(FluidTooltipCallback.NO_AMOUNT)
-           .addIngredients(ForgeTypes.FLUID_STACK, MeltingFuelHandler.getUsableFuels(1));
+           .addIngredients(NeoForgeTypes.FLUID_STACK, MeltingFuelHandler.getUsableFuels(1));
   }
 
   @Override

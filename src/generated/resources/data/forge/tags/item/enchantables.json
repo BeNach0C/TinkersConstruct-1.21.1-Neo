@@ -1,0 +1,8 @@
+﻿{
+    "values":  [
+                   {
+                       "id":  "#c:enchantables",
+                       "required":  false
+                   }
+               ]
+}

@@ -23,8 +23,18 @@ public final class TagUtil {
    */
   @Nullable
   public static BlockPos readOptionalPos(CompoundTag parent, String key, BlockPos offset) {
+    if (parent.contains(key, Tag.TAG_INT_ARRAY)) {
+      return NbtUtils.readBlockPos(parent, key).map(p -> p.offset(offset)).orElse(null);
+    }
+    if (parent.contains(key, Tag.TAG_LONG)) {
+      return BlockPos.of(parent.getLong(key)).offset(offset);
+    }
     if (parent.contains(key, Tag.TAG_COMPOUND)) {
-      return NbtUtils.readBlockPos(parent.getCompound(key)).offset(offset);
+      CompoundTag compound = parent.getCompound(key);
+      if (compound.contains("pos", Tag.TAG_LONG)) {
+        return BlockPos.of(compound.getLong("pos")).offset(offset);
+      }
+      return NbtUtils.readBlockPos(parent, key).map(p -> p.offset(offset)).orElse(null);
     }
     return null;
   }

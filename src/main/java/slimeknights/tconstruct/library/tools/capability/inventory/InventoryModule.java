@@ -53,7 +53,6 @@ import java.util.function.Predicate;
 
 @Getter
 @Accessors(fluent = true)
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class InventoryModule implements ModifierModule, InventoryModifierHook, VolatileDataModifierHook, ValidateModifierHook, ModifierRemovalHook, ModuleWithKey, ConditionalModule<IToolContext>, SlotStackModifierHook {
   private static final List<ModuleHook<?>> DEFAULT_HOOKS = HookProvider.<InventoryModule>defaultHooks(ToolInventoryCapability.HOOK, ModifierHooks.VOLATILE_DATA, ModifierHooks.VALIDATE, ModifierHooks.REMOVE, ModifierHooks.SLOT_STACK);
   /** Mod Data NBT mapper to get a compound list */
@@ -70,22 +69,31 @@ public class InventoryModule implements ModifierModule, InventoryModifierHook, V
   protected static final LoadableField<Pattern, InventoryModule> PATTERN_FIELD = Pattern.PARSER.nullableField("pattern", InventoryModule::pattern);
   protected static final LoadableField<IntRange,InventoryModule> VALIDATION_FIELD = ModifierEntry.VALID_LEVEL.defaultField("validation_level", InventoryModule::validationLevel);
   /** Loader instance */
+  
+  protected InventoryModule(ResourceLocation key, LevelingInt slots, LevelingInt slotLimit, slimeknights.mantle.data.predicate.IJsonPredicate<Item> filter, Pattern pattern, ModifierCondition<IToolContext> condition, IntRange validationLevel) { this.key = key; this.slots = slots; this.slotLimit = slotLimit; this.filter = filter; this.pattern = pattern; this.condition = condition; this.validationLevel = validationLevel; }
   public static final RecordLoadable<InventoryModule> LOADER = RecordLoadable.create(KEY_FIELD, SLOTS_FIELD, LIMIT_FIELD, FILTER_FIELD, PATTERN_FIELD, ModifierCondition.CONTEXT_FIELD, VALIDATION_FIELD, InventoryModule::new);
 
   /** Module adding an inventory to a tool */
   private final @Nullable ResourceLocation key;
+  public @Nullable ResourceLocation key() { return this.key; }
   /** Location to save the inventory */
   private final LevelingInt slots;
+  public LevelingInt slots() { return this.slots; }
   /** Slots to add to the tool */
   private final LevelingInt slotLimit;
+  public LevelingInt slotLimit() { return this.slotLimit; }
   /** Maximum stack size in each slot */
   private final IJsonPredicate<Item> filter;
+  public IJsonPredicate<Item> filter() { return this.filter; }
   /** Filter for valid items in the slot */
   private final @Nullable Pattern pattern;
+  public @Nullable Pattern pattern() { return this.pattern; }
   /** Slot background to show */
   private final ModifierCondition<IToolContext> condition;
+  public ModifierCondition<IToolContext> condition() { return this.condition; }
   /** Additional conditions */
   private final IntRange validationLevel;
+  public IntRange validationLevel() { return this.validationLevel; }
 
   @Override
   public RecordLoadable<? extends InventoryModule> getLoader() {
@@ -145,7 +153,7 @@ public class InventoryModule implements ModifierModule, InventoryModifierHook, V
       for (int i = 0; i < list.size(); i++) {
         CompoundTag compound = list.getCompound(i);
         if (compound.getInt(TAG_SLOT) == slot) {
-          return ItemStack.of(compound);
+          return ItemStack.parseOptional(net.minecraft.core.RegistryAccess.EMPTY, compound);
         }
       }
     }
@@ -266,7 +274,7 @@ public class InventoryModule implements ModifierModule, InventoryModifierHook, V
    * @return Tag written to, same as {@code compound}.
    */
   public static CompoundTag writeStack(ItemStack stack, int slot, CompoundTag compound) {
-    stack.save(compound);
+    net.minecraft.nbt.Tag stackTag = stack.saveOptional(net.minecraft.core.RegistryAccess.EMPTY); if (stackTag instanceof CompoundTag) { compound.merge((CompoundTag)stackTag); }
     compound.putInt(TAG_SLOT, slot);
     return compound;
   }
@@ -286,7 +294,7 @@ public class InventoryModule implements ModifierModule, InventoryModifierHook, V
           // slot must be valid
           int slot = compound.getInt(TAG_SLOT);
           if (slot < max) {
-            ItemStack stack = ItemStack.of(compound);
+            ItemStack stack = ItemStack.parseOptional(net.minecraft.core.RegistryAccess.EMPTY, compound);
             if (!stack.isEmpty() && predicate.test(stack)) {
               return new StackMatch(stack, slot);
             }
@@ -314,7 +322,7 @@ public class InventoryModule implements ModifierModule, InventoryModifierHook, V
           // slot must be valid
           int slot = compound.getInt(TAG_SLOT);
           if (slot < max) {
-            parsed[slot] = ItemStack.of(compound);
+            parsed[slot] = ItemStack.parseOptional(net.minecraft.core.RegistryAccess.EMPTY, compound);
           }
         }
         // add stacks into the list
@@ -351,11 +359,16 @@ public class InventoryModule implements ModifierModule, InventoryModifierHook, V
   public static class Builder extends ModuleBuilder.Context<Builder> {
     @Nullable
     protected ResourceLocation key = null;
+      public Builder key(ResourceLocation key) { this.key = key; return this; }
     protected LevelingInt slotLimit = LevelingInt.flat(64);
+      public Builder slotLimit(LevelingInt slotLimit) { this.slotLimit = slotLimit; return this; }
     protected IJsonPredicate<Item> filter = ItemPredicate.ANY;
+      public Builder filter(IJsonPredicate<Item> filter) { this.filter = filter; return this; }
     @Nullable
     protected Pattern pattern = null;
+      public Builder pattern(Pattern pattern) { this.pattern = pattern; return this; }
     protected IntRange validationLevel = ModifierEntry.VALID_LEVEL;
+      public Builder validationLevel(IntRange validationLevel) { this.validationLevel = validationLevel; return this; }
 
     protected Builder() {}
 

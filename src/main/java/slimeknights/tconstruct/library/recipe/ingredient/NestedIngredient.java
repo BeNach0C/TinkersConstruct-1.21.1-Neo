@@ -5,13 +5,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraftforge.common.crafting.AbstractIngredient;
+import net.neoforged.neoforge.common.crafting.ICustomIngredient;
 
 import javax.annotation.Nullable;
 
 /** Ingredient that contains another ingredient nested inside */
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class NestedIngredient extends AbstractIngredient {
+public abstract class NestedIngredient implements ICustomIngredient {
   protected final Ingredient nested;
 
 
@@ -19,28 +19,12 @@ public abstract class NestedIngredient extends AbstractIngredient {
 
   @Override
   public boolean test(@Nullable ItemStack stack) {
-    return nested.test(stack);
+    return stack != null && nested.test(stack);
   }
 
   @Override
-  public ItemStack[] getItems() {
-    return nested.getItems();
-  }
-
-  @Override
-  public IntList getStackingIds() {
-    return nested.getStackingIds();
-  }
-
-  @Override
-  public boolean isEmpty() {
-    return nested.isEmpty();
-  }
-
-  @Override
-  protected void invalidate() {
-    super.invalidate();
-    nested.checkInvalidation();
+  public java.util.stream.Stream<ItemStack> getItems() {
+    return java.util.Arrays.stream(nested.getItems());
   }
 
   @Override

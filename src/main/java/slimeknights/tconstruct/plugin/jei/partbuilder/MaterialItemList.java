@@ -40,10 +40,10 @@ public class MaterialItemList {
       return MaterialRecipeCache.getItems(variant);
     }
     // if its a base material; the new lookup won't show all children, but this method did
-    MaterialId material = variant.getId();
+    MaterialId material = variant.getMaterialId();
     List<ItemStack> list = ITEM_LISTS.get(material);
     if (list == null) {
-      list = MaterialRecipeCache.getVariants(material.getId()).stream().flatMap(v -> MaterialRecipeCache.getItems(v).stream()).toList();
+      list = MaterialRecipeCache.getVariants(material).stream().flatMap(v -> MaterialRecipeCache.getItems(v).stream()).toList();
       ITEM_LISTS.put(material, list);
     }
     return list;

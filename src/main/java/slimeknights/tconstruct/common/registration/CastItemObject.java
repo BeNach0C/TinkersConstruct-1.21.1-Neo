@@ -21,6 +21,7 @@ import static slimeknights.mantle.util.RegistryHelper.getHolder;
 public class CastItemObject extends ItemObject<Item> {
   @Getter
   private final ResourceLocation name;
+  public ResourceLocation getName() { return name; }
   private final Supplier<? extends Item> sand;
   private final Supplier<? extends Item> redSand;
   @Getter

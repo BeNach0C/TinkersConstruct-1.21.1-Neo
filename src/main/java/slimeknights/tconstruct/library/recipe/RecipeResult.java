@@ -15,7 +15,6 @@ import javax.annotation.Nullable;
  *   <li>Pass: acts like a non-match recipe</li>
  * </ul>
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class RecipeResult<T> {
   /** Single pass instance */
   @SuppressWarnings("rawtypes")
@@ -60,9 +59,13 @@ public class RecipeResult<T> {
     return failure(Component.translatable(translationKey, params));
   }
 
-  /** If true, this recipe passed and can be crafted for the given input */
-  @Getter
   private final boolean success;
+
+  protected RecipeResult(boolean success) {
+    this.success = success;
+  }
+
+  public boolean isSuccess() { return success; }
 
   /**
    * Gets the result, throws if unavailable
