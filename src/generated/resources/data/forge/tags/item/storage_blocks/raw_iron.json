@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/raw_iron",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:raw_iron_block"
+  ]
 }

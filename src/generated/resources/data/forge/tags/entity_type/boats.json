@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:boats",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:boat",
+    "minecraft:chest_boat"
+  ]
 }

@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/black",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:black_dye"
+  ]
 }

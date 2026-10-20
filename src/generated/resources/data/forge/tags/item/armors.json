@@ -1,8 +1,8 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:armors",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#minecraft:head_armor",
+    "#minecraft:chest_armor",
+    "#minecraft:leg_armor",
+    "#minecraft:foot_armor"
+  ]
 }

@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/white",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:white_dye"
+  ]
 }

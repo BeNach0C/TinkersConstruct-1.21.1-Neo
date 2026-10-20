@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops/beetroot",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:beetroot"
+  ]
 }

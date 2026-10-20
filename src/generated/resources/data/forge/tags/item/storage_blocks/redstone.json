@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/redstone",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:redstone_block"
+  ]
 }

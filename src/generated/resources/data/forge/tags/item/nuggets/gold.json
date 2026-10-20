@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:nuggets/gold",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:gold_nugget"
+  ]
 }

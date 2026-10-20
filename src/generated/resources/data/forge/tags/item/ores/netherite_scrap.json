@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:ores/netherite_scrap",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:ancient_debris"
+  ]
 }

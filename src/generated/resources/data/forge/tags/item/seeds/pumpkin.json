@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:seeds/pumpkin",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:pumpkin_seeds"
+  ]
 }

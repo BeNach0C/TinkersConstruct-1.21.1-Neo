@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops/cocoa_bean",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:cocoa_beans"
+  ]
 }

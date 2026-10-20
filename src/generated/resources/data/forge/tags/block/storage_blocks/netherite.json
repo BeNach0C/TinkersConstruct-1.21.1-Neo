@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/netherite",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:netherite_block"
+  ]
 }

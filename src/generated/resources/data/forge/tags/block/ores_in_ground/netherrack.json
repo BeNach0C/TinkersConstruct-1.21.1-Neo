@@ -1,9 +1,7 @@
-﻿{
-    "values":  [
-                   "tconstruct:cobalt_ore",
-                   {
-                       "id":  "#c:ores_in_ground/netherrack",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "tconstruct:cobalt_ore",
+    "minecraft:nether_gold_ore",
+    "minecraft:nether_quartz_ore"
+  ]
 }

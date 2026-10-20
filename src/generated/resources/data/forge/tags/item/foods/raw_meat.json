@@ -1,8 +1,10 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:foods/raw_meat",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:beef",
+    "minecraft:porkchop",
+    "minecraft:chicken",
+    "minecraft:rabbit",
+    "minecraft:mutton",
+    "#forge:foods/raw_meats"
+  ]
 }

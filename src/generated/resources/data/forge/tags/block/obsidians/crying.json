@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:obsidians/crying",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:crying_obsidian"
+  ]
 }

@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/diamond",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:diamond_block"
+  ]
 }

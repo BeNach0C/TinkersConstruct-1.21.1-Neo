@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:fences/nether_brick",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:nether_brick_fence"
+  ]
 }

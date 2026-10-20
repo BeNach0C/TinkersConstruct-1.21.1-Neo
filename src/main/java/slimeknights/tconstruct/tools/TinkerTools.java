@@ -206,7 +206,7 @@ public final class TinkerTools extends TinkerModule {
 
   // ancient
   public static final ItemObject<ModifiableItem> meltingPan = ITEMS.register("melting_pan", () -> new ModifiableItem(TOOL_PROPS, ToolDefinitions.MELTING_PAN));
-  public static final ItemObject<ModifiableCrossbowItem> warPick = ITEMS.register("war_pick", () -> new ModifiableCrossbowItem(TOOL_PROPS, ToolDefinitions.WAR_PICK));
+  public static final ItemObject<ModifiableCrossbowItem> warPick = ITEMS.register("war_pick", () -> new ModifiableCrossbowItem(TOOL_PROPS, ToolDefinitions.WAR_PICK, false));
   public static final ItemObject<ModifiableItem> battlesign = ITEMS.register("battlesign", () -> new ModifiableItem(TOOL_PROPS, ToolDefinitions.BATTLESIGN));
   public static final ItemObject<ModifiableItem> swasher = ITEMS.register("swasher", () -> new ModifiableItem(TOOL_PROPS, ToolDefinitions.SWASHER));
   public static final ItemObject<ModifiableItem> minotaurAxe;

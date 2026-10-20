@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:obsidians/normal",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:obsidian"
+  ]
 }

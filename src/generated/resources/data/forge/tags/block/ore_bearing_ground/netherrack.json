@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:ore_bearing_ground/netherrack",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:netherrack"
+  ]
 }

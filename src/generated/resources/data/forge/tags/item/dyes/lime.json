@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/lime",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:lime_dye"
+  ]
 }

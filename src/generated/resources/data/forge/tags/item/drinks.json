@@ -1,8 +1,11 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:drinks",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:drinks/water",
+    "#forge:drinks/watery",
+    "#forge:drinks/milk",
+    "#forge:drinks/honey",
+    "#forge:drinks/magic",
+    "#forge:drinks/ominous",
+    "#forge:drinks/juice"
+  ]
 }

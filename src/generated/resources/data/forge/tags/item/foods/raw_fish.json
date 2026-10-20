@@ -1,8 +1,9 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:foods/raw_fish",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:cod",
+    "minecraft:salmon",
+    "minecraft:tropical_fish",
+    "minecraft:pufferfish",
+    "#forge:foods/raw_fishes"
+  ]
 }

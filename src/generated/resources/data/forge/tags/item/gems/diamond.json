@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:gems/diamond",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:diamond"
+  ]
 }

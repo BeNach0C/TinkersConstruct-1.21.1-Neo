@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops/wheat",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:wheat"
+  ]
 }

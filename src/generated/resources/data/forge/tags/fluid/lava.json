@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:lava",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:lava",
+    "minecraft:flowing_lava"
+  ]
 }

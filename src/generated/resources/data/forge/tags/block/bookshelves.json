@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:bookshelves",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:bookshelf"
+  ]
 }

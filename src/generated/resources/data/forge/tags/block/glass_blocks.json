@@ -1,8 +1,7 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:glass_blocks",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:glass_blocks/colorless",
+    "#forge:glass_blocks/cheap",
+    "#forge:glass_blocks/tinted"
+  ]
 }

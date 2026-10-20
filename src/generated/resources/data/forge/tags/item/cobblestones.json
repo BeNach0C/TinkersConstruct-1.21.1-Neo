@@ -1,8 +1,8 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:cobblestones",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:cobblestones/normal",
+    "#forge:cobblestones/infested",
+    "#forge:cobblestones/mossy",
+    "#forge:cobblestones/deepslate"
+  ]
 }

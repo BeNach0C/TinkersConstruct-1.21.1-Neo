@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:buckets/empty",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:bucket"
+  ]
 }

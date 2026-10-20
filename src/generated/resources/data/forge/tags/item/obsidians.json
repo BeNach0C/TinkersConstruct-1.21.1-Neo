@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:obsidians",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:obsidians/normal",
+    "#forge:obsidians/crying"
+  ]
 }

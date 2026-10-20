@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:tools/igniter",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:flint_and_steel"
+  ]
 }

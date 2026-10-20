@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:pumpkins/carved",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:carved_pumpkin"
+  ]
 }

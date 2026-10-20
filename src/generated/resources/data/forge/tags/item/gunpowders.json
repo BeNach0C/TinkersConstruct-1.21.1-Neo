@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:gunpowders",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:gunpowder"
+  ]
 }

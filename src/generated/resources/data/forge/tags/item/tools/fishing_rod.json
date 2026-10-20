@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:tools/fishing_rod",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:fishing_rod",
+    "#forge:tools/fishing_rods"
+  ]
 }

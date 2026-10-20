@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/brown",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:brown_dye"
+  ]
 }

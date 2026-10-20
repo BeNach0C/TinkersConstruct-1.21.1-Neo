@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops/cactus",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:cactus"
+  ]
 }

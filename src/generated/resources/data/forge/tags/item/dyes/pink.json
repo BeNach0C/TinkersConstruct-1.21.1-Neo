@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/pink",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:pink_dye"
+  ]
 }

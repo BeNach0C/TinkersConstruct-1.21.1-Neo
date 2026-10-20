@@ -1,9 +1,5 @@
-﻿{
-    "values":  [
-                   "#tconstruct:honey",
-                   {
-                       "id":  "#c:honey",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#tconstruct:honey"
+  ]
 }

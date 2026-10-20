@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:raw_materials/iron",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:raw_iron"
+  ]
 }

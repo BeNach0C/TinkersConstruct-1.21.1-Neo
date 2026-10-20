@@ -69,23 +69,30 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
   private final Predicate<ItemStack> supportedHeldProjectiles;
   /** If true, adds the item data to the drawback model. Its a bit less efficient but produces better models. False will just set a boolean. */
   private final boolean storeDrawingItem;
+  @Getter
+  private final boolean crossbowHoldPose;
 
-  public ModifiableCrossbowItem(Properties properties, ToolDefinition toolDefinition, Predicate<ItemStack> supportedHeldProjectiles, boolean storeDrawingItem) {
+  public ModifiableCrossbowItem(Properties properties, ToolDefinition toolDefinition, Predicate<ItemStack> supportedHeldProjectiles, boolean storeDrawingItem, boolean crossbowHoldPose) {
     super(properties, toolDefinition);
     this.supportedHeldProjectiles = supportedHeldProjectiles;
     this.storeDrawingItem = storeDrawingItem;
+    this.crossbowHoldPose = crossbowHoldPose;
+  }
+
+  public ModifiableCrossbowItem(Properties properties, ToolDefinition toolDefinition, Predicate<ItemStack> supportedHeldProjectiles, boolean storeDrawingItem) {
+    this(properties, toolDefinition, supportedHeldProjectiles, storeDrawingItem, true);
   }
 
   public ModifiableCrossbowItem(Properties properties, ToolDefinition toolDefinition, Predicate<ItemStack> supportedHeldProjectiles) {
-    this(properties, toolDefinition, supportedHeldProjectiles, false);
+    this(properties, toolDefinition, supportedHeldProjectiles, false, true);
   }
 
-  public ModifiableCrossbowItem(Properties properties, ToolDefinition toolDefinition, boolean storeDrawingItem) {
-    this(properties, toolDefinition, ARROW_OR_FIREWORK, storeDrawingItem);
+  public ModifiableCrossbowItem(Properties properties, ToolDefinition toolDefinition, boolean crossbowHoldPose) {
+    this(properties, toolDefinition, ARROW_OR_FIREWORK, false, crossbowHoldPose);
   }
 
   public ModifiableCrossbowItem(Properties properties, ToolDefinition toolDefinition) {
-    this(properties, toolDefinition, ARROW_OR_FIREWORK);
+    this(properties, toolDefinition, ARROW_OR_FIREWORK, false, true);
   }
 
   /* Properties */
@@ -330,28 +337,15 @@ public class ModifiableCrossbowItem extends ModifiableLauncherItem {
       if (!level.isClientSide) {
         CompoundTag ammoNBT = (CompoundTag) ammo.save(level.registryAccess(), new CompoundTag());
         persistentData.put(KEY_CROSSBOW_AMMO, ammoNBT);
-        persistentData.remove(KEY_DRAWBACK_AMMO);
-        persistentData.remove(KEY_DRAWTIME);
-        tool.updateStack(bow);
         // if the crossbow broke during loading, fire immediately
         if (tool.isBroken()) {
           fireCrossbow(tool, living, player != null && player.getAbilities().instabuild, living.getUsedItemHand(), ammoNBT);
         }
       }
-    } else {
-      persistentData.remove(KEY_DRAWBACK_AMMO);
-      persistentData.remove(KEY_DRAWTIME);
-      tool.updateStack(bow);
     }
-  }
-
-  @Override
-  public void onUseTick(Level level, LivingEntity living, ItemStack bow, int chargeRemaining) {
-    super.onUseTick(level, living, bow, chargeRemaining);
-    int drawtime = ModifierUtil.getPersistentInt(bow, KEY_DRAWTIME, -1);
-    if (drawtime > 0 && getUseDuration(bow) - chargeRemaining >= drawtime + 3) {
-      living.releaseUsingItem();
-    }
+    persistentData.remove(KEY_DRAWBACK_AMMO);
+    persistentData.remove(KEY_DRAWTIME);
+    tool.updateStack(bow);
   }
 
   @Override

@@ -1,8 +1,3 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:hidden_from_recipe_viewers",
-                       "required":  false
-                   }
-               ]
+{
+  "values": []
 }

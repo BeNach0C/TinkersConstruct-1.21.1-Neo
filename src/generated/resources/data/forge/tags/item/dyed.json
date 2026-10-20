@@ -1,8 +1,20 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyed",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:dyed/white",
+    "#forge:dyed/orange",
+    "#forge:dyed/magenta",
+    "#forge:dyed/light_blue",
+    "#forge:dyed/yellow",
+    "#forge:dyed/lime",
+    "#forge:dyed/pink",
+    "#forge:dyed/gray",
+    "#forge:dyed/light_gray",
+    "#forge:dyed/cyan",
+    "#forge:dyed/purple",
+    "#forge:dyed/blue",
+    "#forge:dyed/brown",
+    "#forge:dyed/green",
+    "#forge:dyed/red",
+    "#forge:dyed/black"
+  ]
 }

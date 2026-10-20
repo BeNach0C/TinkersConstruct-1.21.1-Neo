@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:bricks",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:bricks/normal",
+    "#forge:bricks/nether"
+  ]
 }

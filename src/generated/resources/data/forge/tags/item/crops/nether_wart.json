@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops/nether_wart",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:nether_wart"
+  ]
 }

@@ -1,17 +1,13 @@
-﻿{
-    "values":  [
-                   "#forge:slimeball/earth",
-                   "#forge:slimeball/sky",
-                   "#forge:slimeball/ichor",
-                   "#forge:slimeball/ender",
-                   {
-                       "id":  "#c:slimeballs",
-                       "required":  false
-                   },
-                   "minecraft:slime_ball",
-                   "tconstruct:earth_slime_ball",
-                   "tconstruct:sky_slime_ball",
-                   "tconstruct:ender_slime_ball",
-                   "tconstruct:ichor_slime_ball"
-               ]
+{
+  "values": [
+    "#forge:slimeball/earth",
+    "#forge:slimeball/sky",
+    "#forge:slimeball/ichor",
+    "#forge:slimeball/ender",
+    "minecraft:slime_ball",
+    "tconstruct:earth_slime_ball",
+    "tconstruct:sky_slime_ball",
+    "tconstruct:ender_slime_ball",
+    "tconstruct:ichor_slime_ball"
+  ]
 }

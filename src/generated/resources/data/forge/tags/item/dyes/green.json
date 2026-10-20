@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/green",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:green_dye"
+  ]
 }

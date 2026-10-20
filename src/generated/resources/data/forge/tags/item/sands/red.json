@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:sands/red",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:red_sand"
+  ]
 }

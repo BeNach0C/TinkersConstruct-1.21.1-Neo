@@ -1,8 +1,8 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:sandstone/uncolored_blocks",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:sandstone",
+    "minecraft:cut_sandstone",
+    "minecraft:chiseled_sandstone",
+    "minecraft:smooth_sandstone"
+  ]
 }

@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:drinks/honey",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:honey_bottle"
+  ]
 }

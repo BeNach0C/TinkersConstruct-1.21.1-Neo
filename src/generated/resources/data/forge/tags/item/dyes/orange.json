@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/orange",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:orange_dye"
+  ]
 }

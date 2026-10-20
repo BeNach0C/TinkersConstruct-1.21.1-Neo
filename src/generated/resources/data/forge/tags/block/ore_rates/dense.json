@@ -1,8 +1,10 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:ore_rates/dense",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:copper_ore",
+    "minecraft:deepslate_copper_ore",
+    "minecraft:deepslate_lapis_ore",
+    "minecraft:deepslate_redstone_ore",
+    "minecraft:lapis_ore",
+    "minecraft:redstone_ore"
+  ]
 }

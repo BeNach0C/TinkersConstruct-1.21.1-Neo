@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:drinks/ominous",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:ominous_bottle"
+  ]
 }

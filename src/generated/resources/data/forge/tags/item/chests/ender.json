@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:chests/ender",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:ender_chest"
+  ]
 }

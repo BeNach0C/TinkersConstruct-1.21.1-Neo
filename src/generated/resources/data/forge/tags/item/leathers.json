@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:leathers",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:leather"
+  ]
 }

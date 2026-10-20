@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:nether_stars",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:nether_star"
+  ]
 }

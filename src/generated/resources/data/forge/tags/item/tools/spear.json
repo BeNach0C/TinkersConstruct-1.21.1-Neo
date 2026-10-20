@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:tools/spear",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:trident",
+    "#forge:tools/tridents"
+  ]
 }

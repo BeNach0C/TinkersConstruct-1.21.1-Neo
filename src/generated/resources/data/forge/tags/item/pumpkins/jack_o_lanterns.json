@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:pumpkins/jack_o_lanterns",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:jack_o_lantern"
+  ]
 }

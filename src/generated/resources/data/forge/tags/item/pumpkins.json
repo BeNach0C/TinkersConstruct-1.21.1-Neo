@@ -1,8 +1,7 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:pumpkins",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:pumpkins/normal",
+    "#forge:pumpkins/carved",
+    "#forge:pumpkins/jack_o_lanterns"
+  ]
 }

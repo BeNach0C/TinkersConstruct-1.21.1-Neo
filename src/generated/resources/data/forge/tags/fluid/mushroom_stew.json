@@ -1,9 +1,5 @@
-﻿{
-    "values":  [
-                   "#tconstruct:mushroom_stew",
-                   {
-                       "id":  "#c:mushroom_stew",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#tconstruct:mushroom_stew"
+  ]
 }

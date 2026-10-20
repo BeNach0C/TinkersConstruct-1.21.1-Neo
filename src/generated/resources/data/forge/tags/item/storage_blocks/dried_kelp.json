@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/dried_kelp",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:dried_kelp_block"
+  ]
 }

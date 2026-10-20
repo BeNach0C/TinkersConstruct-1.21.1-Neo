@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:ore_bearing_ground/stone",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:stone"
+  ]
 }

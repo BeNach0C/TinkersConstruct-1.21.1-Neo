@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:bricks/nether",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:nether_brick"
+  ]
 }

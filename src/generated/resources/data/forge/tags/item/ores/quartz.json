@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:ores/quartz",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:nether_quartz_ore"
+  ]
 }

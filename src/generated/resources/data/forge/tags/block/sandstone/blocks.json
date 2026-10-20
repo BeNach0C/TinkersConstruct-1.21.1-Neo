@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:sandstone/blocks",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:sandstone/red_blocks",
+    "#forge:sandstone/uncolored_blocks"
+  ]
 }

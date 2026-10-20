@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/slime",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:slime_block"
+  ]
 }

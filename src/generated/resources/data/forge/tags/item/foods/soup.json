@@ -1,8 +1,9 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:foods/soup",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:beetroot_soup",
+    "minecraft:mushroom_stew",
+    "minecraft:rabbit_stew",
+    "minecraft:suspicious_stew",
+    "#forge:foods/soups"
+  ]
 }

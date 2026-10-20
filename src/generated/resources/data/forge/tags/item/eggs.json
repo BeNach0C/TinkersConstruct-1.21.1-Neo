@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:eggs",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:egg"
+  ]
 }

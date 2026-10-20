@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:foods/bread",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:bread",
+    "#forge:foods/breads"
+  ]
 }

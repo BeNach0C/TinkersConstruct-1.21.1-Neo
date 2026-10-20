@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:ores/coal",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#minecraft:coal_ores"
+  ]
 }

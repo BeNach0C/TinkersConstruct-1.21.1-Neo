@@ -1,9 +1,8 @@
-﻿{
-    "values":  [
-                   "#forge:raw_materials/cobalt",
-                   {
-                       "id":  "#c:raw_materials",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:raw_materials/cobalt",
+    "#forge:raw_materials/copper",
+    "#forge:raw_materials/gold",
+    "#forge:raw_materials/iron"
+  ]
 }

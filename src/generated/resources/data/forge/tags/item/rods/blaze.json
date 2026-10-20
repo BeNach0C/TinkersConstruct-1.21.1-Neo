@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:rods/blaze",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:blaze_rod"
+  ]
 }

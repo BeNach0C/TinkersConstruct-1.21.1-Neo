@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:bones",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:bone"
+  ]
 }

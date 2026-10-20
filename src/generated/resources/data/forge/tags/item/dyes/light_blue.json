@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:dyes/light_blue",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:light_blue_dye"
+  ]
 }

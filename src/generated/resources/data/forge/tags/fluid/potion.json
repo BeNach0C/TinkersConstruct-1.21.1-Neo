@@ -1,9 +1,5 @@
-﻿{
-    "values":  [
-                   "tconstruct:potion",
-                   {
-                       "id":  "#c:potion",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "tconstruct:potion"
+  ]
 }

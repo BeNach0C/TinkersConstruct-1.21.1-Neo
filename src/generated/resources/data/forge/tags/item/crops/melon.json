@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops/melon",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:melon"
+  ]
 }

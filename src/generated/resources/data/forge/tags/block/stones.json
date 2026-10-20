@@ -1,8 +1,10 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:stones",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:andesite",
+    "minecraft:diorite",
+    "minecraft:granite",
+    "minecraft:stone",
+    "minecraft:deepslate",
+    "minecraft:tuff"
+  ]
 }

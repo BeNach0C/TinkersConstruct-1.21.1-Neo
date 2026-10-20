@@ -1,8 +1,14 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:crops/beetroot",
+    "#forge:crops/cactus",
+    "#forge:crops/carrot",
+    "#forge:crops/cocoa_bean",
+    "#forge:crops/melon",
+    "#forge:crops/nether_wart",
+    "#forge:crops/potato",
+    "#forge:crops/pumpkin",
+    "#forge:crops/sugar_cane",
+    "#forge:crops/wheat"
+  ]
 }

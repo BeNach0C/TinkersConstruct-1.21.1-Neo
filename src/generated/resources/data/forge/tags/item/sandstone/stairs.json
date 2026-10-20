@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:sandstone/stairs",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:sandstone/red_stairs",
+    "#forge:sandstone/uncolored_stairs"
+  ]
 }

@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:slime_balls",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:slime_ball",
+    "#forge:slimeballs"
+  ]
 }

@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:seeds/melon",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:melon_seeds"
+  ]
 }

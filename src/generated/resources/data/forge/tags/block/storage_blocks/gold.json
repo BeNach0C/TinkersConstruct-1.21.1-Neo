@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/gold",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:gold_block"
+  ]
 }

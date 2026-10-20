@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:crops/sugar_cane",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:sugar_cane"
+  ]
 }

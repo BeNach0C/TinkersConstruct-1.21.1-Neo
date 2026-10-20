@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:foods/edible_when_placed",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:cake"
+  ]
 }

@@ -1,10 +1,6 @@
-﻿{
-    "values":  [
-                   "tconstruct:clear_glass_pane",
-                   {
-                       "id":  "#c:glass_panes/colorless",
-                       "required":  false
-                   },
-                   "minecraft:glass_pane"
-               ]
+{
+  "values": [
+    "tconstruct:clear_glass_pane",
+    "minecraft:glass_pane"
+  ]
 }

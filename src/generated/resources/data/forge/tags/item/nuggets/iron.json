@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:nuggets/iron",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:iron_nugget"
+  ]
 }

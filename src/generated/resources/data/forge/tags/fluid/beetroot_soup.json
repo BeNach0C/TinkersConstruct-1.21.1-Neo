@@ -1,9 +1,5 @@
-﻿{
-    "values":  [
-                   "#tconstruct:beetroot_soup",
-                   {
-                       "id":  "#c:beetroot_soup",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#tconstruct:beetroot_soup"
+  ]
 }

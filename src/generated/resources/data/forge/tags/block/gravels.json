@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:gravels",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:gravel"
+  ]
 }

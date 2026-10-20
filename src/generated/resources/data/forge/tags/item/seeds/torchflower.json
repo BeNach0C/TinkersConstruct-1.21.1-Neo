@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:seeds/torchflower",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:torchflower_seeds"
+  ]
 }

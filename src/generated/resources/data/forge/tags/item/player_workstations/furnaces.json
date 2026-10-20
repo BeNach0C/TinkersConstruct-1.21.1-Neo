@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:player_workstations/furnaces",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:furnace"
+  ]
 }

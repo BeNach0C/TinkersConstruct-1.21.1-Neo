@@ -1,8 +1,9 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:foods/vegetable",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:carrot",
+    "minecraft:golden_carrot",
+    "minecraft:potato",
+    "minecraft:beetroot",
+    "#forge:foods/vegetables"
+  ]
 }

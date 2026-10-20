@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:fences",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:fences/nether_brick",
+    "#forge:fences/wooden"
+  ]
 }

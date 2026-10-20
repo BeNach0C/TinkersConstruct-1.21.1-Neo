@@ -1,8 +1,6 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:sands",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:sands/colorless",
+    "#forge:sands/red"
+  ]
 }

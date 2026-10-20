@@ -1,8 +1,9 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:seeds",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "#forge:seeds/beetroot",
+    "#forge:seeds/melon",
+    "#forge:seeds/pumpkin",
+    "#forge:seeds/torchflower",
+    "#forge:seeds/wheat"
+  ]
 }

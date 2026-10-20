@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:storage_blocks/coal",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:coal_block"
+  ]
 }

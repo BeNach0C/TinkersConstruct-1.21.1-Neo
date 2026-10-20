@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:cobblestones/deepslate",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:cobbled_deepslate"
+  ]
 }

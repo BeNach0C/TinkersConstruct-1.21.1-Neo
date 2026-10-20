@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:pumpkins/normal",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:pumpkin"
+  ]
 }

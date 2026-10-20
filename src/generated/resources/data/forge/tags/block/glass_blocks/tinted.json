@@ -1,8 +1,5 @@
-﻿{
-    "values":  [
-                   {
-                       "id":  "#c:glass_blocks/tinted",
-                       "required":  false
-                   }
-               ]
+{
+  "values": [
+    "minecraft:tinted_glass"
+  ]
 }
